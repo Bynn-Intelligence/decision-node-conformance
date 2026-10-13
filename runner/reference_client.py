@@ -2724,7 +2724,10 @@ class FaceDetection:
 class FaceMatch:
     """A face matched in a collection: its box, the score, the
     collection searched, the item's reference, and name (a public figure) or label (an
-    item of the workspace's own collection that has one), empty when absent."""
+    item of the workspace's own collection that has one), empty when absent. From 1.16
+    collection_name (an own collection's display name, or its id; a public collection's
+    id) and metadata (an own item's, when it has any), each empty when absent, as from
+    an answer from before these fields."""
 
     def __init__(self, raw: dict):
         self.box = FaceBox(raw["box"])
@@ -2733,6 +2736,8 @@ class FaceMatch:
         self.reference = raw["reference"]
         self.name = raw.get("name")
         self.label = raw.get("label")
+        self.collection_name = raw.get("collection_name")
+        self.metadata = raw.get("metadata")
 
 
 class FaceDetectionReading(Reading):
@@ -2756,6 +2761,9 @@ class FaceRecognitionReading(Reading):
     def __init__(self, raw):
         super().__init__(raw)
         self.matches = [FaceMatch(m) for m in raw["matches"]]
+        # From 1.16: an own collection's display name, empty when absent (a public
+        # collection, or an answer from before these fields).
+        self.collection_name = raw.get("collection_name")
 
 
 def _box_ok(box) -> bool:
@@ -2772,6 +2780,8 @@ def _face_detection_ok(raw: dict) -> bool:
 def _face_recognition_ok(raw: dict) -> bool:
     if not isinstance(raw.get("image"), str) or not _int(raw.get("faces")) or raw["faces"] < 0:
         return False
+    if raw.get("collection_name") is not None and not isinstance(raw["collection_name"], str):
+        return False
     found = raw.get("matches")
     return isinstance(found, list) and all(
         isinstance(m, dict)
@@ -2779,7 +2789,8 @@ def _face_recognition_ok(raw: dict) -> bool:
         and _number(m.get("score"))
         and isinstance(m.get("collection"), str)
         and isinstance(m.get("reference"), str)
-        and all(m.get(k) is None or isinstance(m[k], str) for k in ("name", "label"))
+        and all(m.get(k) is None or isinstance(m[k], str) for k in ("name", "label", "collection_name"))
+        and (m.get("metadata") is None or isinstance(m["metadata"], dict))
         for m in found
     )
 

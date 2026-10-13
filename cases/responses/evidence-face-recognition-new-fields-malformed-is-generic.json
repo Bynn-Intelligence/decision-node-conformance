@@ -1,0 +1,117 @@
+{
+  "id": "evidence-face-recognition-new-fields-malformed-is-generic",
+  "description": "A face_recognition reading whose collection_name (on the result or on a match) is not a string, or whose match's metadata is not an object, is a generic reading holding its raw fields; the decision does not fail.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "yard",
+            "url": "https://files.example.com/yard/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "face_recognition",
+            "options": {
+              "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "face_recognition=ok:210"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"someone_at_gate\": {\"type\": \"truth\", \"truth\": 0.91}}, \"evidence\": {\"face_recognition\": {\"version\": \"face_recognition-v1\", \"status\": \"ok\", \"latency_ms\": 210, \"billed_calls\": 3, \"results\": [{\"image\": \"gate\", \"faces\": 1, \"collection_name\": 7, \"matches\": []}, {\"image\": \"gate\", \"faces\": 1, \"matches\": [{\"box\": {\"x1\": 412, \"y1\": 188, \"x2\": 486, \"y2\": 274}, \"score\": 0.9, \"collection\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"reference\": \"emp-1\", \"collection_name\": [\"Staff\"]}]}, {\"image\": \"gate\", \"faces\": 1, \"matches\": [{\"box\": {\"x1\": 412, \"y1\": 188, \"x2\": 486, \"y2\": 274}, \"score\": 0.9, \"collection\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"reference\": \"emp-1\", \"metadata\": \"department=Reception\"}]}]}}, \"usage\": {\"input_tokens\": 310, \"output_tokens\": 0, \"booster_tokens\": 52, \"boosters\": 2}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "face_recognition": {
+          "version": "face_recognition-v1",
+          "status": "ok",
+          "latency_ms": 210,
+          "billed_calls": 3,
+          "results": [
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1,
+                "collection_name": 7,
+                "matches": []
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1,
+                "matches": [
+                  {
+                    "box": {
+                      "x1": 412,
+                      "y1": 188,
+                      "x2": 486,
+                      "y2": 274
+                    },
+                    "score": 0.9,
+                    "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+                    "reference": "emp-1",
+                    "collection_name": [
+                      "Staff"
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1,
+                "matches": [
+                  {
+                    "box": {
+                      "x1": 412,
+                      "y1": 188,
+                      "x2": 486,
+                      "y2": 274
+                    },
+                    "score": 0.9,
+                    "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+                    "reference": "emp-1",
+                    "metadata": "department=Reception"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

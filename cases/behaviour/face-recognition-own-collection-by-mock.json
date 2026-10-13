@@ -1,6 +1,6 @@
 {
   "id": "face-recognition-own-collection-by-mock",
-  "description": "Against the mock: a face enrolled in the workspace's own collection, then face_recognition with that collection; the reading's close match names the collection, the item's reference and its label. A collection's id in the mock follows from the workspace and the name.",
+  "description": "Against the mock: a face enrolled with metadata in the workspace's own collection Staff, then face_recognition with that collection; the result names the collection (collection_name), and its close match carries the collection, its name, the item's reference, its label and its metadata, as the API answers from 1.16's fields on. A collection's id in the mock follows from the workspace and the name.",
   "client": {
     "api_key": "dn_test_conformance"
   },
@@ -28,7 +28,11 @@
             }
           },
           "reference": "emp-1042",
-          "label": "Reception"
+          "label": "Reception",
+          "metadata": {
+            "department": "Reception",
+            "badge_level": 2
+          }
         }
       }
     },
@@ -80,6 +84,7 @@
                   "kind": "face_recognition",
                   "image": "gate",
                   "faces": 1,
+                  "collection_name": "Staff",
                   "matches": [
                     {
                       "box": {
@@ -92,7 +97,12 @@
                       "collection": "col_4da4fa2511b3c8fe3a620c8c948ea430",
                       "reference": "emp-1042",
                       "name": null,
-                      "label": "Reception"
+                      "label": "Reception",
+                      "collection_name": "Staff",
+                      "metadata": {
+                        "department": "Reception",
+                        "badge_level": 2
+                      }
                     }
                   ]
                 }

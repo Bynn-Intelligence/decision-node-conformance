@@ -1885,6 +1885,33 @@ class TestCollections(Spec11):
             self.assertEqual((st, out["detail"]["error_type"], out["detail"]["details"], hd.get("retry-after")),
                              (529, "overloaded_error", {"reason": "enrollment_unpriced" if reason == "unpriced" else reason}, retry))
 
+    def test_face_recognition_names_and_metadata(self):
+        """Suite 1.16: the mock sends 1.16's fields: collection_name on an own
+        collection's result and on every match, an own item's metadata on its match."""
+        h = self.h("c11")
+        col = self.call("POST", "/v1/collections", {"type": "face", "name": "  Front desk   staff "}, h)[2]
+        self.call("POST", "/v1/collections/%s/items" % col["id"], {"image": self.BADGE, "reference": "emp-1", "metadata": {"department": "Reception"}}, h)
+        q = {"ok": {"type": "truth", "instructions": "Is someone there?"}}
+
+        def search(collection):
+            body = {"images": [self.BADGE], "questions": q, "boosters": [{"name": "face_recognition", "options": {"collection": collection, "threshold": 0}}]}
+            st, _, out = self.call("POST", "/v1/decide", body, h)
+            self.assertEqual(st, 200)
+            return out["evidence"]["face_recognition"]["results"][0]
+
+        own = search(col["id"])
+        self.assertEqual(own["collection_name"], "Front desk staff")
+        self.assertTrue(own["matches"])
+        for m in own["matches"]:
+            self.assertEqual((m["collection_name"], m["metadata"]), ("Front desk staff", {"department": "Reception"}))
+        st, _, out = self.call("POST", "/v1/collections", {"type": "face", "name": "Front\tdesk"}, h)
+        self.assertEqual((st, out["detail"][0]["type"], out["detail"][0]["msg"]), (422, "string_pattern_mismatch", "A name holds no control or invisible characters"))
+        st, _, out = self.call("POST", "/v1/collections/%s/items" % col["id"], {"image": self.BADGE, "reference": "emp-2", "label": "Anna\u200b"}, h)
+        self.assertEqual((st, out["detail"][0]["loc"], out["detail"][0]["msg"]), (422, ["body", "label"], "A label holds no control or invisible characters"))
+        public = search("celebrities")
+        self.assertNotIn("collection_name", public)
+        self.assertTrue(public["matches"] and all(m["collection_name"] == "celebrities" and "metadata" not in m for m in public["matches"]))
+
     def test_decide_key(self):
         """Suite 1.15: a decide key decides and lists the models, nothing else."""
         def h(key):

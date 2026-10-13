@@ -1196,10 +1196,31 @@
                   "string",
                   "null"
                 ]
+              },
+              "collection_name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Suite 1.16: an own collection's display name (or its id), a public collection's id; null when absent, as in an answer from before these fields."
+              },
+              "metadata": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Suite 1.16: an own item's metadata, as sent; null when absent."
               }
             },
             "additionalProperties": false
           }
+        },
+        "collection_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Suite 1.16: a face_recognition result's own collection display name; null when absent (a public collection, an answer from before these fields)."
         },
         "raw": {
           "type": "object"

@@ -72,7 +72,9 @@
                   "collection": "celebrities",
                   "reference": "celeb-00412",
                   "name": "A Public Figure",
-                  "label": null
+                  "label": null,
+                  "collection_name": null,
+                  "metadata": null
                 },
                 {
                   "box": {
@@ -85,9 +87,12 @@
                   "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
                   "reference": "vis-0001",
                   "name": null,
-                  "label": null
+                  "label": null,
+                  "collection_name": null,
+                  "metadata": null
                 }
-              ]
+              ],
+              "collection_name": null
             }
           ]
         }

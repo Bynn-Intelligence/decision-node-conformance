@@ -505,6 +505,8 @@ def forbidden_char(c: str) -> bool:
     return (
         o <= 0x1F or 0x7F <= o <= 0x9F or o == 0xAD or 0x600 <= o <= 0x605 or o in (0x61C, 0x6DD, 0x70F, 0x8E2, 0x180E, 0xFEFF)
         or 0x890 <= o <= 0x891 or 0x200B <= o <= 0x200F or 0x2028 <= o <= 0x202E or 0x2060 <= o <= 0x206F
+        or 0xFFF9 <= o <= 0xFFFB or o in (0x110BD, 0x110CD, 0xE0001) or 0x13430 <= o <= 0x1343F
+        or 0x1BCA0 <= o <= 0x1BCA3 or 0x1D173 <= o <= 0x1D17A or 0xE0020 <= o <= 0xE007F
     )
 
 
@@ -560,7 +562,11 @@ def label_entries(loc: list, label) -> list:
     if not isinstance(label, str):
         return [centry("string_type", loc, "Input should be a valid string", label)]
     e = string_length(loc, label, ITEM_LABEL_MAX)
-    return [e] if e else []
+    if e:
+        return [e]
+    if any(forbidden_char(c) for c in label):
+        return [centry("string_pattern_mismatch", loc, "A label holds no control or invisible characters", label)]
+    return []
 
 
 def string_length(loc: list, value: str, most: int):
@@ -1721,7 +1727,10 @@ def booster_header(plan: list) -> str:
 
 def face_recognition_reading(b: dict, iid: str, stream) -> dict:
     """One or two faces, the first a close match when the collection has anyone to match,
-    the second a weak one; a match is kept at the request's threshold or above."""
+    the second a weak one; a match is kept at the request's threshold or above. As a
+    API answers from 1.16's fields on: every match names its collection (collection_name: an
+    own collection's display name, a public one's id), an own item's match carries its
+    metadata when it has any, and the result of an own collection its display name."""
     col = b["collection"]
     faces = 1 + int(stream.next() * 2)
     matches = []
@@ -1740,14 +1749,20 @@ def face_recognition_reading(b: dict, iid: str, stream) -> dict:
             match = {"box": box, "score": score, "collection": col["id"], "reference": item["reference"]}
             if item.get("label") is not None:
                 match["label"] = item["label"]
+            match["collection_name"] = col["name"] or col["id"]
+            if item.get("metadata"):
+                match["metadata"] = item["metadata"]
         elif col["kind"] == "celebrities":
             ref, who = CELEBRITIES[int(pick * len(CELEBRITIES)) % len(CELEBRITIES)]
-            match = {"box": box, "score": score, "collection": col["id"], "reference": ref, "name": who}
+            match = {"box": box, "score": score, "collection": col["id"], "reference": ref, "name": who, "collection_name": col["id"]}
         else:
             continue
         matches.append(match)
     matches.sort(key=lambda m: m["score"], reverse=True)
-    return {"image": iid, "faces": faces, "matches": matches}
+    out = {"image": iid, "faces": faces, "matches": matches}
+    if col["kind"] == "own" and col["name"]:
+        out["collection_name"] = col["name"]
+    return out
 
 
 def reading(name: str, iid: str, digest: str, b: dict | None = None) -> dict:
@@ -3516,9 +3531,12 @@ class Handler(BaseHTTPRequestHandler):
         its 403 collection_not_enabled, any other unknown or foreign id the 404."""
         own, pub = self.find_collection(cid, search=True)
         if pub:
-            return {"id": pub["id"], "kind": "celebrities", "items": []}
+            return {"id": pub["id"], "kind": "celebrities", "name": None, "items": []}
         items = sorted(own["items"].values(), key=lambda i: i["seq"])
-        return {"id": own["id"], "kind": "own", "items": [{"reference": i["reference"], "label": i["label"]} for i in items]}
+        # The display name as the search carries it: cut to 64 characters, none when it
+        # folds to nothing (control and separator characters as spaces, then trimmed).
+        name = re.sub(r"\s+", " ", "".join(" " if unicodedata.category(c)[0] in "CZ" else c for c in own["name"])).strip()[:64].strip() or None
+        return {"id": own["id"], "kind": "own", "name": name, "items": [{"reference": i["reference"], "label": i["label"], "metadata": i.get("metadata") or {}} for i in items]}
 
     def idem_begin(self, rid, body_bytes):
         """An Idempotency-Key on a collections POST. None: no key, the
@@ -3595,6 +3613,8 @@ class Handler(BaseHTTPRequestHandler):
                 entries.append(centry("string_type", ["body", "name"], "Input should be a valid string", name))
             elif string_length(["body", "name"], name, COLLECTION_NAME_MAX):
                 entries.append(string_length(["body", "name"], name, COLLECTION_NAME_MAX))
+            elif any(forbidden_char(c) for c in name):
+                entries.append(centry("string_pattern_mismatch", ["body", "name"], "A name holds no control or invisible characters", name))
             if entries:
                 raise refuse_422(entries)
         except Refused as exc:

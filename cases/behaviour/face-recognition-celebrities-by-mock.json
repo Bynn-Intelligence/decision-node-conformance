@@ -64,9 +64,12 @@
                     "collection": "celebrities",
                     "reference": "celeb-00977",
                     "name": "Another Public Figure",
-                    "label": null
+                    "label": null,
+                    "collection_name": "celebrities",
+                    "metadata": null
                   }
-                ]
+                ],
+                "collection_name": null
               }
             ]
           }

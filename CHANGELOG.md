@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.16 (for SDK specification 1.3)
+
+The `face_recognition` reading names its collection and carries an own item's metadata. `SPEC_VERSION` stays `"1.3"`.
+
+- Types: a `face_recognition` match gains `collection_name` (an own collection's display name, or its id; a public collection's id) and `metadata` (an own item's, an object as sent); the reading gains `collection_name` (an own collection's display name). Each is empty when absent, as in an answer from before these fields; one of the wrong type makes the reading generic.
+- Mock: the reading sends the three fields; a collection name or an item label holding a control or invisible character is the `422` `string_pattern_mismatch`, as the API answers.
+
+Cases: 733 in all (requests 128, responses 111, errors 102, behaviour 390, constants 2): 4 new (a reading with its collection's name and an item's metadata, a public match's name, an own collection without a display name, the new fields malformed); the face_recognition readings now expect the three fields, empty in the recorded answers from before them.
+
 ## 1.15 (for SDK specification 1.3)
 
 Items found by reference, edited and described, the enrollment's 529 reasons, decide keys, and `wanted-persons` no longer offered. `SPEC_VERSION` stays `"1.3"`.

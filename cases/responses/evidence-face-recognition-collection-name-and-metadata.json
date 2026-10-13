@@ -1,0 +1,113 @@
+{
+  "id": "evidence-face-recognition-collection-name-and-metadata",
+  "description": "A face_recognition reading of the workspace's own collection, as the API sends it from 1.16's fields on: the result's collection_name (the collection's display name), and on every match its collection_name, and the item's metadata when the item has any, kept as sent; a match of an item without metadata reads it as empty.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "yard",
+            "url": "https://files.example.com/yard/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "face_recognition",
+            "options": {
+              "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "face_recognition=ok:210"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"someone_at_gate\": {\"type\": \"truth\", \"truth\": 0.91}}, \"evidence\": {\"face_recognition\": {\"version\": \"face_recognition-v1\", \"status\": \"ok\", \"latency_ms\": 210, \"billed_calls\": 2, \"results\": [{\"image\": \"gate\", \"faces\": 2, \"collection_name\": \"Staff\", \"matches\": [{\"box\": {\"x1\": 412, \"y1\": 188, \"x2\": 486, \"y2\": 274}, \"score\": 0.93, \"collection\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"reference\": \"emp-1042\", \"label\": \"Anna, reception\", \"collection_name\": \"Staff\", \"metadata\": {\"department\": \"Reception\", \"badge_level\": 2, \"visitor\": false}}, {\"box\": {\"x1\": 120, \"y1\": 210, \"x2\": 171, \"y2\": 268}, \"score\": 0.81, \"collection\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"reference\": \"emp-1043\", \"collection_name\": \"Staff\"}]}, {\"image\": \"yard\", \"faces\": 1, \"collection_name\": \"Staff\", \"matches\": []}]}}, \"usage\": {\"input_tokens\": 310, \"output_tokens\": 0, \"booster_tokens\": 52, \"boosters\": 2}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "face_recognition": {
+          "version": "face_recognition-v1",
+          "status": "ok",
+          "latency_ms": 210,
+          "billed_calls": 2,
+          "results": [
+            {
+              "kind": "face_recognition",
+              "image": "gate",
+              "faces": 2,
+              "collection_name": "Staff",
+              "matches": [
+                {
+                  "box": {
+                    "x1": 412,
+                    "y1": 188,
+                    "x2": 486,
+                    "y2": 274
+                  },
+                  "score": 0.93,
+                  "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+                  "reference": "emp-1042",
+                  "name": null,
+                  "label": "Anna, reception",
+                  "collection_name": "Staff",
+                  "metadata": {
+                    "department": "Reception",
+                    "badge_level": 2,
+                    "visitor": false
+                  }
+                },
+                {
+                  "box": {
+                    "x1": 120,
+                    "y1": 210,
+                    "x2": 171,
+                    "y2": 268
+                  },
+                  "score": 0.81,
+                  "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+                  "reference": "emp-1043",
+                  "name": null,
+                  "label": null,
+                  "collection_name": "Staff",
+                  "metadata": null
+                }
+              ]
+            },
+            {
+              "kind": "face_recognition",
+              "image": "yard",
+              "faces": 1,
+              "collection_name": "Staff",
+              "matches": []
+            }
+          ]
+        }
+      }
+    }
+  }
+}

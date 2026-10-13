@@ -166,7 +166,9 @@ def norm_reading(r) -> dict:
             "kind": r.kind,
             "image": r.image,
             "faces": r.faces,
-            "matches": [{"box": norm_box(m.box), "score": m.score, "collection": m.collection, "reference": m.reference, "name": m.name, "label": m.label} for m in r.matches],
+            "collection_name": r.collection_name,
+            "matches": [{"box": norm_box(m.box), "score": m.score, "collection": m.collection, "reference": m.reference, "name": m.name, "label": m.label,
+                         "collection_name": m.collection_name, "metadata": m.metadata} for m in r.matches],
         }
     raise Fail("reading of class %s is none of AgeReading, AiGeneratedReading, FaceDetectionReading, FaceRecognitionReading, OcrReading, UnknownReading" % type(r).__name__)
 
