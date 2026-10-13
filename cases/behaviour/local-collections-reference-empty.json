@@ -1,6 +1,6 @@
 {
   "id": "local-collections-reference-empty",
-  "description": "An empty reference fails the reference's pattern, which holds the length too (1 to 64). Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "description": "An empty reference: a reference is 1 to 64 characters, its length checked before its pattern, so the entry is string_too_short. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
   "client": {
     "api_key": "dn_test_conformance"
   },
@@ -26,15 +26,15 @@
         "request_id": null,
         "entries": [
           {
-            "type": "string_pattern_mismatch",
+            "type": "string_too_short",
             "loc": [
               "body",
               "reference"
             ],
-            "msg": "String should match pattern '^[A-Za-z0-9_.:-]{1,64}$'",
+            "msg": "String should have at least 1 character",
             "input": "",
             "ctx": {
-              "pattern": "^[A-Za-z0-9_.:-]{1,64}$"
+              "min_length": 1
             }
           }
         ]

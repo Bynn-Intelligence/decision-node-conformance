@@ -1775,9 +1775,15 @@ class TestCollections(Spec11):
     def test_validation(self):
         st, _, out = self.call("POST", "/v1/collections", {"type": "face", "name": "x" * 81}, self.h("c2"))
         self.assertEqual((st, out["detail"][0]["type"]), (422, "string_too_long"))
+        self.assertEqual(out["detail"][0]["input"], "x" * 64 + "...")
         self.call("POST", "/v1/collections", {"type": "face", "name": "Staff"}, self.h("c2"))
         st, _, out = self.call("POST", "/v1/collections", {"type": "face", "name": "Staff"}, self.h("c2"))
         self.assertEqual((st, out["detail"][0]["type"]), (422, "name_taken"))
+        st, _, out = self.call("POST", "/v1/collections/col_nope/items", {"reference": "emp-1", "label": ""}, self.h("c2"))
+        self.assertEqual((st, out["detail"]), (422, [
+            {"type": "missing", "loc": ["body", "image"], "msg": "Field required", "input": None},
+            {"type": "string_too_short", "loc": ["body", "label"], "msg": "String should have at least 1 character", "input": "", "ctx": {"min_length": 1}},
+        ]))
         col = self.call("POST", "/v1/collections", {"type": "face", "name": "Other"}, self.h("c2"))[2]
         st, _, out = self.call("POST", "/v1/collections/%s/items" % col["id"], {"image": self.BADGE, "reference": "bad ref!"}, self.h("c2"))
         self.assertEqual((st, out["detail"][0]["type"]), (422, "string_pattern_mismatch"))
@@ -1849,6 +1855,13 @@ class TestCollections(Spec11):
         self.assertEqual(page["total"], 1)
         st, _, out = post("/v1/collections", {"type": "face", "name": "X"}, "")
         self.assertEqual((st, out["detail"]["error_type"]), (400, "api_usage_error"))
+        # The body is checked before the key and before the collection: a 422 first.
+        st, _, out = post("/v1/collections", {"type": "face", "name": "x" * 81}, "")
+        self.assertEqual((st, out["detail"][0]["type"]), (422, "string_too_long"))
+        st, _, out = post("/v1/collections/col_nope/items", {"image": self.BADGE, "reference": ""}, "k-5")
+        self.assertEqual((st, out["detail"][0]["type"]), (422, "string_too_short"))
+        st, _, out = post("/v1/collections/col_nope/items", item, "k-5")
+        self.assertEqual((st, out["detail"]["error_type"]), (404, "collection_not_found"))
         # A billed no_face is kept and replayed.
         scenario = {"name": "t-idem-no-face", "collections": {"faces": 0}}
         self.assertEqual(self.call("POST", "/_mock/scenarios", scenario, {"Content-Type": "application/json"})[0], 200)

@@ -1,6 +1,6 @@
 {
   "id": "local-collections-label-too-long",
-  "description": "A label of 129 characters: a label is at most 128. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "description": "A label of 129 characters: a label is at most 128. Checked locally (a limit a client may hold): ValidationError with the entry the API answers, its input echoed as the API echoes it (the first 64 characters, then \"...\"); nothing is sent.",
   "client": {
     "api_key": "dn_test_conformance"
   },
@@ -33,7 +33,7 @@
               "label"
             ],
             "msg": "String should have at most 128 characters",
-            "input": "lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll",
+            "input": "llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll...",
             "ctx": {
               "max_length": 128
             }

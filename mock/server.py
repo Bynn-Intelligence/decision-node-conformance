@@ -475,6 +475,34 @@ def missing(loc: list, value) -> dict:
     return entry("missing", loc, "Field required", value)
 
 
+ECHO_CHARS = 64  # a collections 422 echoes a string cut to 64 characters, then "..."
+
+
+def echoed(value):
+    """An input as a collections 422 entry echoes it, as the API does: a string cut to
+    64 characters with "..." added, a number, a boolean or null as it is, an object or
+    an array never (null), so never the whole body or a whole image object."""
+    if isinstance(value, str):
+        return value[:ECHO_CHARS] + ("..." if len(value) > ECHO_CHARS else "")
+    if isinstance(value, (dict, list)):
+        return None
+    return value
+
+
+def centry(kind: str, loc: list, msg: str, value, ctx=None) -> dict:
+    """A collections 422 entry, its input echoed within bounds."""
+    return entry(kind, loc, msg, echoed(value), ctx)
+
+
+def string_length(loc: list, value: str, most: int):
+    """A collections string's length entry, in characters, against 1 to most."""
+    if not value:
+        return centry("string_too_short", loc, "String should have at least 1 character", value, {"min_length": 1})
+    if len(value) > most:
+        return centry("string_too_long", loc, "String should have at most %d characters" % most, value, {"max_length": most})
+    return None
+
+
 def str_dict_list(loc: list, value) -> list:
     return [
         entry("string_type", loc + ["str"], "Input should be a valid string", value),
@@ -3443,31 +3471,34 @@ class Handler(BaseHTTPRequestHandler):
         self.refuse(rid, exc)
 
     def api_collection_create(self, rid, started, body_bytes, query):
+        # The body is checked before its key is taken, as the API does: a 422 is never kept.
+        try:
+            body = parse_body(body_bytes)
+            if not isinstance(body, dict):
+                raise refuse_422([centry("model_attributes_type", ["body"], "Input should be a valid dictionary or object to extract fields from", body)])
+            entries = []
+            ctype, name = body.get("type"), body.get("name")
+            if ctype is None:
+                entries.append(centry("missing", ["body", "type"], "Field required", body))
+            elif ctype != "face":
+                entries.append(centry("literal_error", ["body", "type"], "Input should be 'face'", ctype, {"expected": "'face'"}))
+            if name is None:
+                entries.append(centry("missing", ["body", "name"], "Field required", body))
+            elif not isinstance(name, str):
+                entries.append(centry("string_type", ["body", "name"], "Input should be a valid string", name))
+            elif string_length(["body", "name"], name, COLLECTION_NAME_MAX):
+                entries.append(string_length(["body", "name"], name, COLLECTION_NAME_MAX))
+            if entries:
+                raise refuse_422(entries)
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
         idem = self.idem_begin(rid, body_bytes)
         if idem is False:
             return
         try:
-            body = parse_body(body_bytes)
-            if not isinstance(body, dict):
-                raise refuse_422([entry("model_attributes_type", ["body"], "Input should be a valid dictionary or object to extract fields from", body)])
-            entries = []
-            ctype, name = body.get("type"), body.get("name")
-            if ctype is None:
-                entries.append(missing(["body", "type"], body))
-            elif ctype != "face":
-                entries.append(entry("literal_error", ["body", "type"], "Input should be 'face'", ctype, {"expected": "'face'"}))
-            if name is None:
-                entries.append(missing(["body", "name"], body))
-            elif not isinstance(name, str):
-                entries.append(entry("string_type", ["body", "name"], "Input should be a valid string", name))
-            elif len(name) < 1:
-                entries.append(entry("string_too_short", ["body", "name"], "String should have at least 1 character", name, {"min_length": 1}))
-            elif len(name) > COLLECTION_NAME_MAX:
-                entries.append(entry("string_too_long", ["body", "name"], "String should have at most %d characters" % COLLECTION_NAME_MAX, name, {"max_length": COLLECTION_NAME_MAX}))
-            elif any(c["name"] == name for c in self.own_collections()):
-                entries.append(entry("name_taken", ["body", "name"], "A collection of this workspace already has this name", name))
-            if entries:
-                raise refuse_422(entries)
+            if any(c["name"] == name for c in self.own_collections()):
+                raise refuse_422([centry("name_taken", ["body", "name"], "A collection with this name already exists in this workspace", name)])
             conf = self.collection_conf()
             if conf.get("region_unavailable"):
                 raise typed_error(403, "collections_region_unavailable", "Collections are not available yet for this workspace's storage location.")
@@ -3512,6 +3543,36 @@ class Handler(BaseHTTPRequestHandler):
         self.send(200, {"id": own["id"], "deleted": True}, {"x-request-id": rid})
 
     def api_item_enroll(self, rid, started, body_bytes, query, cid):
+        # The body is checked before its key is taken and before the collection is looked
+        # up, as the API does: a 422 is never kept.
+        try:
+            body = parse_body(body_bytes)
+            if not isinstance(body, dict):
+                raise refuse_422([centry("model_attributes_type", ["body"], "Input should be a valid dictionary or object to extract fields from", body)])
+            entries = []
+            image, reference, label = body.get("image"), body.get("reference"), body.get("label")
+            if image is None:
+                entries.append(centry("missing", ["body", "image"], "Field required", body))
+            elif isinstance(image, dict) and isinstance(image.get("id"), str) and string_length(["body", "image", "id"], image["id"], MAX_IMAGE_ID_CHARS):
+                entries.append(string_length(["body", "image", "id"], image["id"], MAX_IMAGE_ID_CHARS))
+            if reference is None:
+                entries.append(centry("missing", ["body", "reference"], "Field required", body))
+            elif not isinstance(reference, str):
+                entries.append(centry("string_type", ["body", "reference"], "Input should be a valid string", reference))
+            elif string_length(["body", "reference"], reference, ITEM_REFERENCE_MAX):
+                entries.append(string_length(["body", "reference"], reference, ITEM_REFERENCE_MAX))
+            elif not re.fullmatch(ITEM_REFERENCE_PATTERN, reference):
+                entries.append(centry("string_pattern_mismatch", ["body", "reference"], "String should match pattern '%s'" % ITEM_REFERENCE_PATTERN, reference, {"pattern": ITEM_REFERENCE_PATTERN}))
+            if label is not None:
+                if not isinstance(label, str):
+                    entries.append(centry("string_type", ["body", "label"], "Input should be a valid string", label))
+                elif string_length(["body", "label"], label, ITEM_LABEL_MAX):
+                    entries.append(string_length(["body", "label"], label, ITEM_LABEL_MAX))
+            if entries:
+                raise refuse_422(entries)
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
         idem = self.idem_begin(rid, body_bytes)
         if idem is False:
             return
@@ -3520,31 +3581,9 @@ class Handler(BaseHTTPRequestHandler):
             own, pub = self.find_collection(cid)
             if pub:
                 raise typed_error(403, "collection_read_only", "%s is a public collection and cannot be changed or listed." % cid)
-            body = parse_body(body_bytes)
-            if not isinstance(body, dict):
-                raise refuse_422([entry("model_attributes_type", ["body"], "Input should be a valid dictionary or object to extract fields from", body)])
-            entries = []
-            image, reference, label = body.get("image"), body.get("reference"), body.get("label")
-            if image is None:
-                entries.append(missing(["body", "image"], body))
-            if reference is None:
-                entries.append(missing(["body", "reference"], body))
-            elif not isinstance(reference, str):
-                entries.append(entry("string_type", ["body", "reference"], "Input should be a valid string", reference))
-            elif len(reference) > ITEM_REFERENCE_MAX:
-                entries.append(entry("string_too_long", ["body", "reference"], "String should have at most %d characters" % ITEM_REFERENCE_MAX, reference, {"max_length": ITEM_REFERENCE_MAX}))
-            elif not re.fullmatch(ITEM_REFERENCE_PATTERN, reference):
-                entries.append(entry("string_pattern_mismatch", ["body", "reference"], "String should match pattern '%s'" % ITEM_REFERENCE_PATTERN, reference, {"pattern": ITEM_REFERENCE_PATTERN}))
-            if label is not None:
-                if not isinstance(label, str):
-                    entries.append(entry("string_type", ["body", "label"], "Input should be a valid string", label))
-                elif len(label) > ITEM_LABEL_MAX:
-                    entries.append(entry("string_too_long", ["body", "label"], "String should have at most %d characters" % ITEM_LABEL_MAX, label, {"max_length": ITEM_LABEL_MAX}))
-            if isinstance(image, dict) and isinstance(image.get("id"), str) and len(image["id"]) > MAX_IMAGE_ID_CHARS:
-                entries.append(entry("string_too_long", ["body", "image", "id"], "String should have at most %d characters" % MAX_IMAGE_ID_CHARS, image["id"], {"max_length": MAX_IMAGE_ID_CHARS}))
-            if entries:
-                raise refuse_422(entries)
             conf = self.collection_conf()
+            if conf.get("region_unavailable"):
+                raise typed_error(403, "collections_region_unavailable", "Collections are not available yet for this workspace's storage location.")
             most = int(conf.get("max_items", ITEMS_MAX))
             if sum(len(c["items"]) for c in self.own_collections()) >= most:
                 raise typed_error(409, "items_limit_reached", "This workspace has reached its limit of %d items in its collections." % most)
@@ -3556,12 +3595,12 @@ class Handler(BaseHTTPRequestHandler):
                     raw = None
                 why = "not base64" if raw is None else ("not a JPEG, PNG or WebP image" if sniff(raw) is None else None)
                 if why:
-                    raise refuse_422([entry("image_unreadable", ["body", "image"], "The image could not be read: %s." % why, image.get("id"))])
+                    raise refuse_422([centry("image_unreadable", ["body", "image"], "The image could not be read: %s." % why, image.get("id"))])
             img = validate_images([image], self.resolver(consumed))[0]
             stream = Stream(img["digest"] + "\n" + reference)
             found = int(conf["faces"]) if "faces" in conf else 1 + int(stream.next() * 3)
             if found == 0:
-                raise refuse_422([entry("no_face", ["body", "image"], "No face was found in the image.", img["id"])])
+                raise refuse_422([centry("no_face", ["body", "image"], "No face was found in the image.", img["id"])])
             xs = sorted((stream.next(), stream.next()))
             ys = sorted((stream.next(), stream.next()))
             box = {"x1": int(xs[0] * PLACE_WIDTH), "y1": int(ys[0] * PLACE_HEIGHT), "x2": int(xs[1] * PLACE_WIDTH), "y2": int(ys[1] * PLACE_HEIGHT)}

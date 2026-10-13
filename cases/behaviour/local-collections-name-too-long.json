@@ -1,6 +1,6 @@
 {
   "id": "local-collections-name-too-long",
-  "description": "A collection name of 81 characters: a name is 1 to 80. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "description": "A collection name of 81 characters: a name is 1 to 80. Checked locally (a limit a client may hold): ValidationError with the entry the API answers, its input echoed as the API echoes it (the first 64 characters, then \"...\"); nothing is sent.",
   "client": {
     "api_key": "dn_test_conformance"
   },
@@ -25,7 +25,7 @@
               "name"
             ],
             "msg": "String should have at most 80 characters",
-            "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...",
             "ctx": {
               "max_length": 80
             }

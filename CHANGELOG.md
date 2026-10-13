@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.14 (for SDK specification 1.3)
+
+Collections' `422`s as the API answers them. `SPEC_VERSION` stays `"1.3"`.
+
+- Local checks: an empty reference, or an empty label when one is given, is `string_too_short` (`min_length` 1), the length being checked before the pattern; a too-long name, reference or label echoes its first 64 characters with `...` added in the entry's `input`, as the API does; an entry never echoes an object or an array (null), so a missing image's `input` is null.
+- Mock: a collections POST's body is checked first, so its `422` comes before an `Idempotency-Key`'s `400` or `409` and before an enrollment's `404` or `403`, and never takes the key; then the key, then the collection, the region (an enrollment's `403` `collections_region_unavailable` too) and the limits. Each `422` input is echoed within those bounds; `name_taken` carries the API's message.
+
+Cases: 698 in all (requests 122, responses 104, errors 97, behaviour 373, constants 2): `local-collections-label-empty` new; `local-collections-reference-empty` is `string_too_short`; the three too-long cases echo 64 characters and `...`.
+
 ## 1.13 (for SDK specification 1.3)
 
 Collections and face recognition. `SPEC_VERSION` stays `"1.3"`, unreleased, so the change folds into it.

@@ -1,6 +1,6 @@
 {
   "id": "local-collections-reference-too-long",
-  "description": "A reference of 65 characters. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "description": "A reference of 65 characters. Checked locally (a limit a client may hold): ValidationError with the entry the API answers, its input echoed as the API echoes it (the first 64 characters, then \"...\"); nothing is sent.",
   "client": {
     "api_key": "dn_test_conformance"
   },
@@ -32,7 +32,7 @@
               "reference"
             ],
             "msg": "String should have at most 64 characters",
-            "input": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "input": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee...",
             "ctx": {
               "max_length": 64
             }

@@ -2317,20 +2317,34 @@ def _line(self, req) -> bytes:
 
 COLLECTION_NAME_MAX = 80  # with the item's reference and label below
 ITEM_REFERENCE_MAX, ITEM_LABEL_MAX = 64, 128
-ITEM_REFERENCE_PATTERN = r"^[A-Za-z0-9_.:-]{1,64}$"  # an empty reference fails the pattern
+ITEM_REFERENCE_PATTERN = r"^[A-Za-z0-9_.:-]{1,64}$"  # checked after the length, so an empty one is too short
 
 
-def _string_entries(loc, value, least, most, pattern=None) -> list:
-    """A string field's 422 entry, as the API answers it: missing, not a string, too
-    short, too long, or (with pattern) not matching it."""
+ECHO_CHARS = 64  # a collections 422 echoes a string cut to 64 characters, then "..."
+
+
+def _echoed(value):
+    """An input as a collections 422 entry echoes it, as the API does: a string cut to
+    64 characters with "..." added, an object or an array never (null)."""
+    if isinstance(value, str):
+        return value[:ECHO_CHARS] + ("..." if len(value) > ECHO_CHARS else "")
+    if isinstance(value, (dict, list)):
+        return None
+    return value
+
+
+def _string_entries(loc, value, most, pattern=None) -> list:
+    """A collections string field's 422 entry, as the API answers it: missing, not a
+    string, empty, too long, or (with pattern) not matching it; its input echoed within
+    bounds."""
     if value is None:
-        return [_entry("missing", loc, "Field required", None)] if least else []
+        return [_entry("missing", loc, "Field required", None)]
     if not isinstance(value, str):
-        return [_entry("string_type", loc, "Input should be a valid string", value)]
-    if len(value) < least:
-        return [_entry("string_too_short", loc, "String should have at least %d character%s" % (least, "" if least == 1 else "s"), value, {"min_length": least})]
+        return [_entry("string_type", loc, "Input should be a valid string", _echoed(value))]
+    if not value:
+        return [_entry("string_too_short", loc, "String should have at least 1 character", value, {"min_length": 1})]
     if len(value) > most:
-        return [_entry("string_too_long", loc, "String should have at most %d characters" % most, value, {"max_length": most})]
+        return [_entry("string_too_long", loc, "String should have at most %d characters" % most, _echoed(value), {"max_length": most})]
     if pattern and not re.fullmatch(pattern, value):
         return [_entry("string_pattern_mismatch", loc, "String should match pattern '%s'" % pattern, value, {"pattern": pattern})]
     return []
@@ -2358,8 +2372,8 @@ class Collections:
     def create(self, name, type="face"):  # noqa: A002 - the API's field
         entries = []
         if type != "face":
-            entries.append(_entry("literal_error", ["body", "type"], "Input should be 'face'", type, {"expected": "'face'"}))
-        entries.extend(_string_entries(["body", "name"], name, 1, COLLECTION_NAME_MAX))
+            entries.append(_entry("literal_error", ["body", "type"], "Input should be 'face'", _echoed(type), {"expected": "'face'"}))
+        entries.extend(_string_entries(["body", "name"], name, COLLECTION_NAME_MAX))
         if entries:
             raise local_422(entries)
         return self._call("POST", "/v1/collections", {"type": type, "name": name}, "idempotent", str(uuid.uuid4()))
@@ -2378,14 +2392,11 @@ class Collections:
         bytes inline or uploaded)."""
         entries = []
         if image is None:
-            entries.append(_entry("missing", ["body", "image"], "Field required", {"reference": reference}))
-        if reference is None:
-            entries.append(_entry("missing", ["body", "reference"], "Field required", None))
-        else:
-            entries.extend(_string_entries(["body", "reference"], reference, 0, ITEM_REFERENCE_MAX, ITEM_REFERENCE_PATTERN))
+            entries.append(_entry("missing", ["body", "image"], "Field required", None))
+        entries.extend(_string_entries(["body", "reference"], reference, ITEM_REFERENCE_MAX, ITEM_REFERENCE_PATTERN))
         if label is not None:
             # Its pattern (no control or invisible character) is the server's to judge.
-            entries.extend(_string_entries(["body", "label"], label, 0, ITEM_LABEL_MAX))
+            entries.extend(_string_entries(["body", "label"], label, ITEM_LABEL_MAX))
         if entries:
             raise local_422(entries)
         # Only a URL's rules are a decision's (the 400 image_url_refused); every other fault
