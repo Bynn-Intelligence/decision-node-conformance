@@ -1,0 +1,47 @@
+{
+  "id": "custom-headers",
+  "description": "Headers passed to the client are sent on every request, beside the SDK's own.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "headers": {
+      "x-team": "support-tools"
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance",
+        "x-team": "support-tools"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "id": "upload-id-image-sent-as-is",
+  "description": "Image(id, upload_id) is sent as {id, upload_id} with nothing uploaded; the mock answers the decision from a scenario.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "body": {
+            "model": "decisionnode-moe-0.9.0-rc1",
+            "answers": {
+              "q": {
+                "type": "truth",
+                "truth": 0.5
+              }
+            },
+            "usage": {
+              "input_tokens": 20,
+              "output_tokens": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "upload_id": "upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body_checks": [
+        {
+          "pointer": "/model",
+          "equals": "decisionnode-moe"
+        },
+        {
+          "pointer": "/state",
+          "equals": "s"
+        },
+        {
+          "pointer": "/images/0",
+          "equals": {
+            "id": "receipt",
+            "upload_id": "upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+          }
+        }
+      ]
+    }
+  }
+}

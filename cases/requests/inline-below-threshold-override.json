@@ -1,0 +1,60 @@
+{
+  "id": "inline-below-threshold-override",
+  "description": "The client's inline_threshold set to 634 bytes and one image of 633 bytes: one byte under the threshold, the image goes inline.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "inline_threshold": 634
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "photo",
+            "path": "fixtures/images/pixel.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body_checks": [
+        {
+          "pointer": "/model",
+          "equals": "decisionnode-moe"
+        },
+        {
+          "pointer": "/state",
+          "equals": "s"
+        },
+        {
+          "pointer": "/images/0",
+          "equals": {
+            "id": "photo",
+            "media_type": "image/jpeg",
+            "data": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAACAAIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDgKKKK+eP2E//Z"
+          }
+        }
+      ]
+    }
+  }
+}

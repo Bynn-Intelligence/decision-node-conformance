@@ -1,0 +1,82 @@
+{
+  "id": "ocr-default-timeout-30s",
+  "description": "With no timeout set, a decision whose boosters name ocr waits 30 s per attempt, not the default 10 s: an answer that takes 11 s arrives in one attempt.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "url": "https://files.example.com/receipt.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "total_matches": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      },
+      "boosters": [
+        "ocr"
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "x-decisionnode-boosters": "ocr=ok:2400"
+          },
+          "body": {
+            "model": "decisionnode-moe-0.9.0-rc1",
+            "answers": {
+              "total_matches": {
+                "type": "truth",
+                "truth": 0.97
+              }
+            },
+            "evidence": {
+              "ocr": {
+                "version": "ocr-v1",
+                "status": "ok",
+                "latency_ms": 2400,
+                "billed_calls": 1,
+                "results": [
+                  {
+                    "image": "receipt",
+                    "text": "Total 740.00 SEK",
+                    "truncated": false
+                  }
+                ]
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0,
+              "booster_tokens": 24,
+              "boosters": 1
+            }
+          },
+          "delay_ms": 11000
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}

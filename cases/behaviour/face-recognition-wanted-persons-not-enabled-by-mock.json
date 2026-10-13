@@ -1,0 +1,49 @@
+{
+  "id": "face-recognition-wanted-persons-not-enabled-by-mock",
+  "description": "wanted-persons named where it is not enabled for the workspace: the 403 collection_not_enabled before any model runs, a PermissionDeniedError, not retried.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "face_recognition",
+            "options": {
+              "collection": "wanted-persons"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "collection_not_enabled",
+        "message": "wanted-persons is not enabled for this workspace. Contact hello@bynn.com."
+      }
+    }
+  }
+}

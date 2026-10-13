@@ -1,0 +1,60 @@
+{
+  "id": "box-max-sent",
+  "description": "A box question with max (several places, an integer from 2 to 16) sends max in the question as given, beside its image and units.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "lot",
+            "url": "https://files.example.com/lot/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "cars": {
+          "$box": {
+            "instructions": "Every car in the lot.",
+            "image": "lot",
+            "max": 8
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "",
+        "images": [
+          {
+            "id": "lot",
+            "url": "https://files.example.com/lot/0917.jpg"
+          }
+        ],
+        "questions": {
+          "cars": {
+            "type": "box",
+            "instructions": "Every car in the lot.",
+            "image": "lot",
+            "max": 8
+          }
+        }
+      }
+    }
+  }
+}

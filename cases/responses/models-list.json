@@ -1,0 +1,48 @@
+{
+  "id": "models-list",
+  "description": "models() returns every entry with name, description and release_date; every other field of an entry is a published limit and is kept (as limits, or in the entry's raw form). An entry without limits is valid.",
+  "call": {
+    "method": "models",
+    "args": {}
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a"
+    },
+    "body_text": "{\"models\": [{\"name\": \"decisionnode-moe-0.9.0-rc1\", \"description\": \"DecisionNode MoE, the main model.\", \"release_date\": \"2026-10-01\", \"max_input_tokens\": 32768, \"max_choice_options\": 255, \"max_score_levels\": 10, \"max_images\": 4}, {\"name\": \"decisionnode-flash-0.9.0-rc1\", \"description\": \"DecisionNode Flash, the fast and lower-cost model.\", \"release_date\": \"2026-10-01\", \"max_input_tokens\": 8192, \"max_choice_options\": 255, \"max_score_levels\": 10, \"max_images\": 4}, {\"name\": \"decisionnode-moe\", \"description\": \"The latest DecisionNode model.\", \"release_date\": \"2026-10-01\"}]}"
+  },
+  "expect": {
+    "models": [
+      {
+        "name": "decisionnode-moe-0.9.0-rc1",
+        "description": "DecisionNode MoE, the main model.",
+        "release_date": "2026-10-01",
+        "limits": {
+          "max_input_tokens": 32768,
+          "max_choice_options": 255,
+          "max_score_levels": 10,
+          "max_images": 4
+        }
+      },
+      {
+        "name": "decisionnode-flash-0.9.0-rc1",
+        "description": "DecisionNode Flash, the fast and lower-cost model.",
+        "release_date": "2026-10-01",
+        "limits": {
+          "max_input_tokens": 8192,
+          "max_choice_options": 255,
+          "max_score_levels": 10,
+          "max_images": 4
+        }
+      },
+      {
+        "name": "decisionnode-moe",
+        "description": "The latest DecisionNode model.",
+        "release_date": "2026-10-01",
+        "limits": {}
+      }
+    ]
+  }
+}

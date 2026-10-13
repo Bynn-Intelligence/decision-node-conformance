@@ -1,0 +1,110 @@
+{
+  "id": "decide-boosters-objects",
+  "description": "Booster(name, images, require) is sent as {\"booster\", \"images\", \"require\"}, each argument left out of the wire form when not given.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "age",
+            "images": [
+              "person"
+            ]
+          }
+        },
+        {
+          "$booster": {
+            "name": "ai_generated",
+            "images": [
+              "poster"
+            ],
+            "require": true
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "",
+        "images": [
+          {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          },
+          {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        ],
+        "questions": {
+          "adult": {
+            "type": "truth",
+            "instructions": "Is the person in the first picture an adult?"
+          },
+          "synthetic": {
+            "type": "truth",
+            "instructions": "Is the second picture AI-generated?"
+          }
+        },
+        "boosters": [
+          {
+            "name": "age",
+            "images": [
+              "person"
+            ]
+          },
+          {
+            "name": "ai_generated",
+            "images": [
+              "poster"
+            ],
+            "require": true
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "id": "places-not-supported-by-mock",
+  "description": "While the model version lacks the capability (the scenario's places max_places 0), the mock answers a question with max with the API's 422 not_supported: a ValidationError with that entry, not retried.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "places": {
+        "max_places": 0
+      }
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "lot",
+            "url": "https://files.example.com/lot/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "cars": {
+          "$box": {
+            "instructions": "Every car in the lot.",
+            "max": 8
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": 422,
+        "entries": [
+          {
+            "type": "not_supported",
+            "loc": [
+              "body",
+              "questions",
+              "cars",
+              "box",
+              "max"
+            ],
+            "msg": "Several places are not supported by this model version",
+            "input": 8
+          }
+        ]
+      }
+    }
+  }
+}

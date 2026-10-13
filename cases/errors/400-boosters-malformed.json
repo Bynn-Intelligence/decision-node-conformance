@@ -1,0 +1,89 @@
+{
+  "id": "400-boosters-malformed",
+  "description": "A malformed boosters list (here five entries, over the 4 a request takes) is the API's 400 api_usage_error \"Invalid request.\", a BadRequestError whose reason, from x-decisionnode-error, says what is wrong.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "age",
+        "ai_generated",
+        "age",
+        "ai_generated",
+        "age"
+      ]
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "boosters: at most 4 boosters, got 5"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Invalid request.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "",
+      "images": [
+        {
+          "id": "person",
+          "url": "https://files.example.com/person.jpg"
+        }
+      ],
+      "questions": {
+        "adult": {
+          "type": "truth",
+          "instructions": "Is the person in the first picture an adult?"
+        }
+      },
+      "boosters": [
+        "age",
+        "ai_generated",
+        "age",
+        "ai_generated",
+        "age"
+      ]
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Invalid request.",
+        "reason": "boosters: at most 4 boosters, got 5",
+        "boosters": {},
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

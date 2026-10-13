@@ -1,0 +1,43 @@
+{
+  "id": "state-string-that-looks-like-json",
+  "description": "A string state is sent as a string, never parsed or re-serialised, also when it holds a JSON document.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "{\n  \"already\": \"a JSON document\",\n  \"kept\": true\n}",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is kept true?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "{\n  \"already\": \"a JSON document\",\n  \"kept\": true\n}",
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "Is kept true?"
+          }
+        }
+      }
+    }
+  }
+}

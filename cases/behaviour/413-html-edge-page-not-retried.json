@@ -1,0 +1,48 @@
+{
+  "id": "413-html-edge-page-not-retried",
+  "description": "A 413 HTML page from the edge is never retried, whatever its body: one attempt, then RequestTooLargeError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 413,
+          "headers": {
+            "content-type": "text/html"
+          },
+          "body_text": "<html><body><h1>413 Request Entity Too Large</h1></body></html>",
+          "no_request_id": true
+        },
+        {
+          "action": "normal"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "RequestTooLargeError",
+      "fields": {
+        "status": 413,
+        "error_type": null,
+        "message": "HTTP 413 Content Too Large"
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "retries-exhausted-500",
+  "description": "A 500 every time gives 3 attempts, then ServerError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 500,
+          "headers": {
+            "retry-after-ms": "20"
+          },
+          "body": {
+            "detail": {
+              "error_type": "api_error",
+              "message": "Internal server error."
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "outcome": {
+      "error": "ServerError",
+      "fields": {
+        "status": 500
+      }
+    }
+  }
+}

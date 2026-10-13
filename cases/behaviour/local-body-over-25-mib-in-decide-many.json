@@ -1,0 +1,51 @@
+{
+  "id": "local-body-over-25-mib-in-decide-many",
+  "description": "decide_many where the second request's body is over 25 MiB: every request is checked before any is sent, so the whole call raises RequestTooLargeError and nothing is sent, not even the small first request.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "small",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "?"
+              }
+            }
+          }
+        },
+        {
+          "state": {
+            "$text": {
+              "repeat": "a",
+              "times": 26214336
+            }
+          },
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "RequestTooLargeError",
+      "fields": {
+        "status": null,
+        "error_type": "request_too_large_error",
+        "message": "The request body is over 26,214,400 bytes (25 MiB). Send large images as uploads (POST /v1/uploads) and name them by upload_id.",
+        "request_id": null
+      }
+    }
+  }
+}

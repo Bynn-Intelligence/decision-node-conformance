@@ -1,0 +1,57 @@
+{
+  "id": "422-empty-questions",
+  "description": "An empty question map sent through decide_raw is a 422 from the server. (decide() refuses it before sending.)",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "state": "s",
+        "questions": {}
+      }
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "questions: Dictionary should have at least 1 item after validation, not 0"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"too_short\", \"loc\": [\"body\", \"questions\"], \"msg\": \"Dictionary should have at least 1 item after validation, not 0\", \"input\": {}}]}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "state": "s",
+      "questions": {}
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "entries": [
+          {
+            "type": "too_short",
+            "loc": [
+              "body",
+              "questions"
+            ],
+            "msg": "Dictionary should have at least 1 item after validation, not 0",
+            "input": {}
+          }
+        ]
+      }
+    }
+  }
+}

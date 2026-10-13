@@ -1,0 +1,75 @@
+{
+  "id": "session-frame-upload-error",
+  "description": "A frame whose image names an upload that does not exist: frame error upload_not_found with the API's message; the session continues.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "frame": "a",
+        "image": {
+          "$image": {
+            "id": "frame",
+            "upload_id": "upl_00000000000000000000000000000000"
+          }
+        },
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "session_events": [
+      {
+        "frame_error": {
+          "seq": 1,
+          "error_type": "upload_not_found"
+        }
+      },
+      {
+        "ended": true
+      }
+    ]
+  }
+}

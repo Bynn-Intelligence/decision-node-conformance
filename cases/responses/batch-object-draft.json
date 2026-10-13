@@ -1,0 +1,66 @@
+{
+  "id": "batch-object-draft",
+  "description": "A draft: every field of the batch object, null times, counters, price_factor, usage and error. The SDK's Batch carries every field as sent.",
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "a",
+          "state": "x",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"id\": \"batch_01J9ZB8Q3T\", \"state\": \"draft\", \"counters\": {\"requests\": 3, \"queued\": 0, \"in_progress\": 0, \"completed\": 0, \"failed\": 0, \"expired\": 0, \"cancelled\": 0}, \"created_at\": \"2026-10-06T09:12:04Z\", \"finalized_at\": null, \"expires_at\": null, \"ended_at\": null, \"results_url\": null, \"results_expire_at\": null, \"price_factor\": 0.5, \"usage\": {\"input_tokens\": 0, \"output_tokens\": 0}, \"error\": null}"
+  },
+  "expect": {
+    "batch": {
+      "id": "batch_01J9ZB8Q3T",
+      "state": "draft",
+      "counters": {
+        "requests": 3,
+        "queued": 0,
+        "in_progress": 0,
+        "completed": 0,
+        "failed": 0,
+        "expired": 0,
+        "cancelled": 0
+      },
+      "created_at": "2026-10-06T09:12:04Z",
+      "finalized_at": null,
+      "expires_at": null,
+      "ended_at": null,
+      "results_url": null,
+      "results_expire_at": null,
+      "price_factor": 0.5,
+      "usage": {
+        "input_tokens": 0,
+        "output_tokens": 0
+      },
+      "error": null
+    }
+  }
+}

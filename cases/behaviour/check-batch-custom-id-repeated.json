@@ -1,0 +1,48 @@
+{
+  "id": "check-batch-custom-id-repeated",
+  "description": "check_request on a batches.add request whose two lines share a custom_id raises what add raises: BadRequestError, api_usage_error and the documented message. The batch_id is not needed to check. check_request runs the checks the call would run and sends nothing.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "batches.add",
+    "args": {
+      "batch_id": "batch_00000000000000000000000000",
+      "requests": [
+        {
+          "custom_id": "a",
+          "state": "s",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        },
+        {
+          "custom_id": "a",
+          "state": "t",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error",
+        "message": "Line 2: custom_id \"a\" is already in the batch."
+      }
+    }
+  }
+}

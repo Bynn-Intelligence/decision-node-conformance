@@ -1,0 +1,40 @@
+{
+  "id": "418-unmapped-status",
+  "description": "A status with no row of its own (418), with a body that is not JSON, is the base DecisionNodeError carrying that status. Its body is not JSON, so the message is the client's own description: a status outside the status-text table is written \"HTTP 418\", then the request id.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 418,
+    "headers": {
+      "content-type": "text/plain",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "I'm a teapot"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 418,
+        "error_type": null,
+        "request_id": "req_err_0001",
+        "message": "HTTP 418 (request id req_err_0001)"
+      }
+    }
+  }
+}

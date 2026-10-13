@@ -1,0 +1,144 @@
+{
+  "id": "run-batch-end-to-end",
+  "description": "run_batch(requests, poll_interval=10): create an empty draft, add the lines, finalize, get every poll_interval until the batch ends (the waits recorded, not waited), then read the results.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "run_batch",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "t1",
+          "state": "I was charged twice.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        },
+        {
+          "custom_id": "t2",
+          "state": "The app crashes.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        },
+        {
+          "custom_id": "t3",
+          "state": "Login fails.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ],
+      "poll_interval": 10
+    }
+  },
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/batches",
+        "status": 201,
+        "jsonl_count": 0
+      },
+      {
+        "method": "POST",
+        "path_pattern": "/requests$",
+        "status": 200,
+        "jsonl_count": 3
+      },
+      {
+        "method": "POST",
+        "path_pattern": "/finalize$",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/batches/batch_[0-9A-Z]{10}$",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/batches/batch_[0-9A-Z]{10}$",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "/results$",
+        "status": 200
+      }
+    ],
+    "scheduled_waits_ms": [
+      {
+        "min": 10000,
+        "max": 10000
+      },
+      {
+        "min": 10000,
+        "max": 10000
+      }
+    ],
+    "outcome": {
+      "result": "batch_run",
+      "batch": {
+        "state": "completed",
+        "counters": {
+          "completed": 3
+        }
+      },
+      "batch_results": [
+        {
+          "custom_id": "t1",
+          "status": 200
+        },
+        {
+          "custom_id": "t2",
+          "status": 200
+        },
+        {
+          "custom_id": "t3",
+          "status": 200
+        }
+      ]
+    }
+  }
+}

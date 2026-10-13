@@ -1,0 +1,51 @@
+{
+  "id": "redirect-307-not-followed",
+  "description": "A 307 is never followed, not even to the same host: one request, a DecisionNodeError with status 307, nothing requested at the Location and no retry.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 307,
+          "headers": {
+            "location": "/v1/redirected-307"
+          },
+          "body": {
+            "detail": {
+              "error_type": "redirect",
+              "message": "Moved."
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "DecisionNodeError",
+      "fields": {
+        "status": 307
+      }
+    },
+    "unrequested_paths": [
+      "/v1/redirected-307"
+    ]
+  }
+}

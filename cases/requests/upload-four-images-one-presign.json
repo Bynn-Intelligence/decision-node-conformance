@@ -1,0 +1,246 @@
+{
+  "id": "upload-four-images-one-presign",
+  "description": "Four images of 150,000 to 160,000 bytes: each is under the threshold, but the request's local images total 610,000 bytes, so all four are uploaded through one presign of four files, four PUTs, then the decision.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 150000
+          }
+        },
+        {
+          "$image": {
+            "id": "b",
+            "path": "fixtures/images/pixel.jpg",
+            "pad_to": 150000
+          }
+        },
+        {
+          "$image": {
+            "id": "c",
+            "path": "fixtures/images/pixel.webp",
+            "pad_to": 150000
+          }
+        },
+        {
+          "$image": {
+            "id": "d",
+            "path": "fixtures/images/pixel.jpg",
+            "pad_to": 160000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body": {
+          "files": [
+            {
+              "content_type": "image/png",
+              "byte_size": 150000,
+              "checksum": "jt62eJj2NnTRpWLvJflUiA==",
+              "sha256": "TaE1n4FFdnoDFmTdBcGdcxsmwDRZd2Y8KsKwnPnC84k="
+            },
+            {
+              "content_type": "image/jpeg",
+              "byte_size": 150000,
+              "checksum": "aZpYmNu6OovRg+ySTL7MHw==",
+              "sha256": "4EgWt+RplnFjtQnPHc3fggDy7Ct0ZVYZNVPdUzj/cKM="
+            },
+            {
+              "content_type": "image/webp",
+              "byte_size": 150000,
+              "checksum": "yW87t2q7lldnlgmCzFxqfQ==",
+              "sha256": "trB4vv2sRCENT5sJ7Ze78OF7pjPKfB57+ZZAFlvYbPI="
+            },
+            {
+              "content_type": "image/jpeg",
+              "byte_size": 160000,
+              "checksum": "9Djzz635zCYh5SvWb9fI2Q==",
+              "sha256": "54eaib9Y4WAzr52Kf/ZUlDe12g3vYE24nBNytLnyMNU="
+            }
+          ]
+        }
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "jt62eJj2NnTRpWLvJflUiA==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "TaE1n4FFdnoDFmTdBcGdcxsmwDRZd2Y8KsKwnPnC84k="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "4da1359f8145767a031664dd05c19d731b26c0345977663c2ac2b09cf9c2f389",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/jpeg",
+          "content-md5": "aZpYmNu6OovRg+ySTL7MHw==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "4EgWt+RplnFjtQnPHc3fggDy7Ct0ZVYZNVPdUzj/cKM="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "e04816b7e469967163b509cf1dcddf8200f2ec2b746556193553dd5338ff70a3",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/webp",
+          "content-md5": "yW87t2q7lldnlgmCzFxqfQ==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "trB4vv2sRCENT5sJ7Ze78OF7pjPKfB57+ZZAFlvYbPI="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "b6b078befdac44210d4f9b09ed97bbf0e17ba633ca7c1e7bf99640165bd86cf2",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/jpeg",
+          "content-md5": "9Djzz635zCYh5SvWb9fI2Q==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "54eaib9Y4WAzr52Kf/ZUlDe12g3vYE24nBNytLnyMNU="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "e7879a89bf58e16033af9d8a7ff6549437b5da0def604db89c1372b4b9f230d5",
+        "parallel": true
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body_checks": [
+          {
+            "pointer": "/model",
+            "equals": "decisionnode-moe"
+          },
+          {
+            "pointer": "/state",
+            "equals": "s"
+          },
+          {
+            "pointer": "/images/0/id",
+            "equals": "a"
+          },
+          {
+            "pointer": "/images/0/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/0/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/0/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/1/id",
+            "equals": "b"
+          },
+          {
+            "pointer": "/images/1/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/1/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/1/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/2/id",
+            "equals": "c"
+          },
+          {
+            "pointer": "/images/2/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/2/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/2/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/3/id",
+            "equals": "d"
+          },
+          {
+            "pointer": "/images/3/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/3/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/3/url",
+            "absent": true
+          }
+        ]
+      }
+    ]
+  }
+}

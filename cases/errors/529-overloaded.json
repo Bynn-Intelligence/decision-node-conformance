@@ -1,0 +1,43 @@
+{
+  "id": "529-overloaded",
+  "description": "A 529 is an OverloadedError, with retry_after from retry-after-ms.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 529,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "retry-after": "1",
+      "retry-after-ms": "250"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"overloaded_error\", \"message\": \"The service is overloaded. Try again shortly.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "OverloadedError",
+      "fields": {
+        "status": 529,
+        "error_type": "overloaded_error",
+        "message": "The service is overloaded. Try again shortly.",
+        "request_id": "req_err_0001",
+        "retry_after": 0.25
+      }
+    }
+  }
+}

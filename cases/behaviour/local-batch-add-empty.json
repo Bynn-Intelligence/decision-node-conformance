@@ -1,0 +1,46 @@
+{
+  "id": "local-batch-add-empty",
+  "description": "batches.add with no requests: an add holds at least one, the API's 400 api_usage_error \"The call holds no requests.\" raised locally; only the create reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": []
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.add",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          },
+          "requests": []
+        }
+      },
+      "outcome": {
+        "error": "BadRequestError",
+        "fields": {
+          "error_type": "api_usage_error",
+          "message": "The call holds no requests."
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/batches",
+        "status": 201
+      }
+    ]
+  }
+}

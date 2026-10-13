@@ -1,0 +1,82 @@
+{
+  "id": "upload-media-type-mismatch-not-reuploaded",
+  "description": "Image(id, upload_id, media_type) whose media type differs from the upload's: 400 upload_media_type_mismatch is raised as BadRequestError and nothing is resent (it is not a stale reference).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "upload",
+        "args": {
+          "images": [
+            {
+              "$image": {
+                "id": "receipt",
+                "path": "fixtures/images/pixel.png"
+              }
+            }
+          ]
+        }
+      },
+      "save_as": "ids",
+      "outcome": {
+        "result": "upload_ids",
+        "count": 1
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": "s",
+          "images": [
+            {
+              "$image": {
+                "id": "receipt",
+                "upload_id": {
+                  "$ref": "ids.0"
+                },
+                "media_type": "image/jpeg"
+              }
+            }
+          ],
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "error": "BadRequestError",
+        "fields": {
+          "status": 400,
+          "error_type": "upload_media_type_mismatch"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 400
+      }
+    ]
+  }
+}

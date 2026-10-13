@@ -1,0 +1,44 @@
+{
+  "id": "collections-delete-sent",
+  "description": "collections.delete sends DELETE /v1/collections/{id}. (The mock answers this case from its scenario.) A read or a delete carries no Idempotency-Key.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.delete",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+            "deleted": true
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "DELETE",
+      "path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      },
+      "absent_headers": [
+        "idempotency-key"
+      ]
+    }
+  }
+}

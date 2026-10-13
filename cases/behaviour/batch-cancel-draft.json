@@ -1,0 +1,81 @@
+{
+  "id": "batch-cancel-draft",
+  "description": "Cancelling a draft ends it cancelled at once with results_url set; its lines are cancelled.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": [
+            {
+              "custom_id": "t1",
+              "state": "I was charged twice.",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.cancel",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "state": "cancelled",
+          "counters": {
+            "cancelled": 1
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.results",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch_results",
+        "batch_results": [
+          {
+            "custom_id": "t1",
+            "status": "cancelled",
+            "headers": {}
+          }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 3
+  }
+}

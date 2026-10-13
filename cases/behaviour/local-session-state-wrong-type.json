@@ -1,0 +1,61 @@
+{
+  "id": "local-session-state-wrong-type",
+  "description": "open_session with a state that is a number: a state is a string, an object or an array, the API's three 422 entries. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "state": 42,
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "string_type",
+            "loc": [
+              "body",
+              "state",
+              "str"
+            ],
+            "msg": "Input should be a valid string",
+            "input": 42
+          },
+          {
+            "type": "dict_type",
+            "loc": [
+              "body",
+              "state",
+              "dict[any,any]"
+            ],
+            "msg": "Input should be a valid dictionary",
+            "input": 42
+          },
+          {
+            "type": "list_type",
+            "loc": [
+              "body",
+              "state",
+              "list[any]"
+            ],
+            "msg": "Input should be a valid list",
+            "input": 42
+          }
+        ]
+      }
+    }
+  }
+}

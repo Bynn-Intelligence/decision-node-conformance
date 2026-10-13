@@ -1,0 +1,26 @@
+{
+  "id": "collections-list-sent",
+  "description": "collections.list sends GET /v1/collections with no body. A read or a delete carries no Idempotency-Key.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.list",
+    "args": {}
+  },
+  "expect": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/collections",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      },
+      "absent_headers": [
+        "idempotency-key"
+      ]
+    }
+  }
+}

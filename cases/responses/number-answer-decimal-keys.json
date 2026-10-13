@@ -1,0 +1,46 @@
+{
+  "id": "number-answer-decimal-keys",
+  "description": "A grid in halves: keys such as \"3.5\" stay the server's strings, never re-formatted; number 3.5, expected to the grid's decimals.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "r": {
+          "$number": {
+            "instructions": "Rating?",
+            "min": 0,
+            "max": 5,
+            "step": 0.5
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"r\": {\"type\": \"number\", \"number\": 3.5, \"expected\": 3.42, \"confidence\": 0.61, \"probabilities\": {\"2.5\": 0.04, \"3\": 0.21, \"3.5\": 0.612, \"4\": 0.13}}}, \"usage\": {\"input_tokens\": 90, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "r": {
+          "kind": "number",
+          "number": 3.5,
+          "expected": 3.42,
+          "confidence": 0.61,
+          "probabilities": {
+            "2.5": 0.04,
+            "3": 0.21,
+            "3.5": 0.612,
+            "4": 0.13
+          }
+        }
+      }
+    }
+  }
+}

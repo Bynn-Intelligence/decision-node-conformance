@@ -1,0 +1,61 @@
+{
+  "id": "400-unknown-model",
+  "description": "An unknown model id is a BadRequestError with error_type api_usage_error.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      },
+      "model": "decisionnode-0.1"
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "unknown model 'decisionnode-0.1'; GET /v1/models lists the models"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Unknown model: decisionnode-0.1\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-0.1",
+      "state": "s",
+      "questions": {
+        "q": {
+          "type": "truth",
+          "instructions": "?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Unknown model: decisionnode-0.1",
+        "request_id": "req_err_0001",
+        "reason": "unknown model 'decisionnode-0.1'; GET /v1/models lists the models"
+      }
+    }
+  }
+}

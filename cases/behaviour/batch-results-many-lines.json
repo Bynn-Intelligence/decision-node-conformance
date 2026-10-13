@@ -1,0 +1,176 @@
+{
+  "id": "batch-results-many-lines",
+  "description": "Results of 1,200 lines, more than a JSON page holds (1,000): batches.results reads the whole JSON Lines file line by line and yields every result in upload order.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": {
+            "$list": {
+              "count": 1200,
+              "item": {
+                "custom_id": "r{i}",
+                "state": "item {i}",
+                "questions": {
+                  "q": {
+                    "$truth": {
+                      "instructions": "Does the receipt total equal the claim?"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.finalize",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.get",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.get",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "state": "completed"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.results",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch_results",
+        "count": 1200,
+        "batch_results_sample": [
+          {
+            "index": 0,
+            "custom_id": "r0",
+            "status": 200,
+            "decision": {
+              "answers": {
+                "q": {
+                  "kind": "truth"
+                }
+              }
+            }
+          },
+          {
+            "index": 1,
+            "custom_id": "r1",
+            "status": 200,
+            "decision": {
+              "answers": {
+                "q": {
+                  "kind": "truth"
+                }
+              }
+            }
+          },
+          {
+            "index": 999,
+            "custom_id": "r999",
+            "status": 200,
+            "decision": {
+              "answers": {
+                "q": {
+                  "kind": "truth"
+                }
+              }
+            }
+          },
+          {
+            "index": 1000,
+            "custom_id": "r1000",
+            "status": 200,
+            "decision": {
+              "answers": {
+                "q": {
+                  "kind": "truth"
+                }
+              }
+            }
+          },
+          {
+            "index": 1199,
+            "custom_id": "r1199",
+            "status": 200,
+            "decision": {
+              "answers": {
+                "q": {
+                  "kind": "truth"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 5,
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/batches",
+        "status": 201,
+        "jsonl_count": 1200
+      },
+      {
+        "method": "POST",
+        "path_pattern": "^/v1/batches/[^/]+/finalize$",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/batches/[^/]+$",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/batches/[^/]+$",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/batches/[^/]+/results$",
+        "status": 200
+      }
+    ]
+  }
+}

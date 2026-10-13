@@ -1,0 +1,85 @@
+{
+  "id": "run-batch-cancels-draft-when-add-fails",
+  "description": "If an add fails, run_batch cancels the draft and raises the add's error.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path_suffix": "/requests"
+          },
+          "steps": [
+            {
+              "status": 400,
+              "body": {
+                "detail": {
+                  "error_type": "api_usage_error",
+                  "message": "Line 1: custom_id \"t1\" is already in the batch."
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "run_batch",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "t1",
+          "state": "I was charged twice.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ],
+      "poll_interval": 10
+    }
+  },
+  "expect": {
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error"
+      }
+    },
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/batches",
+        "status": 201
+      },
+      {
+        "method": "POST",
+        "path_pattern": "/requests$",
+        "status": 400
+      },
+      {
+        "method": "POST",
+        "path_pattern": "/cancel$",
+        "status": 200
+      }
+    ]
+  }
+}

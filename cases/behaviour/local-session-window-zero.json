@@ -1,0 +1,43 @@
+{
+  "id": "local-session-window-zero",
+  "description": "open_session with window 0: window is 1 to 64, the API's 422 entry. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      },
+      "window": 0
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "greater_than_equal",
+            "loc": [
+              "body",
+              "window"
+            ],
+            "msg": "Input should be greater than or equal to 1",
+            "input": 0,
+            "ctx": {
+              "ge": 1
+            }
+          }
+        ]
+      }
+    }
+  }
+}

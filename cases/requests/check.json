@@ -1,0 +1,37 @@
+{
+  "id": "check",
+  "description": "check(state, instructions) sends one truth question under the id \"check\".",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "check",
+    "args": {
+      "state": "Customer: refund me.",
+      "instructions": "Is the customer asking for a refund?"
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "Customer: refund me.",
+        "questions": {
+          "check": {
+            "type": "truth",
+            "instructions": "Is the customer asking for a refund?"
+          }
+        }
+      }
+    }
+  }
+}

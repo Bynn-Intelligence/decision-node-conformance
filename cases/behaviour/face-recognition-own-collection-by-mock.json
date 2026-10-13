@@ -1,0 +1,109 @@
+{
+  "id": "face-recognition-own-collection-by-mock",
+  "description": "Against the mock: a face enrolled in the workspace's own collection, then face_recognition with that collection; the reading's close match names the collection, the item's reference and its label. A collection's id in the mock follows from the workspace and the name.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Staff"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.enroll",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "image": {
+            "$image": {
+              "id": "badge",
+              "url": "https://files.example.com/badges/emp-1042.jpg"
+            }
+          },
+          "reference": "emp-1042",
+          "label": "Reception"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": "",
+          "images": [
+            {
+              "$image": {
+                "id": "gate",
+                "url": "https://files.example.com/gate-2/0917.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "someone_at_gate": {
+              "$truth": {
+                "instructions": "Is someone standing at the gate?"
+              }
+            }
+          },
+          "boosters": [
+            {
+              "$booster": {
+                "name": "face_recognition",
+                "options": {
+                  "collection": {
+                    "$ref": "col.id"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "outcome": {
+        "result": "decision",
+        "decision": {
+          "evidence": {
+            "face_recognition": {
+              "version": "face_recognition-v1",
+              "status": "ok",
+              "latency_ms": 230,
+              "billed_calls": 1,
+              "results": [
+                {
+                  "kind": "face_recognition",
+                  "image": "gate",
+                  "faces": 1,
+                  "matches": [
+                    {
+                      "box": {
+                        "x1": 201,
+                        "y1": 192,
+                        "x2": 1715,
+                        "y2": 715
+                      },
+                      "score": 0.7386,
+                      "collection": "col_4da4fa2511b3c8fe3a620c8c948ea430",
+                      "reference": "emp-1042",
+                      "name": null,
+                      "label": "Reception"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 3
+  }
+}

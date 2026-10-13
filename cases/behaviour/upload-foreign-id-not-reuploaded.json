@@ -1,0 +1,41 @@
+{
+  "id": "upload-foreign-id-not-reuploaded",
+  "description": "Image(id, upload_id) with an id the SDK did not place: its 400 upload_not_found is raised as BadRequestError with the server's fields; nothing is uploaded and nothing is resent.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "upload_id": "upl_00000000000000000000000000000000"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "upload_not_found",
+        "message": "Image 'receipt': upload upl_00000000000000000000000000000000 was not found.",
+        "reason": "Image 'receipt': upload upl_00000000000000000000000000000000 was not found."
+      }
+    }
+  }
+}

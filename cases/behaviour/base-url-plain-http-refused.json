@@ -1,0 +1,27 @@
+{
+  "id": "base-url-plain-http-refused",
+  "description": "A base URL with plain http to a host other than localhost, 127.0.0.1 or ::1 is an argument error, raised by the constructor or the call before any request, so a key never travels unencrypted. The host does not resolve, so nothing could leave the machine even if a client tried.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "base_url": "http://decisions.example.invalid"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "argument_error": true
+    }
+  }
+}

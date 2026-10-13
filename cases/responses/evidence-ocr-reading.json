@@ -1,0 +1,74 @@
+{
+  "id": "evidence-ocr-reading",
+  "description": "An ocr reading is the text the picture shows, in reading order, and truncated, both always sent: an OcrReading with image, text and truncated. A picture that shows no text reads the empty string, a reading, not a failure.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "claim": {
+          "total": "740.00",
+          "currency": "SEK"
+        }
+      },
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "url": "https://files.example.com/receipt.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "blank",
+            "url": "https://files.example.com/blank.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "total_matches": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      },
+      "boosters": [
+        "ocr"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "ocr=ok:420"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"total_matches\": {\"type\": \"truth\", \"truth\": 0.93}}, \"evidence\": {\"ocr\": {\"version\": \"ocr-v1\", \"status\": \"ok\", \"latency_ms\": 420, \"billed_calls\": 2, \"results\": [{\"image\": \"receipt\", \"text\": \"Nordic Rail\\nTotal 740.00 SEK\\n2026-09-28\", \"truncated\": false}, {\"image\": \"blank\", \"text\": \"\", \"truncated\": false}]}}, \"usage\": {\"input_tokens\": 260, \"output_tokens\": 0, \"booster_tokens\": 40, \"boosters\": 2}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "ocr": {
+          "version": "ocr-v1",
+          "status": "ok",
+          "latency_ms": 420,
+          "billed_calls": 2,
+          "results": [
+            {
+              "kind": "ocr",
+              "image": "receipt",
+              "text": "Nordic Rail\nTotal 740.00 SEK\n2026-09-28",
+              "truncated": false
+            },
+            {
+              "kind": "ocr",
+              "image": "blank",
+              "text": "",
+              "truncated": false
+            }
+          ]
+        }
+      }
+    }
+  }
+}

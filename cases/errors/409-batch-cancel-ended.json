@@ -1,0 +1,33 @@
+{
+  "id": "409-batch-cancel-ended",
+  "description": "batches.cancel answered 409 invalid_batch_state: DecisionNodeError with status and error_type (batch errors use the classes a status gives; 409 and 410 have none, so the base class).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "batches.cancel",
+    "args": {
+      "batch_id": "batch_01J9ZB8Q3T"
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Batch batch_01J9ZB8Q3T has already ended completed."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"invalid_batch_state\", \"message\": \"Batch batch_01J9ZB8Q3T has already ended completed.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "invalid_batch_state",
+        "message": "Batch batch_01J9ZB8Q3T has already ended completed."
+      }
+    }
+  }
+}

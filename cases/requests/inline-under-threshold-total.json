@@ -1,0 +1,91 @@
+{
+  "id": "inline-under-threshold-total",
+  "description": "Two images of 200,000 bytes each total 400,000 bytes, under the 524,288-byte threshold: both go inline as base64 {id, media_type, data} in the one decision request, and nothing is uploaded.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 200000
+          }
+        },
+        {
+          "$image": {
+            "id": "b",
+            "path": "fixtures/images/pixel.jpg",
+            "pad_to": 200000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body_checks": [
+        {
+          "pointer": "/model",
+          "equals": "decisionnode-moe"
+        },
+        {
+          "pointer": "/state",
+          "equals": "s"
+        },
+        {
+          "pointer": "/images/0/id",
+          "equals": "a"
+        },
+        {
+          "pointer": "/images/0/media_type",
+          "equals": "image/png"
+        },
+        {
+          "pointer": "/images/0/data",
+          "type": "string"
+        },
+        {
+          "pointer": "/images/0/upload_id",
+          "absent": true
+        },
+        {
+          "pointer": "/images/1/id",
+          "equals": "b"
+        },
+        {
+          "pointer": "/images/1/media_type",
+          "equals": "image/jpeg"
+        },
+        {
+          "pointer": "/images/1/data",
+          "type": "string"
+        },
+        {
+          "pointer": "/images/1/upload_id",
+          "absent": true
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "id": "decide-three-question-types",
+  "description": "decide() with one question of each type built by the builders. The model defaults to decisionnode-moe.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "ticket": "I was charged twice and nobody has replied for 3 days."
+      },
+      "questions": {
+        "route": {
+          "$choice": {
+            "instructions": "Where should this go?",
+            "options": {
+              "billing": "money",
+              "bug": "broken",
+              "account": "login"
+            }
+          }
+        },
+        "urgency": {
+          "$score": {
+            "instructions": "How urgent is this?",
+            "levels": [
+              "routine",
+              "today",
+              "urgent",
+              "critical"
+            ]
+          }
+        },
+        "escalate": {
+          "$truth": {
+            "instructions": "Escalate to a human now?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": {
+          "ticket": "I was charged twice and nobody has replied for 3 days."
+        },
+        "questions": {
+          "route": {
+            "type": "choice",
+            "instructions": "Where should this go?",
+            "criteria": {
+              "billing": "money",
+              "bug": "broken",
+              "account": "login"
+            }
+          },
+          "urgency": {
+            "type": "score",
+            "instructions": "How urgent is this?",
+            "criteria": [
+              "routine",
+              "today",
+              "urgent",
+              "critical"
+            ]
+          },
+          "escalate": {
+            "type": "truth",
+            "instructions": "Escalate to a human now?"
+          }
+        }
+      },
+      "ordered_keys": [
+        "/questions"
+      ]
+    }
+  }
+}

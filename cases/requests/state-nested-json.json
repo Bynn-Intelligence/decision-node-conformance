@@ -1,0 +1,79 @@
+{
+  "id": "state-nested-json",
+  "description": "A structured state is sent as JSON: nested objects, arrays, booleans, nulls, empty values and non-ASCII text, unchanged.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "claim": {
+          "merchant": "Nordic Rail",
+          "total": "740.00",
+          "lines": [
+            {
+              "n": 1,
+              "ok": true
+            },
+            {
+              "n": 2,
+              "ok": null
+            }
+          ],
+          "note": ""
+        },
+        "tags": [],
+        "unicode": "Grüße, 東京"
+      },
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is the claim complete?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": {
+          "claim": {
+            "merchant": "Nordic Rail",
+            "total": "740.00",
+            "lines": [
+              {
+                "n": 1,
+                "ok": true
+              },
+              {
+                "n": 2,
+                "ok": null
+              }
+            ],
+            "note": ""
+          },
+          "tags": [],
+          "unicode": "Grüße, 東京"
+        },
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "Is the claim complete?"
+          }
+        }
+      }
+    }
+  }
+}

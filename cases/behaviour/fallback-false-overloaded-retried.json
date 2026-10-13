@@ -1,0 +1,46 @@
+{
+  "id": "fallback-false-overloaded-retried",
+  "description": "The same request with fallback=False: the API answers the 529 overloaded_error with Retry-After and retry-after-ms instead of a Flash answer. It is retried as every 529 (3 attempts), then raised as an OverloadedError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "I was charged twice.",
+      "questions": {
+        "route": {
+          "$choice": {
+            "instructions": "Where should this go?",
+            "options": [
+              "billing",
+              "bug"
+            ]
+          }
+        }
+      },
+      "model": "decisionnode-moe",
+      "fallback": false
+    }
+  },
+  "mock": {
+    "scenario": {
+      "workers": {
+        "cold": [
+          "decisionnode-moe"
+        ]
+      }
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "outcome": {
+      "error": "OverloadedError",
+      "fields": {
+        "status": 529,
+        "error_type": "overloaded_error",
+        "retry_after": 0.05
+      }
+    }
+  }
+}

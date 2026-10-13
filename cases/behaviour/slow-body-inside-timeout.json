@@ -1,0 +1,47 @@
+{
+  "id": "slow-body-inside-timeout",
+  "description": "A body sent in 4 pieces 100 ms apart, with a 3 s timeout, is read whole: one attempt, a decision.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "timeout": 3,
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "action": "normal",
+          "trickle": {
+            "chunks": 4,
+            "interval_ms": 100
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": {
+          "$pattern": "^decisionnode-moe-"
+        }
+      }
+    }
+  }
+}

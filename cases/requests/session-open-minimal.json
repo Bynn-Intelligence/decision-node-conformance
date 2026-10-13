@@ -1,0 +1,38 @@
+{
+  "id": "session-open-minimal",
+  "description": "open_session with questions only: the body holds model and questions; instructions, state, window and ttl_seconds are left out so the server's defaults apply.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "model": "decisionnode-flash"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/sessions",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "body": {
+        "model": "decisionnode-flash",
+        "questions": {
+          "abort": {
+            "type": "truth",
+            "instructions": "Abort?"
+          }
+        }
+      }
+    }
+  }
+}

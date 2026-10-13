@@ -1,0 +1,105 @@
+{
+  "id": "batch-expired-by-clock",
+  "description": "Lines unfinished 24 hours after finalize expire: the mock's clock moves 25 hours, and the next get shows the batch expired with its lines in counters.expired; their result lines have the status \"expired\".",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "batch": {
+        "polls_to_running": 5,
+        "polls_to_end": 9
+      }
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": [
+            {
+              "custom_id": "t1",
+              "state": "I was charged twice.",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.finalize",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      }
+    },
+    {
+      "mock_clock": {
+        "advance_seconds": 90000
+      }
+    },
+    {
+      "call": {
+        "method": "batches.get",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "state": "expired",
+          "counters": {
+            "expired": 1
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.results",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch_results",
+        "batch_results": [
+          {
+            "custom_id": "t1",
+            "status": "expired",
+            "headers": {},
+            "no_decision": true
+          }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 4
+  }
+}

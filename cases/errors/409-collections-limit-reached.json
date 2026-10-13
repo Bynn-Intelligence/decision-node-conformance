@@ -1,0 +1,32 @@
+{
+  "id": "409-collections-limit-reached",
+  "description": "A new collection past the workspace's limit (100 by default) is the 409 collections_limit_reached: the base DecisionNodeError with that status and error_type, as every 409.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.create",
+    "args": {
+      "name": "Staff"
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"collections_limit_reached\", \"message\": \"This workspace has reached its limit of 100 collections.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "collections_limit_reached",
+        "message": "This workspace has reached its limit of 100 collections."
+      }
+    }
+  }
+}

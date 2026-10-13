@@ -1,0 +1,88 @@
+{
+  "id": "session-open-response",
+  "description": "The open response: the Session carries every field (session_id, model, stream_url, window, ttl_seconds, expires_at, limits, questions, prefix_tokens, usage, safety) and its answers typed as decide's.",
+  "call": {
+    "method": "open_session",
+    "args": {
+      "state": {
+        "mission": "Survey the north field"
+      },
+      "questions": {
+        "mode": {
+          "$choice": {
+            "instructions": "Which flight mode now?",
+            "options": {
+              "continue": "keep flying",
+              "hold": "hover",
+              "return": "fly home",
+              "land": "land now"
+            }
+          }
+        },
+        "abort": {
+          "$truth": {
+            "instructions": "Should the mission be aborted now?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-billable-tokens": "164"
+    },
+    "body_text": "{\"session_id\": \"ses_3f9a1c07b2e84d5f6a0c9e12\", \"model\": \"decisionnode-moe-0.9.0-rc1\", \"stream_url\": \"ws://127.0.0.1:1/v1/sessions/ses_3f9a1c07b2e84d5f6a0c9e12/stream\", \"window\": 8, \"ttl_seconds\": 300, \"expires_at\": \"2026-10-06T09:35:00Z\", \"limits\": {\"max_frame_tokens\": 1535, \"max_frame_images\": 1, \"window_tokens\": 1536, \"idle_timeout_seconds\": 120}, \"questions\": [\"mode\", \"abort\"], \"prefix_tokens\": 52, \"usage\": {\"input_tokens\": 164, \"output_tokens\": 0}, \"answers\": {\"mode\": {\"type\": \"choice\", \"choice\": \"continue\", \"confidence\": 0.84, \"probabilities\": {\"continue\": 0.88, \"hold\": 0.06, \"land\": 0.01, \"return\": 0.05}}, \"abort\": {\"type\": \"truth\", \"truth\": 0.03}}, \"safety\": {\"checked\": true, \"harm\": 0.0018, \"self_harm\": 0.0007, \"flagged\": []}}"
+  },
+  "expect": {
+    "session": {
+      "session_id": "ses_3f9a1c07b2e84d5f6a0c9e12",
+      "model": "decisionnode-moe-0.9.0-rc1",
+      "stream_url": "ws://127.0.0.1:1/v1/sessions/ses_3f9a1c07b2e84d5f6a0c9e12/stream",
+      "window": 8,
+      "ttl_seconds": 300,
+      "expires_at": "2026-10-06T09:35:00Z",
+      "limits": {
+        "max_frame_tokens": 1535,
+        "max_frame_images": 1,
+        "window_tokens": 1536,
+        "idle_timeout_seconds": 120
+      },
+      "questions": [
+        "mode",
+        "abort"
+      ],
+      "prefix_tokens": 52,
+      "usage": {
+        "input_tokens": 164,
+        "output_tokens": 0
+      },
+      "answers": {
+        "mode": {
+          "kind": "choice",
+          "choice": "continue",
+          "confidence": 0.84,
+          "probabilities": {
+            "continue": 0.88,
+            "hold": 0.06,
+            "land": 0.01,
+            "return": 0.05
+          }
+        },
+        "abort": {
+          "kind": "truth",
+          "truth": 0.03
+        }
+      },
+      "safety": {
+        "checked": true,
+        "harm": 0.0018,
+        "self_harm": 0.0007,
+        "flagged": []
+      }
+    }
+  }
+}

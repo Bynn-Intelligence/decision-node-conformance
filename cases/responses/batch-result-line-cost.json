@@ -1,0 +1,35 @@
+{
+  "id": "batch-result-line-cost",
+  "description": "A batch result line carries its own usage.cost, what the line booked at the batch price, read into the line's decision as on a live answer.",
+  "call": {
+    "method": "batches.results",
+    "args": {
+      "batch_id": "batch_01J9ZB8Q3T"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/x-ndjson"
+    },
+    "body_text": "{\"custom_id\":\"t1\",\"status\":200,\"body\":{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"refund\": {\"type\": \"truth\", \"truth\": 0.94}}, \"usage\": {\"input_tokens\": 62, \"output_tokens\": 0, \"cost\": {\"usd\": 0.000001302, \"model_usd\": 0.000001302, \"boosters_usd\": 0, \"free_tier\": false}}},\"headers\":{\"x-request-id\":\"req_line_0001\"}}\n"
+  },
+  "expect": {
+    "batch_results": [
+      {
+        "custom_id": "t1",
+        "status": 200,
+        "decision": {
+          "usage": {
+            "cost": {
+              "usd": 1.302e-06,
+              "model_usd": 1.302e-06,
+              "boosters_usd": 0,
+              "free_tier": false
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "local-question-without-type",
+  "description": "A wire-form question with no type: the API's 422 missing entry at the question's type. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "instructions": "?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "questions",
+              "q",
+              "type"
+            ],
+            "msg": "Field required",
+            "input": {
+              "instructions": "?"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

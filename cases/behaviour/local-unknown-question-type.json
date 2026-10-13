@@ -1,0 +1,29 @@
+{
+  "id": "local-unknown-question-type",
+  "description": "A question of a type /v1/decide does not take (rank; the types are truth, noul, choice, score and number): the API's 400 api_usage_error \"Invalid request.\". Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "type": "rank",
+          "instructions": "?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error",
+        "message": "Invalid request."
+      }
+    }
+  }
+}

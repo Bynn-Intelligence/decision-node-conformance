@@ -1,0 +1,34 @@
+{
+  "id": "number-helper-returns-number-answer",
+  "description": "number() returns the NumberAnswer of the question with the id number.",
+  "call": {
+    "method": "number",
+    "args": {
+      "state": "s",
+      "instructions": "How many?",
+      "min": 0,
+      "max": 50
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"number\": {\"type\": \"number\", \"number\": 12, \"expected\": 12.4, \"confidence\": 0.55, \"probabilities\": {\"11\": 0.2, \"12\": 0.551, \"13\": 0.21}}}, \"usage\": {\"input_tokens\": 300, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "answer": {
+      "kind": "number",
+      "number": 12,
+      "expected": 12.4,
+      "confidence": 0.55,
+      "probabilities": {
+        "11": 0.2,
+        "12": 0.551,
+        "13": 0.21
+      }
+    }
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "id": "malformed-known-answers",
+  "description": "An answer of a known type with a missing or wrongly typed field (a choice without probabilities, a truth whose value is a string, a score whose probabilities are a list) is returned as an UnknownAnswer holding its type and raw fields, exactly as an unknown type is. The decision does not fail and the well-formed answers parse as usual.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "route": {
+          "$choice": {
+            "instructions": "Where?",
+            "options": [
+              "billing",
+              "bug"
+            ]
+          }
+        },
+        "pick": {
+          "$choice": {
+            "instructions": "Which?",
+            "options": [
+              "billing",
+              "bug"
+            ]
+          }
+        },
+        "flag": {
+          "$truth": {
+            "instructions": "Flag?"
+          }
+        },
+        "level": {
+          "$score": {
+            "instructions": "How much?",
+            "levels": [
+              "low",
+              "high"
+            ]
+          }
+        },
+        "ok": {
+          "$truth": {
+            "instructions": "Ok?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_malformed_0001",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "21",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"route\": {\"type\": \"choice\", \"choice\": \"billing\", \"confidence\": 0.87, \"probabilities\": {\"billing\": 0.87, \"bug\": 0.13}}, \"pick\": {\"type\": \"choice\", \"choice\": \"billing\", \"confidence\": 0.87}, \"flag\": {\"type\": \"truth\", \"truth\": \"0.94\"}, \"level\": {\"type\": \"score\", \"score\": 1.2, \"confidence\": 0.5, \"probabilities\": [0.2, 0.8], \"legend\": {\"0\": \"low\", \"1\": \"high\"}}, \"ok\": {\"type\": \"truth\", \"truth\": 0.25}}, \"usage\": {\"input_tokens\": 40, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "model": "decisionnode-moe-0.9.0-rc1",
+      "request_id": "req_malformed_0001",
+      "answers": {
+        "route": {
+          "kind": "choice",
+          "choice": "billing",
+          "confidence": 0.87,
+          "probabilities": {
+            "billing": 0.87,
+            "bug": 0.13
+          }
+        },
+        "pick": {
+          "kind": "unknown",
+          "type": "choice",
+          "raw": {
+            "type": "choice",
+            "choice": "billing",
+            "confidence": 0.87
+          }
+        },
+        "flag": {
+          "kind": "unknown",
+          "type": "truth",
+          "raw": {
+            "type": "truth",
+            "truth": "0.94"
+          }
+        },
+        "level": {
+          "kind": "unknown",
+          "type": "score",
+          "raw": {
+            "type": "score",
+            "score": 1.2,
+            "confidence": 0.5,
+            "probabilities": [
+              0.2,
+              0.8
+            ],
+            "legend": {
+              "0": "low",
+              "1": "high"
+            }
+          }
+        },
+        "ok": {
+          "kind": "truth",
+          "truth": 0.25
+        }
+      }
+    }
+  }
+}

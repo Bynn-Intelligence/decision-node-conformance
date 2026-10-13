@@ -1,0 +1,107 @@
+{
+  "id": "upload-one-image-over-threshold",
+  "description": "An image of 600,000 bytes, at or over the inline threshold (524,288 by default), is uploaded: one POST /v1/uploads with its content_type, byte_size, base64 MD5 checksum and base64 SHA-256; one PUT to the returned URL with exactly the returned headers and the bytes (no Authorization, none of the client's own headers); then the decision names it as {id, upload_id} with no data.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body": {
+          "files": [
+            {
+              "content_type": "image/png",
+              "byte_size": 600000,
+              "checksum": "Yj4NtyxKcKkF+lO1i7hnsQ==",
+              "sha256": "wv0nNpXCdGFIs+MKEBJQBErTjfCC03p7n6a9D4vyOXQ="
+            }
+          ]
+        }
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "Yj4NtyxKcKkF+lO1i7hnsQ==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "wv0nNpXCdGFIs+MKEBJQBErTjfCC03p7n6a9D4vyOXQ="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "c2fd273695c2746148b3e30a101250044ad38df082d37a7b9fa6bd0f8bf23974"
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body_checks": [
+          {
+            "pointer": "/model",
+            "equals": "decisionnode-moe"
+          },
+          {
+            "pointer": "/state",
+            "equals": "s"
+          },
+          {
+            "pointer": "/images/0/id",
+            "equals": "receipt"
+          },
+          {
+            "pointer": "/images/0/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/0/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/0/url",
+            "absent": true
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "id": "supervise-reopens-at-once-on-4410",
+  "description": "4410 (expires_at reached) reopens at once, without a backoff wait.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "session": {
+        "close": {
+          "after_replies": 1,
+          "code": 4410
+        }
+      }
+    }
+  },
+  "call": {
+    "method": "supervise",
+    "args": {
+      "body": {
+        "state": {
+          "mission": "Survey"
+        },
+        "questions": {
+          "abort": {
+            "$truth": {
+              "instructions": "Abort?"
+            }
+          }
+        }
+      },
+      "feed": [
+        {
+          "frame": "a"
+        },
+        {
+          "frame": "b"
+        }
+      ],
+      "feed_interval_ms": 300
+    }
+  },
+  "expect": {
+    "request_counts": [
+      {
+        "method": "POST",
+        "path": "/v1/sessions",
+        "count": 2
+      }
+    ],
+    "outcome": {
+      "result": "supervised",
+      "replies": {
+        "min": 2,
+        "max": 2
+      }
+    },
+    "scheduled_waits_ms": []
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "default-inline-threshold",
+  "description": "The SDK exports the default inline threshold in bytes: local images that total under it in one request go inline as base64; at or above it they are uploaded. The client's inline_threshold argument overrides it.",
+  "constant": "DEFAULT_INLINE_THRESHOLD",
+  "names": {
+    "go": "DefaultInlineThreshold",
+    "dotnet": "DefaultInlineThreshold"
+  },
+  "equals": 524288
+}

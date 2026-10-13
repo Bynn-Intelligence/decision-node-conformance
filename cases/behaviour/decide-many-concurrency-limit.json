@@ -1,0 +1,119 @@
+{
+  "id": "decide-many-concurrency-limit",
+  "description": "At most `concurrency` requests are in flight at once: six requests of 250 ms each with concurrency 2 take at least three rounds.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "item 0",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 0?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 1",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 1?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 2",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 2?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 3",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 3?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 4",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 4?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 5",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 5?"
+              }
+            }
+          }
+        }
+      ],
+      "concurrency": 2
+    }
+  },
+  "mock": {
+    "scenario": {
+      "rules": [],
+      "otherwise": {
+        "steps": [
+          {
+            "action": "normal",
+            "delay_ms": 250
+          }
+        ],
+        "after": "repeat_last"
+      }
+    }
+  },
+  "expect": {
+    "attempts": 6,
+    "max_in_flight": {
+      "min": 1,
+      "max": 2
+    },
+    "elapsed_ms": {
+      "min": 700
+    },
+    "results": [
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      }
+    ]
+  }
+}

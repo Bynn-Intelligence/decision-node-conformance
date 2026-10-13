@@ -1,0 +1,55 @@
+{
+  "id": "collections-enroll-image-unreadable-by-mock",
+  "description": "An enrollment's picture that is not a JPEG, PNG or WebP is the server's to judge: the SDK sends it as a decision's local image, and the mock's 422 image_unreadable comes back as a ValidationError, not retried.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Staff"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.enroll",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "image": {
+            "$image": {
+              "id": "badge",
+              "path": "fixtures/images/pixel.gif"
+            }
+          },
+          "reference": "emp-1042"
+        }
+      },
+      "outcome": {
+        "error": "ValidationError",
+        "fields": {
+          "status": 422,
+          "entries": [
+            {
+              "type": "image_unreadable",
+              "loc": [
+                "body",
+                "image"
+              ],
+              "msg": "The image could not be read: not a JPEG, PNG or WebP image.",
+              "input": "badge"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 2
+  }
+}

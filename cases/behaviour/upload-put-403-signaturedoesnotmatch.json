@@ -1,0 +1,61 @@
+{
+  "id": "upload-put-403-signaturedoesnotmatch",
+  "description": "The storage refuses the PUT with 403 SignatureDoesNotMatch: not retried; the base DecisionNodeError with the storage status, error_type upload_failed and reason SignatureDoesNotMatch. No decision is sent.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "PUT"
+          },
+          "steps": [
+            {
+              "status": 403,
+              "headers": {
+                "content-type": "application/xml"
+              },
+              "body_text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Error><Code>SignatureDoesNotMatch</Code><Message>The request signature we calculated does not match the signature you provided.</Message><RequestId>MOCK0001</RequestId></Error>"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "error": "DecisionNodeError",
+      "fields": {
+        "status": 403,
+        "error_type": "upload_failed",
+        "reason": "SignatureDoesNotMatch"
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "400-fine-tuned-model-other-workspace",
+  "description": "Another workspace's fine-tuned model is the 400 of any unknown name (api_usage_error, \"Unknown model: <name>\"), a BadRequestError; the answer never says whether the name exists elsewhere.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      },
+      "model": "decisionnode-moe@acme/fraud"
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "unknown model 'decisionnode-moe@acme/fraud'; GET /v1/models lists the models"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Unknown model: decisionnode-moe@acme/fraud\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe@acme/fraud",
+      "state": "s",
+      "questions": {
+        "q": {
+          "type": "truth",
+          "instructions": "?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Unknown model: decisionnode-moe@acme/fraud",
+        "reason": "unknown model 'decisionnode-moe@acme/fraud'; GET /v1/models lists the models",
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

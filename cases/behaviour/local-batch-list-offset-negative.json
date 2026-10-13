@@ -1,0 +1,22 @@
+{
+  "id": "local-batch-list-offset-negative",
+  "description": "batches.list with offset -1 (an integer of 0 or more): the API's 400 api_usage_error. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "batches.list",
+    "args": {
+      "offset": -1
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error"
+      }
+    }
+  }
+}

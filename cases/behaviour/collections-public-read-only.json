@@ -1,0 +1,64 @@
+{
+  "id": "collections-public-read-only",
+  "description": "A public collection takes no enrollment, its items are not listed and it cannot be deleted: each the 403 collection_read_only, PermissionDeniedError, not retried.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "collections.enroll",
+        "args": {
+          "collection_id": "celebrities",
+          "image": {
+            "$image": {
+              "id": "badge",
+              "url": "https://files.example.com/badges/emp-1042.jpg"
+            }
+          },
+          "reference": "emp-1042"
+        }
+      },
+      "outcome": {
+        "error": "PermissionDeniedError",
+        "fields": {
+          "status": 403,
+          "error_type": "collection_read_only"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list_items",
+        "args": {
+          "collection_id": "celebrities"
+        }
+      },
+      "outcome": {
+        "error": "PermissionDeniedError",
+        "fields": {
+          "status": 403,
+          "error_type": "collection_read_only"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.delete",
+        "args": {
+          "collection_id": "celebrities"
+        }
+      },
+      "outcome": {
+        "error": "PermissionDeniedError",
+        "fields": {
+          "status": 403,
+          "error_type": "collection_read_only"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 3
+  }
+}

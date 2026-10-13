@@ -1,0 +1,165 @@
+{
+  "id": "ocr-timeout-not-retried-in-decide-many",
+  "description": "In decide_many the rule is per item: the item that names ocr times out once and is not retried, while the item without it is retried after its own timeout and then answers.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "timeout": 1
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "with ocr",
+          "images": [
+            {
+              "$image": {
+                "id": "receipt",
+                "url": "https://files.example.com/receipt.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "total_matches": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          },
+          "boosters": [
+            "ocr"
+          ]
+        },
+        {
+          "state": "without",
+          "images": [
+            {
+              "$image": {
+                "id": "receipt",
+                "url": "https://files.example.com/receipt.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "total_matches": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      ],
+      "concurrency": 2
+    }
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "/state": "with ocr"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json",
+                "x-decisionnode-boosters": "ocr=ok:2400"
+              },
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "total_matches": {
+                    "type": "truth",
+                    "truth": 0.97
+                  }
+                },
+                "evidence": {
+                  "ocr": {
+                    "version": "ocr-v1",
+                    "status": "ok",
+                    "latency_ms": 2400,
+                    "billed_calls": 1,
+                    "results": [
+                      {
+                        "image": "receipt",
+                        "text": "Total 740.00 SEK",
+                        "truncated": false
+                      }
+                    ]
+                  }
+                },
+                "usage": {
+                  "input_tokens": 120,
+                  "output_tokens": 0,
+                  "booster_tokens": 24,
+                  "boosters": 1
+                }
+              },
+              "delay_ms": 2000
+            }
+          ],
+          "after": "repeat_last"
+        },
+        {
+          "match": {
+            "/state": "without"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json"
+              },
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "total_matches": {
+                    "type": "truth",
+                    "truth": 0.2
+                  }
+                },
+                "usage": {
+                  "input_tokens": 90,
+                  "output_tokens": 0
+                }
+              },
+              "delay_ms": 2000
+            },
+            {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json"
+              },
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "total_matches": {
+                    "type": "truth",
+                    "truth": 0.2
+                  }
+                },
+                "usage": {
+                  "input_tokens": 90,
+                  "output_tokens": 0
+                }
+              }
+            }
+          ],
+          "after": "repeat_last"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "results": [
+      {
+        "error": "TimeoutError"
+      },
+      {
+        "result": "decision"
+      }
+    ]
+  }
+}

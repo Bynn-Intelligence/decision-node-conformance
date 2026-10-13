@@ -1,0 +1,39 @@
+{
+  "id": "helper-score-malformed-answer",
+  "description": "score() promises a typed answer, so when its own answer comes back malformed (probabilities as a list) the call raises ServerError (status 200, reason from the x-decisionnode-error header) instead of returning an UnknownAnswer. decide() with the same answer returns an UnknownAnswer; see responses/malformed-known-answers.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "score",
+    "args": {
+      "state": "s",
+      "instructions": "How much?",
+      "levels": [
+        "low",
+        "high"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_helper_0001",
+      "x-decisionnode-model": "decisionnode-moe",
+      "x-decisionnode-error": "question 'score': the answer could not be completed"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe\", \"answers\": {\"score\": {\"type\": \"score\", \"score\": 1.2, \"confidence\": 0.5, \"probabilities\": [0.2, 0.8], \"legend\": {\"0\": \"low\", \"1\": \"high\"}}}, \"usage\": {\"input_tokens\": 12, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "error": {
+      "class": "ServerError",
+      "fields": {
+        "status": 200,
+        "request_id": "req_helper_0001",
+        "reason": "question 'score': the answer could not be completed"
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "fallback-answered-by-mock",
+  "description": "The mock has no ready worker for the MoE family: a request for decisionnode-moe is answered at once by Flash, with the two fallback headers. One attempt; Decision.model and fallback.served_model are the pinned Flash id (checked by its family prefix), and fallback.requested_model is the canonical form of what was asked, the family id decisionnode-moe.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "I was charged twice.",
+      "questions": {
+        "route": {
+          "$choice": {
+            "instructions": "Where should this go?",
+            "options": [
+              "billing",
+              "bug"
+            ]
+          }
+        }
+      },
+      "model": "decisionnode-moe"
+    }
+  },
+  "mock": {
+    "scenario": {
+      "workers": {
+        "cold": [
+          "decisionnode-moe"
+        ]
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": {
+          "$pattern": "^decisionnode-flash-"
+        },
+        "fallback": {
+          "served_model": {
+            "$pattern": "^decisionnode-flash-"
+          },
+          "requested_model": "decisionnode-moe"
+        }
+      }
+    }
+  }
+}

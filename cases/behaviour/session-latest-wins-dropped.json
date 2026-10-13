@@ -1,0 +1,95 @@
+{
+  "id": "session-latest-wins-dropped",
+  "description": "Latest wins: the mock holds its answers until three frames have arrived, so frame 1 is being answered, frame 2 waits and frame 3 supersedes it. The replies: seq 1, then seq 3 with dropped [2]. Frame 2 gets no reply.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "session": {
+        "hold_until_frames": 3
+      }
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "frame": "a",
+        "session": "s"
+      }
+    },
+    {
+      "send": {
+        "frame": "b",
+        "session": "s"
+      }
+    },
+    {
+      "send": {
+        "frame": "c",
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 2
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "session_events": [
+      {
+        "reply": {
+          "seq": 1
+        }
+      },
+      {
+        "reply": {
+          "seq": 3,
+          "dropped": [
+            2
+          ]
+        }
+      },
+      {
+        "ended": true
+      }
+    ]
+  }
+}

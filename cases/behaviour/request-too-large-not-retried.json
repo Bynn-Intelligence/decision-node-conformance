@@ -1,0 +1,51 @@
+{
+  "id": "request-too-large-not-retried",
+  "description": "The API's 413 request_too_large_error is never retried, even with a retry header present: the same body is refused again. One attempt, then RequestTooLargeError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 413,
+          "headers": {
+            "retry-after-ms": "20",
+            "x-decisionnode-error": "the body is 26214500 bytes; the limit is 26214400"
+          },
+          "body": {
+            "detail": {
+              "error_type": "request_too_large_error",
+              "message": "The request body is over 26,214,400 bytes (25 MiB). Send large images as uploads (POST /v1/uploads) and name them by upload_id."
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "RequestTooLargeError",
+      "fields": {
+        "status": 413,
+        "error_type": "request_too_large_error",
+        "message": "The request body is over 26,214,400 bytes (25 MiB). Send large images as uploads (POST /v1/uploads) and name them by upload_id."
+      }
+    }
+  }
+}

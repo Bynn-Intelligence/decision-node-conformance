@@ -1,0 +1,74 @@
+{
+  "id": "supervise-reopens-on-1011",
+  "description": "supervise(body, feed, on_reply): every session closes with 1011 after one reply; with two readings 300 ms apart, the supervisor answers the first, reopens after a capped backoff with jitter (one wait between 0 and 30 s, recorded, not waited), and answers the second on a new session.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "session": {
+        "close": {
+          "after_replies": 1,
+          "code": 1011
+        }
+      }
+    }
+  },
+  "call": {
+    "method": "supervise",
+    "args": {
+      "body": {
+        "state": {
+          "mission": "Survey"
+        },
+        "questions": {
+          "abort": {
+            "$truth": {
+              "instructions": "Abort?"
+            }
+          }
+        }
+      },
+      "feed": [
+        {
+          "frame": {
+            "battery": 0.9
+          }
+        },
+        {
+          "frame": {
+            "battery": 0.8
+          }
+        }
+      ],
+      "feed_interval_ms": 300
+    }
+  },
+  "expect": {
+    "request_counts": [
+      {
+        "method": "POST",
+        "path": "/v1/sessions",
+        "count": 2
+      },
+      {
+        "method": "WS",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}/stream$",
+        "count": 2
+      }
+    ],
+    "outcome": {
+      "result": "supervised",
+      "replies": {
+        "min": 2,
+        "max": 2
+      }
+    },
+    "scheduled_waits_ms": [
+      {
+        "min": 0,
+        "max": 30000
+      }
+    ]
+  }
+}

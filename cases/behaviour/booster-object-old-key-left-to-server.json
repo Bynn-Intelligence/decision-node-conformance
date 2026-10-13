@@ -1,0 +1,44 @@
+{
+  "id": "booster-object-old-key-left-to-server",
+  "description": "A booster object's key is name. A plain wire-form object with another key, here the old booster, is sent as given, and the API refuses it with the 400 api_usage_error and its reason. One attempt.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "booster": "age"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "reason": "boosters: boosters[0] is neither a booster name nor an object with name"
+      }
+    }
+  }
+}

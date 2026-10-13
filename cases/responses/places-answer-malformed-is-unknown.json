@@ -1,0 +1,156 @@
+{
+  "id": "places-answer-malformed-is-unknown",
+  "description": "A several-places answer with count not a whole number, a box without its confidence, no complete, points that are not a list, or a box answer carrying points is an UnknownAnswer with its raw fields; the decision does not fail.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "lot",
+            "url": "https://files.example.com/lot/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "a": {
+          "$box": {
+            "instructions": "Every one.",
+            "max": 4
+          }
+        },
+        "b": {
+          "$box": {
+            "instructions": "Every one.",
+            "max": 4
+          }
+        },
+        "c": {
+          "$point": {
+            "instructions": "Every one.",
+            "max": 4
+          }
+        },
+        "d": {
+          "$point": {
+            "instructions": "Every one.",
+            "max": 4
+          }
+        },
+        "e": {
+          "$box": {
+            "instructions": "Every one.",
+            "max": 4
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"a\": {\"type\": \"box\", \"count\": \"3\", \"present\": 0.9, \"complete\": 0.9, \"boxes\": [], \"image\": \"lot\", \"width\": 1920, \"height\": 1080}, \"b\": {\"type\": \"box\", \"count\": 1, \"present\": 0.9, \"complete\": 0.9, \"boxes\": [{\"x1\": 1, \"y1\": 2, \"x2\": 3, \"y2\": 4}], \"image\": \"lot\", \"width\": 1920, \"height\": 1080}, \"c\": {\"type\": \"point\", \"count\": 1, \"present\": 0.9, \"points\": [{\"x\": 1, \"y\": 2, \"confidence\": 0.5}], \"image\": \"lot\", \"width\": 1920, \"height\": 1080}, \"d\": {\"type\": \"point\", \"count\": 1, \"present\": 0.9, \"complete\": 0.9, \"points\": {\"x\": 1, \"y\": 2, \"confidence\": 0.5}, \"image\": \"lot\", \"width\": 1920, \"height\": 1080}, \"e\": {\"type\": \"box\", \"count\": 1, \"present\": 0.9, \"complete\": 0.9, \"points\": [{\"x\": 1, \"y\": 2, \"confidence\": 0.5}], \"image\": \"lot\", \"width\": 1920, \"height\": 1080}}, \"usage\": {\"input_tokens\": 410, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "a": {
+          "kind": "unknown",
+          "type": "box",
+          "raw": {
+            "type": "box",
+            "count": "3",
+            "present": 0.9,
+            "complete": 0.9,
+            "boxes": [],
+            "image": "lot",
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        "b": {
+          "kind": "unknown",
+          "type": "box",
+          "raw": {
+            "type": "box",
+            "count": 1,
+            "present": 0.9,
+            "complete": 0.9,
+            "boxes": [
+              {
+                "x1": 1,
+                "y1": 2,
+                "x2": 3,
+                "y2": 4
+              }
+            ],
+            "image": "lot",
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        "c": {
+          "kind": "unknown",
+          "type": "point",
+          "raw": {
+            "type": "point",
+            "count": 1,
+            "present": 0.9,
+            "points": [
+              {
+                "x": 1,
+                "y": 2,
+                "confidence": 0.5
+              }
+            ],
+            "image": "lot",
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        "d": {
+          "kind": "unknown",
+          "type": "point",
+          "raw": {
+            "type": "point",
+            "count": 1,
+            "present": 0.9,
+            "complete": 0.9,
+            "points": {
+              "x": 1,
+              "y": 2,
+              "confidence": 0.5
+            },
+            "image": "lot",
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        "e": {
+          "kind": "unknown",
+          "type": "box",
+          "raw": {
+            "type": "box",
+            "count": 1,
+            "present": 0.9,
+            "complete": 0.9,
+            "points": [
+              {
+                "x": 1,
+                "y": 2,
+                "confidence": 0.5
+              }
+            ],
+            "image": "lot",
+            "width": 1920,
+            "height": 1080
+          }
+        }
+      }
+    }
+  }
+}

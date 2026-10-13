@@ -1,0 +1,112 @@
+{
+  "id": "session-frame-image-id-not-checked",
+  "description": "A session frame's image goes on the wire as {media_type, data} without the Image's id (the server names it), so the 64-character id rule does not apply: a frame whose Image has a 65-character id is sent with no local refusal, carries no id, and is answered.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "image": {
+          "$image": {
+            "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/sessions",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}/stream$",
+        "status": 101
+      },
+      {
+        "method": "WS",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}/stream$",
+        "body_checks": [
+          {
+            "pointer": "/image/media_type",
+            "equals": "image/png"
+          },
+          {
+            "pointer": "/image/data",
+            "equals": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGM8ISfHwMDAxMDAwMDAAAANBAEIfXHKZgAAAABJRU5ErkJggg=="
+          },
+          {
+            "pointer": "/image/upload_id",
+            "absent": true
+          },
+          {
+            "pointer": "/image/id",
+            "absent": true
+          }
+        ]
+      },
+      {
+        "method": "DELETE",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}$",
+        "status": 200
+      }
+    ],
+    "session_events": [
+      {
+        "reply": {
+          "seq": 1
+        }
+      },
+      {
+        "ended": true
+      }
+    ]
+  }
+}

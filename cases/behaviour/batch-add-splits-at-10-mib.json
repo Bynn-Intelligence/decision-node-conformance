@@ -1,0 +1,122 @@
+{
+  "id": "batch-add-splits-at-10-mib",
+  "description": "batches.add with three requests of about 3.8 MB each (11.4 MB in all): the SDK splits them into calls of at most 10 MiB, in order: two lines, then one.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": []
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.add",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          },
+          "requests": [
+            {
+              "custom_id": "big-0",
+              "state": {
+                "$text": {
+                  "repeat": "x",
+                  "times": 3800000
+                }
+              },
+              "questions": {
+                "q": {
+                  "$truth": {
+                    "instructions": "?"
+                  }
+                }
+              }
+            },
+            {
+              "custom_id": "big-1",
+              "state": {
+                "$text": {
+                  "repeat": "x",
+                  "times": 3800000
+                }
+              },
+              "questions": {
+                "q": {
+                  "$truth": {
+                    "instructions": "?"
+                  }
+                }
+              }
+            },
+            {
+              "custom_id": "big-2",
+              "state": {
+                "$text": {
+                  "repeat": "x",
+                  "times": 3800000
+                }
+              },
+              "questions": {
+                "q": {
+                  "$truth": {
+                    "instructions": "?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "counters": {
+            "requests": 3
+          }
+        }
+      }
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/batches",
+        "status": 201,
+        "jsonl_count": 0
+      },
+      {
+        "method": "POST",
+        "path_pattern": "^/v1/batches/batch_[0-9A-Z]{10}/requests$",
+        "status": 200,
+        "jsonl_count": 2,
+        "jsonl_checks": [
+          {
+            "line": 0,
+            "pointer": "/custom_id",
+            "equals": "big-0"
+          }
+        ]
+      },
+      {
+        "method": "POST",
+        "path_pattern": "^/v1/batches/batch_[0-9A-Z]{10}/requests$",
+        "status": 200,
+        "jsonl_count": 1,
+        "jsonl_checks": [
+          {
+            "line": 0,
+            "pointer": "/custom_id",
+            "equals": "big-2"
+          }
+        ]
+      }
+    ]
+  }
+}

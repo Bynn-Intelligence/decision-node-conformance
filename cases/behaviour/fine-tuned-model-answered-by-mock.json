@@ -1,0 +1,30 @@
+{
+  "id": "fine-tuned-model-answered-by-mock",
+  "description": "The mock serves a fine-tuned model to the keys of its workspace: the plain name is answered by the deployed version, and Decision.model is its pinned name.",
+  "client": {
+    "api_key": "dn_test_ws-acme"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "Claim 4471: two refunds for one order.",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      },
+      "model": "decisionnode-moe@acme/fraud"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": "decisionnode-moe@acme/fraud:3"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "403-collections-region-unavailable",
+  "description": "Creating a collection in a workspace whose storage location is not the default region is the 403 collections_region_unavailable, a PermissionDeniedError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.create",
+    "args": {
+      "name": "Staff"
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"collections_region_unavailable\", \"message\": \"Collections are not available yet for this workspace's storage location.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "collections_region_unavailable",
+        "message": "Collections are not available yet for this workspace's storage location."
+      }
+    }
+  }
+}

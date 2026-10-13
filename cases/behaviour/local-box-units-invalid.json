@@ -1,0 +1,55 @@
+{
+  "id": "local-box-units-invalid",
+  "description": "units other than pixels and normalized. Checked locally (SDK specification 1.2): ValidationError with the entries the API answers, and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "damage": {
+          "$box": {
+            "instructions": "Draw a box around the damaged package.",
+            "units": "percent"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "literal_error",
+            "loc": [
+              "body",
+              "questions",
+              "damage",
+              "box",
+              "units"
+            ],
+            "msg": "Input should be 'pixels' or 'normalized'",
+            "input": "percent",
+            "ctx": {
+              "expected": "'pixels' or 'normalized'"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

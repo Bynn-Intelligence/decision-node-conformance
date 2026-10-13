@@ -1,0 +1,31 @@
+{
+  "id": "local-number-without-instructions",
+  "description": "A number question without instructions. Checked locally: the API's own error class is raised and no request reaches the mock. From suite 1.5 the case also checks the error_type the server would send (null: the API answers this fault with a plain-string 400 detail) and its documented message.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "$number": {
+            "min": 0,
+            "max": 10
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": null,
+        "message": "Number question must have instructions: n"
+      }
+    }
+  }
+}

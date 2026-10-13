@@ -1,0 +1,53 @@
+{
+  "id": "retry-after-http-date",
+  "description": "Retry-After may be an HTTP date: the wait lasts until then. The mock writes the date of three seconds after it answers; an HTTP date has whole seconds, so the wait is between two and three seconds.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 429,
+          "headers": {
+            "retry-after": "{http_date+3}"
+          },
+          "body": {
+            "detail": {
+              "error_type": "rate_limit_error",
+              "message": "Rate limit exceeded."
+            }
+          }
+        },
+        {
+          "action": "normal"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "decision"
+    },
+    "gaps_ms": [
+      {
+        "min": 1900,
+        "max": 4000
+      }
+    ]
+  }
+}

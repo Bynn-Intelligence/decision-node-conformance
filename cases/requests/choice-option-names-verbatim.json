@@ -1,0 +1,68 @@
+{
+  "id": "choice-option-names-verbatim",
+  "description": "Option names are sent byte for byte: the empty string, spaces, punctuation, numeric strings, reserved-looking words and non-ASCII. Nothing is trimmed or case-folded.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "Total due: $1,315.50",
+      "questions": {
+        "pick": {
+          "$choice": {
+            "instructions": "Which label fits?",
+            "options": {
+              "": "no label",
+              "option with spaces": "a",
+              "$1,315.50": "an amount",
+              "01": "a numeric string",
+              "None": "the word None",
+              "true": "the word true",
+              "L014": "an id",
+              "Ünïcödé – ok?": "non-ASCII",
+              " padded ": "leading and trailing spaces"
+            }
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "Total due: $1,315.50",
+        "questions": {
+          "pick": {
+            "type": "choice",
+            "instructions": "Which label fits?",
+            "criteria": {
+              "": "no label",
+              "option with spaces": "a",
+              "$1,315.50": "an amount",
+              "01": "a numeric string",
+              "None": "the word None",
+              "true": "the word true",
+              "L014": "an id",
+              "Ünïcödé – ok?": "non-ASCII",
+              " padded ": "leading and trailing spaces"
+            }
+          }
+        }
+      },
+      "ordered_keys": [
+        "/questions/pick/criteria"
+      ]
+    }
+  }
+}

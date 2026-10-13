@@ -1,0 +1,128 @@
+{
+  "id": "evidence-age-and-ai-generated",
+  "description": "A boosted response: evidence by booster name in the request's order (each with version, status, latency_ms and one reading per image read), an age reading with a face and one with faces 0 (its age fields empty), an ai_generated reading by inference, and usage.booster_tokens and usage.boosters. The answers are unchanged. Each entry's billed_calls (2 for the two pictures age read, 1 for ai_generated) sums to usage.boosters.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "age",
+        {
+          "$booster": {
+            "name": "ai_generated",
+            "images": [
+              "poster"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-boosters": "age=ok:212,ai_generated=ok:340",
+      "x-decisionnode-latency-ms": "396"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"adult\": {\"type\": \"truth\", \"truth\": 0.97}, \"synthetic\": {\"type\": \"truth\", \"truth\": 0.91}}, \"evidence\": {\"age\": {\"version\": \"age-v1\", \"status\": \"ok\", \"latency_ms\": 212, \"billed_calls\": 2, \"results\": [{\"image\": \"person\", \"age_years\": 27, \"low\": 22, \"high\": 33, \"confidence\": 0.81, \"faces\": 1}, {\"image\": \"poster\", \"faces\": 0}]}, \"ai_generated\": {\"version\": \"ai_generated-v1\", \"status\": \"ok\", \"latency_ms\": 340, \"billed_calls\": 1, \"results\": [{\"image\": \"poster\", \"generated\": 0.93, \"confidence\": 0.86, \"method\": \"inference\", \"top_generator\": {\"name\": \"Generator A\", \"probability\": 0.71}, \"c2pa_signer\": null}]}}, \"usage\": {\"input_tokens\": 341, \"output_tokens\": 0, \"booster_tokens\": 72, \"boosters\": 3}}"
+  },
+  "expect": {
+    "decision": {
+      "model": "decisionnode-moe-0.9.0-rc1",
+      "usage": {
+        "input_tokens": 341,
+        "output_tokens": 0,
+        "booster_tokens": 72,
+        "boosters": 3
+      },
+      "evidence": {
+        "age": {
+          "version": "age-v1",
+          "status": "ok",
+          "latency_ms": 212,
+          "billed_calls": 2,
+          "results": [
+            {
+              "kind": "age",
+              "image": "person",
+              "faces": 1,
+              "age_years": 27,
+              "low": 22,
+              "high": 33,
+              "confidence": 0.81
+            },
+            {
+              "kind": "age",
+              "image": "poster",
+              "faces": 0,
+              "age_years": null,
+              "low": null,
+              "high": null,
+              "confidence": null
+            }
+          ]
+        },
+        "ai_generated": {
+          "version": "ai_generated-v1",
+          "status": "ok",
+          "latency_ms": 340,
+          "billed_calls": 1,
+          "results": [
+            {
+              "kind": "ai_generated",
+              "image": "poster",
+              "generated": 0.93,
+              "confidence": 0.86,
+              "method": "inference",
+              "top_generator": {
+                "name": "Generator A",
+                "probability": 0.71
+              },
+              "c2pa_signer": null,
+              "c2pa": null
+            }
+          ]
+        }
+      },
+      "answers": {
+        "adult": {
+          "kind": "truth",
+          "truth": 0.97
+        },
+        "synthetic": {
+          "kind": "truth",
+          "truth": 0.91
+        }
+      }
+    }
+  }
+}

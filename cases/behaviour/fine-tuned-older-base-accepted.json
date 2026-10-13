@@ -1,0 +1,43 @@
+{
+  "id": "fine-tuned-older-base-accepted",
+  "description": "A fine-tuned name written with the older base, decisionnode-1.0@acme/fraud, stays accepted: sent unchanged, answered with the pinned fine-tuned name on the family base, decisionnode-moe@acme/fraud:3.",
+  "client": {
+    "api_key": "dn_test_ws-acme"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "I was charged twice.",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is a refund asked for?"
+          }
+        }
+      },
+      "model": "decisionnode-1.0@acme/fraud"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200,
+        "body_checks": [
+          {
+            "pointer": "/model",
+            "equals": "decisionnode-1.0@acme/fraud"
+          }
+        ]
+      }
+    ],
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": "decisionnode-moe@acme/fraud:3"
+      }
+    }
+  }
+}

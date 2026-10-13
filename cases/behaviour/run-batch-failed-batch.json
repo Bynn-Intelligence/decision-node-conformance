@@ -1,0 +1,75 @@
+{
+  "id": "run-batch-failed-batch",
+  "description": "A batch that ends failed: run_batch returns it with error batch_failed, and its unfinished lines are 500 lines whose error is a ServerError value.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "batch": {
+        "polls_to_running": 9,
+        "polls_to_end": 1,
+        "end_state": "failed"
+      }
+    }
+  },
+  "call": {
+    "method": "run_batch",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "t1",
+          "state": "I was charged twice.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ],
+      "poll_interval": 10
+    }
+  },
+  "expect": {
+    "outcome": {
+      "result": "batch_run",
+      "batch": {
+        "state": "failed",
+        "error": {
+          "error_type": "batch_failed"
+        }
+      },
+      "batch_results": [
+        {
+          "custom_id": "t1",
+          "status": 500,
+          "error": {
+            "error": "ServerError",
+            "fields": {
+              "status": 500,
+              "reason": "the batch failed: its request file could not be read"
+            }
+          }
+        }
+      ]
+    },
+    "request_counts": [
+      {
+        "method": "GET",
+        "path_pattern": "/results$",
+        "count": 1
+      }
+    ]
+  }
+}

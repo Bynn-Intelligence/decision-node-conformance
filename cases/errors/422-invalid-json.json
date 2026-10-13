@@ -1,0 +1,61 @@
+{
+  "id": "422-invalid-json",
+  "description": "A body that is not JSON is a 422 json_invalid.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "the body is not JSON: Expecting ',' delimiter at position 14"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"json_invalid\", \"loc\": [\"body\", 14], \"msg\": \"JSON decode error\", \"input\": {}, \"ctx\": {\"error\": \"Expecting ',' delimiter\"}}]}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body_text": "{\"state\": \"s\" \"questions\": {}}"
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "entries": [
+          {
+            "type": "json_invalid",
+            "loc": [
+              "body",
+              14
+            ],
+            "msg": "JSON decode error",
+            "input": {},
+            "ctx": {
+              "error": "Expecting ',' delimiter"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

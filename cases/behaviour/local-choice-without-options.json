@@ -1,0 +1,31 @@
+{
+  "id": "local-choice-without-options",
+  "description": "A choice with no option (1 to 255). Checked locally: the API's own error class is raised and no request reaches the mock. From suite 1.5 the case also checks the error_type the server would send (null: the API answers this fault with a plain-string 400 detail) and its documented message.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$choice": {
+            "instructions": "?",
+            "options": []
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": null,
+        "message": "Choice question must have at least one choice: q"
+      }
+    }
+  }
+}

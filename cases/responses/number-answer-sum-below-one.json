@@ -1,0 +1,43 @@
+{
+  "id": "number-answer-sum-below-one",
+  "description": "probabilities list only the values above 0.001 and need not sum to 1 (here 0.871): passed through as received, never renormalised.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "$number": {
+            "instructions": "How many?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"n\": {\"type\": \"number\", \"number\": 120, \"expected\": 121.37, \"confidence\": 0.31, \"probabilities\": {\"118\": 0.12, \"119\": 0.2, \"120\": 0.311, \"121\": 0.24}}}, \"usage\": {\"input_tokens\": 600, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "n": {
+          "kind": "number",
+          "number": 120,
+          "expected": 121.37,
+          "confidence": 0.31,
+          "probabilities": {
+            "118": 0.12,
+            "119": 0.2,
+            "120": 0.311,
+            "121": 0.24
+          }
+        }
+      }
+    }
+  }
+}

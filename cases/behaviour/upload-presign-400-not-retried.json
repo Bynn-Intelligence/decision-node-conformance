@@ -1,0 +1,65 @@
+{
+  "id": "upload-presign-400-not-retried",
+  "description": "POST /v1/uploads refused 400 api_usage_error: BadRequestError, nothing retried, no PUT, no decision.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$path": "/v1/uploads"
+          },
+          "steps": [
+            {
+              "status": 400,
+              "body": {
+                "detail": {
+                  "error_type": "api_usage_error",
+                  "message": "files[0].byte_size: 600001 is over the limit of 600000 bytes."
+                }
+              },
+              "headers": {
+                "x-decisionnode-error": "files[0].byte_size: 600001 is over the limit of 600000 bytes."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error"
+      }
+    }
+  }
+}

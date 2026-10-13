@@ -1,0 +1,80 @@
+{
+  "id": "places-held-off-sent",
+  "description": "After models() lists the model without places, a question with max is still sent: an SDK never refuses max on the capability, which the API judges per model version. The mock's 422 not_supported comes back as a ValidationError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "places": {
+        "max_places": 0
+      }
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "models",
+        "args": {}
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "images": [
+            {
+              "$image": {
+                "id": "lot",
+                "url": "https://files.example.com/lot/0917.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "cars": {
+              "$box": {
+                "instructions": "Every car in the lot.",
+                "max": 8
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "error": "ValidationError",
+        "fields": {
+          "status": 422,
+          "entries": [
+            {
+              "type": "not_supported",
+              "loc": [
+                "body",
+                "questions",
+                "cars",
+                "box",
+                "max"
+              ],
+              "msg": "Several places are not supported by this model version",
+              "input": 8
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 2,
+    "request_sequence": [
+      {
+        "method": "GET",
+        "path": "/v1/models",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 422
+      }
+    ]
+  }
+}

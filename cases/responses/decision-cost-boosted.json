@@ -1,0 +1,41 @@
+{
+  "id": "decision-cost-boosted",
+  "description": "A boosted answer's cost split into model_usd and boosters_usd. usd is read as the server sent it, never computed by the client: 0.000014322 + 0.036 as doubles is 0.036014321999999994, not the 0.036014322 the server booked.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "I was charged twice.",
+      "questions": {
+        "refund": {
+          "$truth": {
+            "instructions": "Is a refund asked for?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"refund\": {\"type\": \"truth\", \"truth\": 0.94}}, \"usage\": {\"input_tokens\": 341, \"output_tokens\": 0, \"booster_tokens\": 72, \"boosters\": 3, \"cost\": {\"usd\": 0.036014322, \"model_usd\": 0.000014322, \"boosters_usd\": 0.036, \"free_tier\": false}}}"
+  },
+  "expect": {
+    "decision": {
+      "model": "decisionnode-moe-0.9.0-rc1",
+      "usage": {
+        "cost": {
+          "usd": 0.036014322,
+          "model_usd": 1.4322e-05,
+          "boosters_usd": 0.036,
+          "free_tier": false
+        },
+        "booster_tokens": 72,
+        "boosters": 3
+      }
+    }
+  }
+}

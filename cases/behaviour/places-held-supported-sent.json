@@ -1,0 +1,67 @@
+{
+  "id": "places-held-supported-sent",
+  "description": "After models() lists places.max_places 16 for the model, a question with max is sent and answered as a BoxesAnswer.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "models",
+        "args": {}
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "images": [
+            {
+              "$image": {
+                "id": "lot",
+                "url": "https://files.example.com/lot/0917.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "cars": {
+              "$box": {
+                "instructions": "Every car in the lot.",
+                "max": 8
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "cars": {
+              "kind": "boxes",
+              "image": "lot",
+              "width": 1920,
+              "height": 1080,
+              "count": 5
+            }
+          }
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 2,
+    "request_sequence": [
+      {
+        "method": "GET",
+        "path": "/v1/models",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "local-image-over-10-mb",
+  "description": "An image of 10,485,761 bytes, one over the 10 MiB limit (a valid PNG header followed by zero bytes). Checked locally: the API's own error class is raised and no request reaches the mock. From suite 1.5 the case also checks the error_type the server would send (api_usage_error, the API's type for an image it refuses).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "big",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 10485761
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error"
+      }
+    }
+  }
+}

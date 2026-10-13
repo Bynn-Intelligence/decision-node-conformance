@@ -1,0 +1,108 @@
+{
+  "id": "upload-stale-expired-by-clock",
+  "description": "The upload expires on the server while the client still holds it (the mock's clock moves 3,700 s): the second decision gets 400 upload_expired, and the SDK drops the entry, uploads again and resends once, without counting it as a retry.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": "s",
+          "images": [
+            {
+              "$image": {
+                "id": "a",
+                "path": "fixtures/images/pixel.png",
+                "pad_to": 600000
+              }
+            }
+          ],
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "result": "decision"
+      }
+    },
+    {
+      "mock_clock": {
+        "advance_seconds": 3700
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": "s",
+          "images": [
+            {
+              "$image": {
+                "id": "a",
+                "path": "fixtures/images/pixel.png",
+                "pad_to": 600000
+              }
+            }
+          ],
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "result": "decision"
+      }
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 400
+      },
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200
+      }
+    ]
+  }
+}

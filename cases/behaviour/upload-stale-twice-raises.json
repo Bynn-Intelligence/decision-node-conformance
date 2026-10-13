@@ -1,0 +1,68 @@
+{
+  "id": "upload-stale-twice-raises",
+  "description": "The resend after a re-upload is answered upload_expired again: the second such answer raises BadRequestError with its error_type. Nothing is sent after it.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$path": "/v1/decide"
+          },
+          "steps": [
+            {
+              "status": 400,
+              "body": {
+                "detail": {
+                  "error_type": "upload_expired",
+                  "message": "Image 'a': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 expired at 2026-10-08T13:04:05Z. Upload the image again."
+                }
+              },
+              "headers": {
+                "x-decisionnode-error": "Image 'a': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 expired at 2026-10-08T13:04:05Z. Upload the image again."
+              }
+            }
+          ],
+          "after": "repeat_last"
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 6,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "upload_expired",
+        "message": "Image 'a': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 expired at 2026-10-08T13:04:05Z. Upload the image again.",
+        "reason": "Image 'a': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 expired at 2026-10-08T13:04:05Z. Upload the image again."
+      }
+    }
+  }
+}

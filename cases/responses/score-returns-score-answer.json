@@ -1,0 +1,49 @@
+{
+  "id": "score-returns-score-answer",
+  "description": "score() returns the ScoreAnswer of its one question.",
+  "call": {
+    "method": "score",
+    "args": {
+      "state": {
+        "ticket": "I was charged twice and nobody has replied for 3 days."
+      },
+      "instructions": "How urgent?",
+      "levels": [
+        "routine",
+        "today",
+        "urgent",
+        "critical"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "23",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"score\": {\"type\": \"score\", \"score\": 2.31, \"confidence\": 0.31, \"legend\": {\"0\": \"routine\", \"1\": \"today\", \"2\": \"urgent\", \"3\": \"critical\"}, \"probabilities\": {\"0\": 0.01, \"1\": 0.09, \"2\": 0.48, \"3\": 0.42}}}, \"usage\": {\"input_tokens\": 40, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "answer": {
+      "kind": "score",
+      "score": 2.31,
+      "confidence": 0.31,
+      "legend": {
+        "0": "routine",
+        "1": "today",
+        "2": "urgent",
+        "3": "critical"
+      },
+      "probabilities": {
+        "0": 0.01,
+        "1": 0.09,
+        "2": 0.48,
+        "3": 0.42
+      }
+    }
+  }
+}

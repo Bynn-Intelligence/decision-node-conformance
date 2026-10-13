@@ -1,0 +1,113 @@
+{
+  "id": "boosters-answered-by-mock",
+  "description": "The mock answers boosters with fixed readings per image: a boosted decision parses its evidence (in the request's order) and the booster usage. Every booster read with status ok is billed once per image.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "age",
+        {
+          "$booster": {
+            "name": "ai_generated",
+            "images": [
+              "poster"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": {
+          "$pattern": "^decisionnode-moe-"
+        },
+        "evidence": {
+          "age": {
+            "version": "age-v1",
+            "status": "ok",
+            "latency_ms": 212,
+            "billed_calls": 2,
+            "results": [
+              {
+                "kind": "age",
+                "image": "person",
+                "faces": 1,
+                "age_years": 33,
+                "low": 30,
+                "high": 39,
+                "confidence": 0.86
+              },
+              {
+                "kind": "age",
+                "image": "poster",
+                "faces": 3,
+                "age_years": 30,
+                "low": 24,
+                "high": 35,
+                "confidence": 0.71
+              }
+            ]
+          },
+          "ai_generated": {
+            "version": "ai_generated-v1",
+            "status": "ok",
+            "latency_ms": 340,
+            "billed_calls": 1,
+            "results": [
+              {
+                "kind": "ai_generated",
+                "image": "poster",
+                "generated": 0.27,
+                "confidence": 0.83,
+                "method": "inference",
+                "top_generator": null,
+                "c2pa_signer": null,
+                "c2pa": null
+              }
+            ]
+          }
+        },
+        "usage": {
+          "input_tokens": 1656,
+          "output_tokens": 0,
+          "booster_tokens": 66,
+          "boosters": 3
+        }
+      }
+    }
+  }
+}

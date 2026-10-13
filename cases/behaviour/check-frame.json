@@ -1,0 +1,98 @@
+{
+  "id": "check-frame",
+  "description": "Session.check_frame runs the checks send() runs and sends nothing: a valid frame asking a question the session holds checks clean, a frame asking an id the open response did not list raises what send() raises (BadRequestError, api_usage_error, the documented message). Nothing goes on the socket.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "questions": {
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            },
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": [
+                  "continue",
+                  "hold",
+                  "land"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "session": "s",
+        "frame": {
+          "battery": 0.31
+        },
+        "questions": [
+          "abort"
+        ]
+      },
+      "check": true,
+      "outcome": {
+        "result": "checked"
+      }
+    },
+    {
+      "send": {
+        "session": "s",
+        "frame": {
+          "battery": 0.31
+        },
+        "questions": [
+          "speed"
+        ]
+      },
+      "check": true,
+      "outcome": {
+        "error": "BadRequestError",
+        "fields": {
+          "error_type": "api_usage_error",
+          "message": "questions: unknown question id 'speed'"
+        }
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/sessions",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}/stream$",
+        "status": 101
+      },
+      {
+        "method": "DELETE",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}$",
+        "status": 200
+      }
+    ],
+    "session_events": [
+      {
+        "ended": true
+      }
+    ]
+  }
+}

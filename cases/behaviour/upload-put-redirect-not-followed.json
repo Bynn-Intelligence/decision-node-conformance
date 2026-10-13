@@ -1,0 +1,64 @@
+{
+  "id": "upload-put-redirect-not-followed",
+  "description": "The storage answers the PUT 307 with a Location: the redirect is never followed (the bytes and headers go nowhere else). The base DecisionNodeError with status 307 and error_type upload_failed.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "PUT"
+          },
+          "steps": [
+            {
+              "status": 307,
+              "headers": {
+                "location": "{mock_url}/v1/upload-redirect-target",
+                "content-type": "application/xml"
+              },
+              "body_text": ""
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "error": "DecisionNodeError",
+      "fields": {
+        "status": 307,
+        "error_type": "upload_failed"
+      }
+    },
+    "unrequested_paths": [
+      "/v1/upload-redirect-target"
+    ]
+  }
+}

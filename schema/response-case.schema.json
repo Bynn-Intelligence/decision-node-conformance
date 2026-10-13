@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "response-case.schema.json",
+  "title": "Response case",
+  "description": "A recorded response and the values the SDK must parse it to. The mock replays it under the scenario response/<id>. expect holds exactly one of decision (decide), answer (check, classify, score, number), models (models), raw (decide_raw), batch (a Batch: create, add, finalize, get, cancel), batch_page (list), batch_results (results), session (open_session) or upload_ids.",
+  "type": "object",
+  "required": [
+    "id",
+    "description",
+    "call",
+    "response",
+    "expect"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/case_id"
+    },
+    "description": {
+      "type": "string"
+    },
+    "call": {
+      "$ref": "common.schema.json#/$defs/call"
+    },
+    "response": {
+      "$ref": "common.schema.json#/$defs/http_response"
+    },
+    "expect": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "decision": {
+          "$ref": "common.schema.json#/$defs/decision"
+        },
+        "answer": {
+          "$ref": "common.schema.json#/$defs/answer"
+        },
+        "models": {
+          "type": "array",
+          "description": "One ModelInfo per entry, in order. Suite 1.11: fine_tuned, base, adapter_version and status are the entry's own fields (null when it has none, as a catalogue entry); each is checked when the case lists it.",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "description",
+              "release_date",
+              "limits"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "release_date": {
+                "type": "string"
+              },
+              "limits": {
+                "type": "object",
+                "description": "Every field of the entry other than the three above."
+              },
+              "fine_tuned": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "base": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "adapter_version": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "status": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "raw": {},
+        "batch": {
+          "type": "object",
+          "description": "Every field of the batch object as sent; nested objects compare by the keys given."
+        },
+        "batch_page": {
+          "type": "object"
+        },
+        "batch_results": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/batch_result"
+          }
+        },
+        "session": {
+          "type": "object",
+          "description": "The Session's fields (the open response's), answers typed as decide's."
+        },
+        "upload_ids": {
+          "type": "array"
+        },
+        "collection": {
+          "type": "object",
+          "description": "Suite 1.13: the collections call's object as sent; nested objects compare by the keys given."
+        },
+        "item": {
+          "type": "object",
+          "description": "Suite 1.13: the collections call's object as sent; nested objects compare by the keys given."
+        },
+        "item_page": {
+          "type": "object",
+          "description": "Suite 1.13: the collections call's object as sent; nested objects compare by the keys given."
+        },
+        "deleted": {
+          "type": "object",
+          "description": "Suite 1.13: the collections call's object as sent; nested objects compare by the keys given."
+        },
+        "collections": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "description": "Suite 1.13: the list of collections, in order."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

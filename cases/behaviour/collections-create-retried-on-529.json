@@ -1,0 +1,45 @@
+{
+  "id": "collections-create-retried-on-529",
+  "description": "collections.create is retried on a 529, as a batch's create, and the second attempt answers.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.create",
+    "args": {
+      "name": "Staff"
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 529,
+          "headers": {
+            "Retry-After": "1",
+            "retry-after-ms": "50"
+          },
+          "body": {
+            "detail": {
+              "error_type": "overloaded_error",
+              "message": "The service is busy. Try again shortly."
+            }
+          }
+        },
+        {
+          "action": "normal"
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "collection",
+      "collection": {
+        "name": "Staff"
+      }
+    }
+  }
+}

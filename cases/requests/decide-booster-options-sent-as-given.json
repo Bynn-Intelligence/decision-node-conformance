@@ -1,0 +1,121 @@
+{
+  "id": "decide-booster-options-sent-as-given",
+  "description": "A Booster's options are sent as given: the SDK knows no booster settings and checks none (the API answers a setting a booster does not have with its 400; the mock answers this case from its scenario).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "age",
+            "options": {
+              "threshold": 0.5
+            }
+          }
+        }
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+            "x-decisionnode-boosters": "age=ok:212"
+          },
+          "body": {
+            "model": "decisionnode-moe-0.9.0-rc1",
+            "answers": {
+              "adult": {
+                "type": "truth",
+                "truth": 0.97
+              }
+            },
+            "evidence": {
+              "age": {
+                "version": "age-v1",
+                "status": "ok",
+                "latency_ms": 212,
+                "results": [
+                  {
+                    "image": "person",
+                    "age_years": 27,
+                    "low": 22,
+                    "high": 33,
+                    "confidence": 0.81,
+                    "faces": 1
+                  }
+                ]
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0,
+              "booster_tokens": 24,
+              "boosters": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "",
+        "images": [
+          {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        ],
+        "questions": {
+          "adult": {
+            "type": "truth",
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "boosters": [
+          {
+            "name": "age",
+            "options": {
+              "threshold": 0.5
+            }
+          }
+        ]
+      }
+    }
+  }
+}

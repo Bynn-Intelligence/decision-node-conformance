@@ -1,0 +1,40 @@
+{
+  "id": "check-fallback-false",
+  "description": "The helpers take fallback like decide: check sends its one question with \"fallback\": false.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "check",
+    "args": {
+      "state": "I was charged twice.",
+      "instructions": "Is a refund asked for?",
+      "model": "decisionnode-moe",
+      "fallback": false
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "I was charged twice.",
+        "questions": {
+          "check": {
+            "type": "truth",
+            "instructions": "Is a refund asked for?"
+          }
+        },
+        "fallback": false
+      }
+    }
+  }
+}

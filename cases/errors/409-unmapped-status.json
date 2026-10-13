@@ -1,0 +1,40 @@
+{
+  "id": "409-unmapped-status",
+  "description": "A status with no row of its own (409) is the base DecisionNodeError carrying that status. No other class.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"conflict_error\", \"message\": \"Conflict.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "conflict_error",
+        "message": "Conflict.",
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "id": "422-state-wrong-type",
+  "description": "A state that is a bare number gives three entries, one per allowed type.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "state": 42,
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "state.str: Input should be a valid string"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"string_type\", \"loc\": [\"body\", \"state\", \"str\"], \"msg\": \"Input should be a valid string\", \"input\": 42}, {\"type\": \"dict_type\", \"loc\": [\"body\", \"state\", \"dict[any,any]\"], \"msg\": \"Input should be a valid dictionary\", \"input\": 42}, {\"type\": \"list_type\", \"loc\": [\"body\", \"state\", \"list[any]\"], \"msg\": \"Input should be a valid list\", \"input\": 42}]}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "state": 42,
+      "questions": {
+        "q": {
+          "type": "truth",
+          "instructions": "?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "entries": [
+          {
+            "type": "string_type",
+            "loc": [
+              "body",
+              "state",
+              "str"
+            ],
+            "msg": "Input should be a valid string",
+            "input": 42
+          },
+          {
+            "type": "dict_type",
+            "loc": [
+              "body",
+              "state",
+              "dict[any,any]"
+            ],
+            "msg": "Input should be a valid dictionary",
+            "input": 42
+          },
+          {
+            "type": "list_type",
+            "loc": [
+              "body",
+              "state",
+              "list[any]"
+            ],
+            "msg": "Input should be a valid list",
+            "input": 42
+          }
+        ]
+      }
+    }
+  }
+}

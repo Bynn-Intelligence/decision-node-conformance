@@ -1,0 +1,101 @@
+{
+  "id": "decide-three-types",
+  "description": "A full decision: every field of the body and the public headers.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "ticket": "I was charged twice and nobody has replied for 3 days."
+      },
+      "questions": {
+        "route": {
+          "$choice": {
+            "instructions": "Where should this go?",
+            "options": {
+              "billing": "money",
+              "bug": "broken",
+              "account": "login"
+            }
+          }
+        },
+        "urgency": {
+          "$score": {
+            "instructions": "How urgent is this?",
+            "levels": [
+              "routine",
+              "today",
+              "urgent",
+              "critical"
+            ]
+          }
+        },
+        "escalate": {
+          "$truth": {
+            "instructions": "Escalate to a human now?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "23",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"route\": {\"type\": \"choice\", \"choice\": \"billing\", \"confidence\": 0.81, \"probabilities\": {\"account\": 0.05, \"billing\": 0.87, \"bug\": 0.08}}, \"urgency\": {\"type\": \"score\", \"score\": 2.31, \"confidence\": 0.31, \"legend\": {\"0\": \"routine\", \"1\": \"today\", \"2\": \"urgent\", \"3\": \"critical\"}, \"probabilities\": {\"0\": 0.01, \"1\": 0.09, \"2\": 0.48, \"3\": 0.42}}, \"escalate\": {\"type\": \"truth\", \"truth\": 0.94}}, \"usage\": {\"input_tokens\": 62, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "model": "decisionnode-moe-0.9.0-rc1",
+      "request_id": "req_7c1e0a5b2d9f4e8a",
+      "latency_ms": 23,
+      "usage": {
+        "input_tokens": 62,
+        "output_tokens": 0
+      },
+      "safety": {
+        "checked": true,
+        "harm": 0.031,
+        "self_harm": 0.004,
+        "flagged": []
+      },
+      "answers": {
+        "route": {
+          "kind": "choice",
+          "choice": "billing",
+          "confidence": 0.81,
+          "probabilities": {
+            "account": 0.05,
+            "billing": 0.87,
+            "bug": 0.08
+          }
+        },
+        "urgency": {
+          "kind": "score",
+          "score": 2.31,
+          "confidence": 0.31,
+          "legend": {
+            "0": "routine",
+            "1": "today",
+            "2": "urgent",
+            "3": "critical"
+          },
+          "probabilities": {
+            "0": 0.01,
+            "1": 0.09,
+            "2": 0.48,
+            "3": 0.42
+          }
+        },
+        "escalate": {
+          "kind": "truth",
+          "truth": 0.94
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "decide-many-invalid-request-empty-questions",
+  "description": "decide_many checks every request before it sends any. The last of three requests has an empty question map, so the call is the language's argument error and the two valid requests before it are not sent either. With concurrency 1 an SDK that checks each request only when its turn comes would already have sent two.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "a",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item a?"
+              }
+            }
+          }
+        },
+        {
+          "state": "b",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item b?"
+              }
+            }
+          }
+        },
+        {
+          "state": "c",
+          "questions": {}
+        }
+      ],
+      "concurrency": 1
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "argument_error": true
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "id": "400-booster-unknown",
+  "description": "A name that is not a booster is a BadRequestError with error_type booster_unknown, raised by the API before any booster runs. The SDK sends booster names as given.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "example_booster"
+      ]
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "'example_booster' is not a booster; the boosters are age, ai_generated, face_recognition"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"booster_unknown\", \"message\": \"Unknown booster: example_booster\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "",
+      "images": [
+        {
+          "id": "person",
+          "url": "https://files.example.com/person.jpg"
+        }
+      ],
+      "questions": {
+        "adult": {
+          "type": "truth",
+          "instructions": "Is the person in the first picture an adult?"
+        }
+      },
+      "boosters": [
+        "example_booster"
+      ]
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "booster_unknown",
+        "message": "Unknown booster: example_booster",
+        "reason": "'example_booster' is not a booster; the boosters are age, ai_generated, face_recognition",
+        "boosters": {},
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "local-score-without-criteria",
+  "description": "A score with no criteria (no levels): the API's 422 missing entry (criteria is required for a score). Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "urgency": {
+          "type": "score",
+          "instructions": "How urgent?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "questions",
+              "urgency",
+              "score",
+              "criteria"
+            ],
+            "msg": "Field required",
+            "input": {
+              "type": "score",
+              "instructions": "How urgent?"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

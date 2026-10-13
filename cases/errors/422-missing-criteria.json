@@ -1,0 +1,76 @@
+{
+  "id": "422-missing-criteria",
+  "description": "A 422 is a ValidationError carrying the server's list of entries unchanged. Sent with decide_raw: from suite 1.5 decide() refuses a score without criteria locally (behaviour/local-score-without-criteria).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "urgency": {
+            "type": "score",
+            "instructions": "How urgent?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "questions.urgency.score.criteria: Field required"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"missing\", \"loc\": [\"body\", \"questions\", \"urgency\", \"score\", \"criteria\"], \"msg\": \"Field required\", \"input\": {\"type\": \"score\", \"instructions\": \"How urgent?\"}}]}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "state": "s",
+      "questions": {
+        "urgency": {
+          "type": "score",
+          "instructions": "How urgent?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "request_id": "req_err_0001",
+        "reason": "questions.urgency.score.criteria: Field required",
+        "entries": [
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "questions",
+              "urgency",
+              "score",
+              "criteria"
+            ],
+            "msg": "Field required",
+            "input": {
+              "type": "score",
+              "instructions": "How urgent?"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

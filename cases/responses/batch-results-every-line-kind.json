@@ -1,0 +1,166 @@
+{
+  "id": "batch-results-every-line-kind",
+  "description": "Results as JSON Lines, one BatchResult per line in upload order: a 200 line's body parsed as decide parses it (numbers kept as sent, 0.8200000000000001 included; a number answer); error lines as error values with the class and fields their status and body give (never raised); expired and cancelled lines with their string status and neither decision nor error; headers lower-cased.",
+  "call": {
+    "method": "batches.results",
+    "args": {
+      "batch_id": "batch_01J9ZB8Q3T"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/x-ndjson",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"custom_id\":\"ticket-1\",\"status\":200,\"body\":{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"route\": {\"type\": \"choice\", \"choice\": \"billing\", \"confidence\": 0.81, \"probabilities\": {\"billing\": 0.8200000000000001, \"bug\": 0.18}}, \"refund\": {\"type\": \"truth\", \"truth\": 0.88}}, \"usage\": {\"input_tokens\": 47, \"output_tokens\": 0}},\"headers\":{\"x-request-id\":\"req_01J9ZE1A4K\",\"x-decisionnode-model\":\"decisionnode-moe\",\"x-decisionnode-safety\":\"harm=0.002, self_harm=0.001\"}}\n{\"custom_id\":\"count-1\",\"status\":200,\"body\":{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"cars\": {\"type\": \"number\", \"number\": 7, \"expected\": 7.0, \"confidence\": 0.78, \"probabilities\": {\"6\": 0.105, \"7\": 0.783, \"8\": 0.098}}}, \"usage\": {\"input_tokens\": 300, \"output_tokens\": 0}},\"headers\":{\"x-request-id\":\"req_01J9ZE1A4L\",\"x-decisionnode-model\":\"decisionnode-moe\"}}\n{\"custom_id\":\"ticket-48216\",\"status\":400,\"body\":{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Unknown model: decisionode-latest\"}},\"headers\":{\"x-decisionnode-error\":\"unknown model 'decisionode-latest'; GET /v1/models lists the models\"}}\n{\"custom_id\":\"ticket-48217\",\"status\":422,\"body\":{\"detail\": [{\"type\": \"missing\", \"loc\": [\"body\", \"questions\"], \"msg\": \"Field required\", \"input\": {}}]},\"headers\":{\"x-decisionnode-error\":\"questions: Field required\"}}\n{\"custom_id\":\"case-1182\",\"status\":403,\"body\":{\"detail\": {\"error_type\": \"refusal_error\", \"message\": \"This request was refused under the usage policy: it asks to choose, rank or target people to be harmed.\", \"category\": \"harm\"}},\"headers\":{\"x-request-id\":\"req_01J9ZE2B7Q\",\"x-decisionnode-model\":\"decisionnode-moe\",\"x-decisionnode-safety\":\"harm=0.912;blocked, self_harm=0.004\",\"x-decisionnode-refusal\":\"harm\",\"x-decisionnode-billable-tokens\":\"0\",\"x-decisionnode-error\":\"refused under the key's policy: harm\"}}\n{\"custom_id\":\"ticket-48218\",\"status\":402,\"body\":{\"detail\": {\"error_type\": \"insufficient_credit\", \"message\": \"Your prepaid balance is empty. Add credit in the console to continue.\"}},\"headers\":{\"x-request-id\":\"req_01J9ZE2B7R\",\"x-decisionnode-error\":\"the prepaid balance is empty\"}}\n{\"custom_id\":\"ticket-48219\",\"status\":500,\"body\":{\"detail\": {\"error_type\": \"api_error\", \"message\": \"Something went wrong on our side.\"}},\"headers\":{\"x-request-id\":\"req_01J9ZE2B7S\",\"x-decisionnode-error\":\"the model returned no finite answer\"}}\n{\"custom_id\":\"ticket-48215\",\"status\":\"expired\",\"body\":null,\"headers\":{}}\n{\"custom_id\":\"ticket-48214\",\"status\":\"cancelled\",\"body\":null,\"headers\":{}}\n"
+  },
+  "expect": {
+    "batch_results": [
+      {
+        "custom_id": "ticket-1",
+        "status": 200,
+        "headers": {
+          "x-request-id": "req_01J9ZE1A4K"
+        },
+        "decision": {
+          "model": "decisionnode-moe-0.9.0-rc1",
+          "request_id": "req_01J9ZE1A4K",
+          "usage": {
+            "input_tokens": 47,
+            "output_tokens": 0
+          },
+          "safety": {
+            "checked": true,
+            "harm": 0.002,
+            "self_harm": 0.001,
+            "flagged": []
+          },
+          "answers": {
+            "route": {
+              "kind": "choice",
+              "choice": "billing",
+              "probabilities": {
+                "billing": 0.8200000000000001,
+                "bug": 0.18
+              }
+            },
+            "refund": {
+              "kind": "truth",
+              "truth": 0.88
+            }
+          }
+        }
+      },
+      {
+        "custom_id": "count-1",
+        "status": 200,
+        "decision": {
+          "answers": {
+            "cars": {
+              "kind": "number",
+              "number": 7,
+              "expected": 7.0,
+              "confidence": 0.78,
+              "probabilities": {
+                "6": 0.105,
+                "7": 0.783,
+                "8": 0.098
+              }
+            }
+          }
+        }
+      },
+      {
+        "custom_id": "ticket-48216",
+        "status": 400,
+        "error": {
+          "error": "BadRequestError",
+          "fields": {
+            "status": 400,
+            "error_type": "api_usage_error",
+            "message": "Unknown model: decisionode-latest",
+            "reason": "unknown model 'decisionode-latest'; GET /v1/models lists the models"
+          }
+        }
+      },
+      {
+        "custom_id": "ticket-48217",
+        "status": 422,
+        "error": {
+          "error": "ValidationError",
+          "fields": {
+            "status": 422,
+            "entries": [
+              {
+                "type": "missing",
+                "loc": [
+                  "body",
+                  "questions"
+                ],
+                "msg": "Field required",
+                "input": {}
+              }
+            ]
+          }
+        }
+      },
+      {
+        "custom_id": "case-1182",
+        "status": 403,
+        "error": {
+          "error": "RefusalError",
+          "fields": {
+            "status": 403,
+            "error_type": "refusal_error",
+            "category": "harm",
+            "request_id": "req_01J9ZE2B7Q",
+            "safety": {
+              "checked": true,
+              "harm": 0.912,
+              "self_harm": 0.004,
+              "flagged": [
+                "harm"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "custom_id": "ticket-48218",
+        "status": 402,
+        "error": {
+          "error": "InsufficientCreditError",
+          "fields": {
+            "status": 402,
+            "error_type": "insufficient_credit"
+          }
+        }
+      },
+      {
+        "custom_id": "ticket-48219",
+        "status": 500,
+        "error": {
+          "error": "ServerError",
+          "fields": {
+            "status": 500,
+            "error_type": "api_error",
+            "reason": "the model returned no finite answer"
+          }
+        }
+      },
+      {
+        "custom_id": "ticket-48215",
+        "status": "expired",
+        "headers": {},
+        "no_decision": true
+      },
+      {
+        "custom_id": "ticket-48214",
+        "status": "cancelled",
+        "headers": {},
+        "no_decision": true
+      }
+    ]
+  }
+}

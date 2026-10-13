@@ -1,0 +1,53 @@
+{
+  "id": "check-with-images-and-model",
+  "description": "check takes images and model like decide.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "check",
+    "args": {
+      "state": "Receipt for a refund claim.",
+      "instructions": "Is this a valid receipt?",
+      "images": [
+        {
+          "$image": {
+            "id": "screen",
+            "path": "fixtures/images/pixel.png"
+          }
+        }
+      ],
+      "model": "decisionnode-flash"
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-flash",
+        "state": "Receipt for a refund claim.",
+        "questions": {
+          "check": {
+            "type": "truth",
+            "instructions": "Is this a valid receipt?"
+          }
+        },
+        "images": [
+          {
+            "id": "screen",
+            "media_type": "image/png",
+            "data": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGM8ISfHwMDAxMDAwMDAAAANBAEIfXHKZgAAAABJRU5ErkJggg=="
+          }
+        ]
+      }
+    }
+  }
+}

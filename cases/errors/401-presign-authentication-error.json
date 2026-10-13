@@ -1,0 +1,39 @@
+{
+  "id": "401-presign-authentication-error",
+  "description": "POST /v1/uploads answered 401 authentication_error: AuthenticationError, raised from upload() before any PUT.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "upload",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "path": "fixtures/images/pixel.png"
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 401,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"authentication_error\", \"message\": \"Cannot authenticate with the server. Please check your API key and try again.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "AuthenticationError",
+      "fields": {
+        "status": 401,
+        "error_type": "authentication_error",
+        "message": "Cannot authenticate with the server. Please check your API key and try again."
+      }
+    }
+  }
+}

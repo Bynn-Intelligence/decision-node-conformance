@@ -1,0 +1,154 @@
+{
+  "id": "400-presign-api-usage-error",
+  "description": "POST /v1/uploads answered 400 api_usage_error: BadRequestError, raised from upload() before any PUT.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "upload",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "path": "fixtures/images/pixel.png"
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "files: 1 to 16 files, got 17."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"files: 1 to 16 files, got 17.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "files: 1 to 16 files, got 17."
+      }
+    }
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/uploads",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "files": [
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        {
+          "content_type": "image/png",
+          "byte_size": 79,
+          "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        }
+      ]
+    }
+  }
+}

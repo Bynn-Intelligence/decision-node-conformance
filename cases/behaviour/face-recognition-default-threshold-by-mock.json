@@ -1,0 +1,89 @@
+{
+  "id": "face-recognition-default-threshold-by-mock",
+  "description": "The same picture with no threshold: the default 0.5 keeps both faces' matches, highest score first.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "lobby",
+            "url": "https://files.example.com/lobby/cam-6.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "face_recognition",
+            "options": {
+              "collection": "celebrities"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "evidence": {
+          "face_recognition": {
+            "version": "face_recognition-v1",
+            "status": "ok",
+            "latency_ms": 230,
+            "billed_calls": 1,
+            "results": [
+              {
+                "kind": "face_recognition",
+                "image": "lobby",
+                "faces": 2,
+                "matches": [
+                  {
+                    "box": {
+                      "x1": 91,
+                      "y1": 440,
+                      "x2": 1431,
+                      "y2": 928
+                    },
+                    "score": 0.814,
+                    "collection": "celebrities",
+                    "reference": "celeb-00977",
+                    "name": "Another Public Figure",
+                    "label": null
+                  },
+                  {
+                    "box": {
+                      "x1": 666,
+                      "y1": 668,
+                      "x2": 1529,
+                      "y2": 920
+                    },
+                    "score": 0.5471,
+                    "collection": "celebrities",
+                    "reference": "celeb-00412",
+                    "name": "A Public Figure",
+                    "label": null
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "id": "evidence-timeout-and-skipped",
+  "description": "A booster that timed out and one that was skipped: each entry has its status and time and an empty results list; nothing was billed (billed_calls 0 on each, usage.boosters 0) and the decision stands.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "age",
+        {
+          "$booster": {
+            "name": "ai_generated",
+            "images": []
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "age=timeout:800,ai_generated=skipped:0"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"adult\": {\"type\": \"truth\", \"truth\": 0.64}}, \"evidence\": {\"age\": {\"version\": \"age-v1\", \"status\": \"timeout\", \"latency_ms\": 800, \"billed_calls\": 0, \"results\": []}, \"ai_generated\": {\"version\": \"ai_generated-v1\", \"status\": \"skipped\", \"latency_ms\": 0, \"billed_calls\": 0, \"results\": []}}, \"usage\": {\"input_tokens\": 118, \"output_tokens\": 0, \"booster_tokens\": 12, \"boosters\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 118,
+        "output_tokens": 0,
+        "booster_tokens": 12,
+        "boosters": 0
+      },
+      "evidence": {
+        "age": {
+          "version": "age-v1",
+          "status": "timeout",
+          "latency_ms": 800,
+          "billed_calls": 0,
+          "results": []
+        },
+        "ai_generated": {
+          "version": "ai_generated-v1",
+          "status": "skipped",
+          "latency_ms": 0,
+          "billed_calls": 0,
+          "results": []
+        }
+      },
+      "answers": {
+        "adult": {
+          "kind": "truth",
+          "truth": 0.64
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "id": "response-headers-from-final-attempt",
+  "description": "After a retry, request_id is the one of the response that succeeded.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 529,
+          "headers": {
+            "retry-after-ms": "20",
+            "x-request-id": "req_first"
+          },
+          "body": {
+            "detail": {
+              "error_type": "overloaded_error",
+              "message": "The service is overloaded. Try again shortly."
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "x-request-id": "req_second"
+          },
+          "body": {
+            "model": "decisionnode-moe-0.9.0-rc1",
+            "answers": {
+              "q": {
+                "type": "truth",
+                "truth": 0.5
+              }
+            },
+            "usage": {
+              "input_tokens": 5,
+              "output_tokens": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "request_id": "req_second"
+      }
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "id": "batch-create-small-image-inline",
+  "description": "A batch request's image under the threshold goes inline in its line as {id, media_type, data}.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "ticket-1",
+          "state": "Receipt attached.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          },
+          "images": [
+            {
+              "$image": {
+                "id": "receipt",
+                "path": "fixtures/images/pixel.png"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/batches",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      },
+      "jsonl_count": 1,
+      "jsonl_checks": [
+        {
+          "line": 0,
+          "pointer": "/images/0",
+          "equals": {
+            "id": "receipt",
+            "media_type": "image/png",
+            "data": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGM8ISfHwMDAxMDAwMDAAAANBAEIfXHKZgAAAABJRU5ErkJggg=="
+          }
+        }
+      ]
+    }
+  }
+}

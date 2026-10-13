@@ -1,0 +1,46 @@
+{
+  "id": "batch-list-offset-limit",
+  "description": "batches.list(offset, limit) sends GET /v1/batches?offset=&limit=.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "body": {
+            "batches": [],
+            "offset": 20,
+            "limit": 10,
+            "total": 3,
+            "next_offset": null
+          }
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "batches.list",
+    "args": {
+      "offset": 20,
+      "limit": 10
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/batches",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      },
+      "query": {
+        "offset": "20",
+        "limit": "10"
+      }
+    }
+  }
+}

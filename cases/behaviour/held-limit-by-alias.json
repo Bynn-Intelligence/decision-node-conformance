@@ -1,0 +1,223 @@
+{
+  "id": "held-limit-by-alias",
+  "description": "Held limits apply to a model named by its family id: the scenario's /v1/models lists only the pinned entries, each stating its version and its alias, the family id, and sessions.max_window 16. After models(), open_session naming the family id decisionnode-moe is refused locally exactly as one naming the pinned id would be: the API's 422 entry naming 16. Only GET /v1/models reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "GET",
+            "$path": "/v1/models"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json"
+              },
+              "body": {
+                "models": [
+                  {
+                    "name": "decisionnode-moe-0.9.0-rc1",
+                    "description": "DecisionNode MoE, the main model.",
+                    "release_date": "2026-10-01",
+                    "version": "decisionnode-moe-0.9.0-rc1",
+                    "alias": "decisionnode-moe",
+                    "max_input_tokens": 32768,
+                    "max_choice_options": 255,
+                    "max_score_levels": 10,
+                    "max_images": 4,
+                    "max_image_bytes": 10485760,
+                    "number_one_question_values": 256,
+                    "number_max_grid_values": 4096,
+                    "number_default_range": [
+                      0,
+                      255
+                    ],
+                    "number_default_step": 1,
+                    "upload_max_bytes": 10485760,
+                    "upload_ttl_seconds": 3600,
+                    "upload_media_types": [
+                      "image/jpeg",
+                      "image/png",
+                      "image/webp"
+                    ],
+                    "sessions": {
+                      "enabled": true,
+                      "max_per_key": 4,
+                      "default_window": 8,
+                      "max_window": 16,
+                      "default_ttl_seconds": 300,
+                      "max_ttl_seconds": 3600,
+                      "idle_timeout_seconds": 120,
+                      "max_frame_tokens": 1535,
+                      "max_frame_images": 1,
+                      "window_tokens": 1536,
+                      "max_prefix_tokens": 34752
+                    },
+                    "batch": {
+                      "requests_per_batch": 10000,
+                      "batch_bytes": 268435456,
+                      "add_bytes": 10485760,
+                      "active_batches_per_key": 10,
+                      "queued_requests_per_key": 100000,
+                      "time_to_completion_hours": 24,
+                      "result_retention_days": 7,
+                      "max_custom_id_chars": 512,
+                      "price_per_million_input_tokens": 0.021,
+                      "price_factor": 0.5
+                    }
+                  },
+                  {
+                    "name": "decisionnode-flash-0.9.0-rc1",
+                    "description": "DecisionNode Flash, the fast and lower-cost model.",
+                    "release_date": "2026-10-01",
+                    "version": "decisionnode-flash-0.9.0-rc1",
+                    "alias": "decisionnode-flash",
+                    "max_input_tokens": 8192,
+                    "max_choice_options": 255,
+                    "max_score_levels": 10,
+                    "max_images": 4,
+                    "max_image_bytes": 10485760,
+                    "number_one_question_values": 256,
+                    "number_max_grid_values": 4096,
+                    "number_default_range": [
+                      0,
+                      255
+                    ],
+                    "number_default_step": 1,
+                    "upload_max_bytes": 10485760,
+                    "upload_ttl_seconds": 3600,
+                    "upload_media_types": [
+                      "image/jpeg",
+                      "image/png",
+                      "image/webp"
+                    ],
+                    "sessions": {
+                      "enabled": true,
+                      "max_per_key": 4,
+                      "default_window": 8,
+                      "max_window": 16,
+                      "default_ttl_seconds": 300,
+                      "max_ttl_seconds": 3600,
+                      "idle_timeout_seconds": 120,
+                      "max_frame_tokens": 1535,
+                      "max_frame_images": 1,
+                      "window_tokens": 1536,
+                      "max_prefix_tokens": 34752
+                    },
+                    "batch": {
+                      "requests_per_batch": 10000,
+                      "batch_bytes": 268435456,
+                      "add_bytes": 10485760,
+                      "active_batches_per_key": 10,
+                      "queued_requests_per_key": 100000,
+                      "time_to_completion_hours": 24,
+                      "result_retention_days": 7,
+                      "max_custom_id_chars": 512,
+                      "price_per_million_input_tokens": 0.0105,
+                      "price_factor": 0.5
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "models",
+        "args": {}
+      }
+    },
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "questions": {
+            "abort": {
+              "$truth": {
+                "instructions": "Abort?"
+              }
+            }
+          },
+          "model": "decisionnode-moe",
+          "window": 17
+        }
+      },
+      "outcome": {
+        "error": "ValidationError",
+        "fields": {
+          "error_type": null,
+          "entries": [
+            {
+              "type": "less_than_equal",
+              "loc": [
+                "body",
+                "window"
+              ],
+              "msg": "Input should be less than or equal to 16",
+              "input": 17,
+              "ctx": {
+                "le": 16
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "questions": {
+            "abort": {
+              "$truth": {
+                "instructions": "Abort?"
+              }
+            }
+          },
+          "model": "decisionnode-moe",
+          "window": 17
+        }
+      },
+      "outcome": {
+        "error": "ValidationError",
+        "fields": {
+          "error_type": null,
+          "entries": [
+            {
+              "type": "less_than_equal",
+              "loc": [
+                "body",
+                "window"
+              ],
+              "msg": "Input should be less than or equal to 16",
+              "input": 17,
+              "ctx": {
+                "le": 16
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "request_sequence": [
+      {
+        "method": "GET",
+        "path": "/v1/models",
+        "status": 200
+      }
+    ]
+  }
+}

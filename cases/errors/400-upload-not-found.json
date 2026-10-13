@@ -1,0 +1,74 @@
+{
+  "id": "400-upload-not-found",
+  "description": "A 400 upload_not_found for an image named by upload_id: BadRequestError with error_type upload_not_found and the message; the reason header as sent.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "upload_id": "upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Image 'receipt': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 was not found."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"upload_not_found\", \"message\": \"Image 'receipt': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 was not found.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "upload_not_found",
+        "message": "Image 'receipt': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 was not found.",
+        "request_id": "req_case_0001",
+        "reason": "Image 'receipt': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 was not found."
+      }
+    }
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "s",
+      "images": [
+        {
+          "id": "receipt",
+          "upload_id": "upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+        }
+      ],
+      "questions": {
+        "q": {
+          "type": "truth",
+          "instructions": "?"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "id": "collections-enroll-answer-lost-replayed",
+  "description": "Against the mock: an enrollment whose answer is lost after the face was enrolled (a 500 instead of the 201) is retried with the same Idempotency-Key, and the server replays the first answer instead of enrolling again; the collection holds one item.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path_suffix": "/items"
+          },
+          "steps": [
+            {
+              "status": 500,
+              "headers": {
+                "content-type": "application/json"
+              },
+              "body": {
+                "detail": {
+                  "error_type": "api_error",
+                  "message": "Something went wrong on our side."
+                }
+              },
+              "after_normal": true
+            },
+            {
+              "action": "normal"
+            }
+          ],
+          "after": "repeat_last"
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Staff"
+        }
+      },
+      "outcome": {
+        "result": "collection",
+        "collection": {
+          "id": "col_4da4fa2511b3c8fe3a620c8c948ea430"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.enroll",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "image": {
+            "$image": {
+              "id": "badge",
+              "url": "https://files.example.com/badges/emp-1042.jpg"
+            }
+          },
+          "reference": "emp-1042"
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "reference": "emp-1042",
+          "collection": "col_4da4fa2511b3c8fe3a620c8c948ea430"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list_items",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "item_page",
+        "item_page": {
+          "total": 1
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 4,
+    "same_header": {
+      "name": "idempotency-key",
+      "path_suffix": "/items",
+      "method": "POST"
+    }
+  }
+}

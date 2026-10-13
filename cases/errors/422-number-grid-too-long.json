@@ -1,0 +1,88 @@
+{
+  "id": "422-number-grid-too-long",
+  "description": "A grid of 10,001 values: the 422 too_long.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "p": {
+            "type": "number",
+            "instructions": "Percent?",
+            "min": 0,
+            "max": 1000,
+            "step": 0.1
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "question 'p': the grid holds 10001 values, the limit is 4096; narrow the range or widen the step"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"too_long\", \"loc\": [\"body\", \"questions\", \"p\", \"number\"], \"msg\": \"Grid should have at most 4096 values, not 10001\", \"input\": {\"type\": \"number\", \"instructions\": \"Percent?\", \"min\": 0, \"max\": 1000, \"step\": 0.1}, \"ctx\": {\"field_type\": \"Grid\", \"max_length\": 4096, \"actual_length\": 10001}}]}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "s",
+      "questions": {
+        "p": {
+          "type": "number",
+          "instructions": "Percent?",
+          "min": 0,
+          "max": 1000,
+          "step": 0.1
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "entries": [
+          {
+            "type": "too_long",
+            "loc": [
+              "body",
+              "questions",
+              "p",
+              "number"
+            ],
+            "msg": "Grid should have at most 4096 values, not 10001",
+            "input": {
+              "type": "number",
+              "instructions": "Percent?",
+              "min": 0,
+              "max": 1000,
+              "step": 0.1
+            },
+            "ctx": {
+              "field_type": "Grid",
+              "max_length": 4096,
+              "actual_length": 10001
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "400-choice-without-options",
+  "description": "A choice with an empty option map is a 400. Sent with decide_raw: from spec 1.1 the builders refuse this request locally (behaviour/local-* cases), so the raw body carries it to the recorded response.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "q": {
+            "type": "choice",
+            "instructions": "?",
+            "criteria": {}
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "question 'q': a choice needs at least one option"
+    },
+    "body_text": "{\"detail\": \"Choice question must have at least one choice: q\"}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "type": "choice",
+          "instructions": "?",
+          "criteria": {}
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": null,
+        "message": "Choice question must have at least one choice: q",
+        "reason": "question 'q': a choice needs at least one option"
+      }
+    }
+  }
+}

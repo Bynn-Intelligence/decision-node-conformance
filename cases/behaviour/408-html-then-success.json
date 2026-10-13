@@ -1,0 +1,43 @@
+{
+  "id": "408-html-then-success",
+  "description": "A 408 HTML page from the edge, then the normal answer: the 408 is retried and the second attempt's decision comes back. 2 attempts.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 408,
+          "headers": {
+            "content-type": "text/html",
+            "x-request-id": "req_edge_0408"
+          },
+          "body_text": "<html><body><h1>408 Request Time-out</h1></body></html>"
+        },
+        {
+          "action": "normal"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "truth-criteria-only",
+  "description": "truth with criteria and no instructions leaves the instructions key out.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "The parcel arrived broken.",
+      "questions": {
+        "q": {
+          "$truth": {
+            "true": "the item is damaged",
+            "false": "the item is fine"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "The parcel arrived broken.",
+        "questions": {
+          "q": {
+            "type": "truth",
+            "criteria": {
+              "true": "the item is damaged",
+              "false": "the item is fine"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "session-limit-not-retried",
+  "description": "A 429 session_limit_exceeded is never retried (a count frees when a session ends, not when time passes): raised at once as a RateLimitError (an SDK may raise its SessionLimitError subclass) with error_type session_limit_exceeded and retry_after.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "session": {
+        "max_per_key": 0
+      }
+    }
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "RateLimitError",
+      "subclass_ok": true,
+      "fields": {
+        "status": 429,
+        "error_type": "session_limit_exceeded"
+      }
+    }
+  }
+}

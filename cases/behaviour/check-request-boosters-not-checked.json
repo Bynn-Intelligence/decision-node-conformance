@@ -1,0 +1,32 @@
+{
+  "id": "check-request-boosters-not-checked",
+  "description": "check_request runs no booster check: an unknown name, a duplicate and a booster on a request without images all check clean, and nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      },
+      "boosters": [
+        "age",
+        "age",
+        "example_booster"
+      ]
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "result": "checked"
+    }
+  }
+}

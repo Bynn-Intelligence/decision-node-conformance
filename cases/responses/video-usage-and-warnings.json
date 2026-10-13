@@ -1,0 +1,68 @@
+{
+  "id": "video-usage-and-warnings",
+  "description": "A response to a request with videos: usage.video_frames, usage.video_seconds as received, and the warnings exactly as sent, in order.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "videos": [
+        {
+          "$video": {
+            "id": "dock",
+            "frames": [
+              {
+                "$frame": {
+                  "t": 0,
+                  "data_text": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAACAAIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDgKKKK+eP2E//Z",
+                  "media_type": "image/jpeg"
+                }
+              },
+              {
+                "$frame": {
+                  "t": 0.5,
+                  "data_text": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAACAAIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDgKKKK+eP2E//Z",
+                  "media_type": "image/jpeg"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "questions": {
+        "fall": {
+          "$truth": {
+            "instructions": "Does a person fall in the video?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"fall\": {\"type\": \"truth\", \"truth\": 0.12}}, \"usage\": {\"input_tokens\": 9120, \"output_tokens\": 0, \"video_frames\": 250, \"video_seconds\": 600.0}, \"warnings\": [\"Video 'dock' was read at 0.42 frames a second (250 frames over 600 s): at most 256 frames a video, and to fit the video token budget of 16384.\", \"Video 'dock' was read at 416 x 224 pixels to fit the video token budget of 16384.\"]}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 9120,
+        "output_tokens": 0,
+        "video_frames": 250,
+        "video_seconds": 600.0
+      },
+      "warnings": [
+        "Video 'dock' was read at 0.42 frames a second (250 frames over 600 s): at most 256 frames a video, and to fit the video token budget of 16384.",
+        "Video 'dock' was read at 416 x 224 pixels to fit the video token budget of 16384."
+      ],
+      "answers": {
+        "fall": {
+          "kind": "truth",
+          "truth": 0.12
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "id": "check-session-window-above-64",
+  "description": "check_request on an open_session request with window 65 raises what open_session raises: ValidationError with the API's 422 entry. check_request runs the checks the call would run and sends nothing.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      },
+      "window": 65
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "less_than_equal",
+            "loc": [
+              "body",
+              "window"
+            ],
+            "msg": "Input should be less than or equal to 64",
+            "input": 65,
+            "ctx": {
+              "le": 64
+            }
+          }
+        ]
+      }
+    }
+  }
+}

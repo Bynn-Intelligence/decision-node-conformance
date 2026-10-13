@@ -1,0 +1,40 @@
+{
+  "id": "local-video-frames-empty",
+  "description": "A video with no frames. Checked locally (SDK specification 1.2): BadRequestError with the server's error_type and message, and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "videos": [
+        {
+          "$video": {
+            "id": "cam",
+            "frames": []
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is the door open?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "Video 'cam': frames must be a non-empty list of frames.",
+        "request_id": null
+      }
+    }
+  }
+}

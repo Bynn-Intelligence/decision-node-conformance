@@ -1,0 +1,40 @@
+{
+  "id": "404-batch-not-found",
+  "description": "batches.get answered 404 not_found_error: NotFoundError with status and error_type (batch errors use the classes a status gives; 409 and 410 have none, so the base class).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "batches.get",
+    "args": {
+      "batch_id": "batch_0000000000"
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "No batch batch_0000000000 for this key."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"not_found_error\", \"message\": \"No batch batch_0000000000 for this key.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "NotFoundError",
+      "fields": {
+        "status": 404,
+        "error_type": "not_found_error",
+        "message": "No batch batch_0000000000 for this key."
+      }
+    }
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/batches/batch_0000000000",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  }
+}

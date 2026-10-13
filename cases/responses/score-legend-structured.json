@@ -1,0 +1,70 @@
+{
+  "id": "score-legend-structured",
+  "description": "A level sent as an object or array comes back in the legend as that object or array, not as text.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "risk": {
+          "$score": {
+            "instructions": "?",
+            "levels": [
+              {
+                "what": "no risk",
+                "examples": [
+                  "reading a file"
+                ]
+              },
+              [
+                "high",
+                "risk"
+              ],
+              "critical"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "23",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"risk\": {\"type\": \"score\", \"score\": 0.4, \"confidence\": 0.7, \"legend\": {\"0\": {\"what\": \"no risk\", \"examples\": [\"reading a file\"]}, \"1\": [\"high\", \"risk\"], \"2\": \"critical\"}, \"probabilities\": {\"0\": 0.7, \"1\": 0.2, \"2\": 0.1}}}, \"usage\": {\"input_tokens\": 30, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "risk": {
+          "kind": "score",
+          "score": 0.4,
+          "confidence": 0.7,
+          "legend": {
+            "0": {
+              "what": "no risk",
+              "examples": [
+                "reading a file"
+              ]
+            },
+            "1": [
+              "high",
+              "risk"
+            ],
+            "2": "critical"
+          },
+          "probabilities": {
+            "0": 0.7,
+            "1": 0.2,
+            "2": 0.1
+          }
+        }
+      }
+    }
+  }
+}

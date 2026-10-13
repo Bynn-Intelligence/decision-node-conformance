@@ -1,0 +1,47 @@
+{
+  "id": "check-point-fault",
+  "description": "check_request on a decide request with a point fault raises what sending raises. Checked locally (SDK specification 1.2): ValidationError with the entries the API answers, and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "pick": {
+          "$point": {
+            "instructions": "Point to the yellow package closest to the robot arm."
+          }
+        }
+      }
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "image_required",
+            "loc": [
+              "body",
+              "questions",
+              "pick",
+              "point"
+            ],
+            "msg": "A point question needs an image in the request",
+            "input": {
+              "type": "point",
+              "instructions": "Point to the yellow package closest to the robot arm."
+            }
+          }
+        ]
+      }
+    }
+  }
+}

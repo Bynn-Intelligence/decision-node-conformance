@@ -1,0 +1,45 @@
+{
+  "id": "local-choice-without-criteria",
+  "description": "A choice with no criteria (no option map): the API's 422 missing entry. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "route": {
+          "type": "choice",
+          "instructions": "Where?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "questions",
+              "route",
+              "choice",
+              "criteria"
+            ],
+            "msg": "Field required",
+            "input": {
+              "type": "choice",
+              "instructions": "Where?"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

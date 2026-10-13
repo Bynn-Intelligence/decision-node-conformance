@@ -1,0 +1,50 @@
+{
+  "id": "session-not-served-check-skipped-without-models",
+  "description": "A client that never called models() holds no sessions.enabled value, so it skips that check and sends the open; the server's 400 api_usage_error comes back as BadRequestError, not retried.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 400,
+          "headers": {
+            "content-type": "application/json",
+            "x-decisionnode-error": "decisionnode-moe does not serve sessions",
+            "x-decisionnode-billable-tokens": "0"
+          },
+          "body": {
+            "detail": {
+              "error_type": "api_usage_error",
+              "message": "Model decisionnode-moe does not serve sessions."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Model decisionnode-moe does not serve sessions."
+      }
+    }
+  }
+}

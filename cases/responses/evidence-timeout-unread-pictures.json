@@ -1,0 +1,90 @@
+{
+  "id": "evidence-timeout-unread-pictures",
+  "description": "A booster that timed out lists one entry per picture it was meant to read, {\"image\": id} with no reading, so the caller sees which pictures went unread; each is a generic reading holding its raw fields (the entry's status says why), and billed_calls is 0. The decision stands.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "age"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "age=timeout:800"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"adult\": {\"type\": \"truth\", \"truth\": 0.71}, \"synthetic\": {\"type\": \"truth\", \"truth\": 0.4}}, \"evidence\": {\"age\": {\"version\": \"age-v1\", \"status\": \"timeout\", \"latency_ms\": 800, \"billed_calls\": 0, \"results\": [{\"image\": \"person\"}, {\"image\": \"poster\"}]}}, \"usage\": {\"input_tokens\": 260, \"output_tokens\": 0, \"booster_tokens\": 30, \"boosters\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 260,
+        "output_tokens": 0,
+        "booster_tokens": 30,
+        "boosters": 0
+      },
+      "evidence": {
+        "age": {
+          "version": "age-v1",
+          "status": "timeout",
+          "latency_ms": 800,
+          "billed_calls": 0,
+          "results": [
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "person"
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "poster"
+              }
+            }
+          ]
+        }
+      },
+      "answers": {
+        "adult": {
+          "kind": "truth",
+          "truth": 0.71
+        },
+        "synthetic": {
+          "kind": "truth",
+          "truth": 0.4
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "fine-tuned-model-other-workspace-not-retried",
+  "description": "Another workspace's fine-tuned model is the 400 \"Unknown model\": one attempt, a BadRequestError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      },
+      "model": "decisionnode-moe@acme/fraud"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Unknown model: decisionnode-moe@acme/fraud"
+      }
+    }
+  }
+}

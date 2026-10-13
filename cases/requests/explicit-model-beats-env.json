@@ -1,0 +1,47 @@
+{
+  "id": "explicit-model-beats-env",
+  "description": "A model passed to the client wins over DECISIONNODE_MODEL.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "model": "decisionnode-moe"
+  },
+  "env": {
+    "DECISIONNODE_MODEL": "decisionnode-flash"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  }
+}

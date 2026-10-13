@@ -1,0 +1,48 @@
+{
+  "id": "never-retry-404",
+  "description": "404 is never retried, even with retry headers present: one attempt, then NotFoundError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 404,
+          "headers": {
+            "retry-after-ms": "20"
+          },
+          "body": {
+            "detail": {
+              "error_type": "not_found_error",
+              "message": "Not found."
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "NotFoundError",
+      "fields": {
+        "status": 404
+      }
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "id": "point-and-box-normalized",
+  "description": "Answers to questions sent with units normalized: fractions with 4 decimals, read as sent.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "pick": {
+          "$point": {
+            "instructions": "Point to the yellow package closest to the robot arm.",
+            "units": "normalized"
+          }
+        },
+        "damage": {
+          "$box": {
+            "instructions": "Draw a box around the damaged package.",
+            "units": "normalized"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"pick\": {\"type\": \"point\", \"x\": 0.4229, \"y\": 0.4213, \"present\": 0.97, \"confidence\": 0.91, \"image\": \"belt\", \"width\": 1920, \"height\": 1080}, \"damage\": {\"type\": \"box\", \"x1\": 0.1563, \"y1\": 0.1111, \"x2\": 0.2708, \"y2\": 0.3796, \"present\": 0.95, \"confidence\": 0.88, \"image\": \"belt\", \"width\": 1920, \"height\": 1080}}, \"usage\": {\"input_tokens\": 1402, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "pick": {
+          "x": 0.4229,
+          "y": 0.4213,
+          "present": 0.97,
+          "confidence": 0.91,
+          "image": "belt",
+          "width": 1920,
+          "height": 1080,
+          "kind": "point"
+        },
+        "damage": {
+          "x1": 0.1563,
+          "y1": 0.1111,
+          "x2": 0.2708,
+          "y2": 0.3796,
+          "present": 0.95,
+          "confidence": 0.88,
+          "image": "belt",
+          "width": 1920,
+          "height": 1080,
+          "kind": "box"
+        }
+      }
+    }
+  }
+}

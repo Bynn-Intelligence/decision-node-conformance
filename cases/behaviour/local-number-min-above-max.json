@@ -1,0 +1,48 @@
+{
+  "id": "local-number-min-above-max",
+  "description": "A number grid whose min is above its max (the API's 422). Checked locally: the API's own error class is raised and no request reaches the mock. From suite 1.5 the case also checks the error_type the server would send (null: a 422 has a list for its detail) and the API's entries exactly.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "$number": {
+            "instructions": "How many?",
+            "min": 60,
+            "max": 50
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "less_than_equal",
+            "loc": [
+              "body",
+              "questions",
+              "n",
+              "number",
+              "min"
+            ],
+            "msg": "Input should be less than or equal to 50",
+            "input": 60,
+            "ctx": {
+              "le": 50
+            }
+          }
+        ]
+      }
+    }
+  }
+}

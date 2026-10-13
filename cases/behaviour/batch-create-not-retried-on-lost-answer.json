@@ -1,0 +1,58 @@
+{
+  "id": "batch-create-not-retried-on-lost-answer",
+  "description": "batches.create whose connection closes without an answer is not retried: ConnectionError after one attempt.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path_suffix": "/v1/batches"
+          },
+          "steps": [
+            {
+              "action": "close"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "t1",
+          "state": "I was charged twice.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "ConnectionError"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "id": "403-collection-read-only",
+  "description": "A public collection takes no enrollment and no delete: the 403 collection_read_only, PermissionDeniedError with that error_type.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.delete",
+    "args": {
+      "collection_id": "celebrities"
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"collection_read_only\", \"message\": \"celebrities is a public collection and cannot be changed or listed.\"}}"
+  },
+  "natural_request": {
+    "method": "DELETE",
+    "path": "/v1/collections/celebrities",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "collection_read_only",
+        "message": "celebrities is a public collection and cannot be changed or listed."
+      }
+    }
+  }
+}

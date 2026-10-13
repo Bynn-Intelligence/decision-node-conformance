@@ -1,0 +1,35 @@
+{
+  "id": "batch-result-line-without-body",
+  "description": "A batch result line without a body is read as a JSON null body: it is JSON, so the rule for bodies that are not JSON does not apply. The line's error keeps the envelope's empty message \"\", error_type empty, and the class its status gives (500: ServerError), as a value, not raised.",
+  "call": {
+    "method": "batches.results",
+    "args": {
+      "batch_id": "batch_01J9ZB8Q3T"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/x-ndjson"
+    },
+    "body_text": "{\"custom_id\":\"t1\",\"status\":500,\"headers\":{}}\n"
+  },
+  "expect": {
+    "batch_results": [
+      {
+        "custom_id": "t1",
+        "status": 500,
+        "no_decision": true,
+        "error": {
+          "error": "ServerError",
+          "fields": {
+            "status": 500,
+            "error_type": null,
+            "message": "",
+            "request_id": null
+          }
+        }
+      }
+    ]
+  }
+}

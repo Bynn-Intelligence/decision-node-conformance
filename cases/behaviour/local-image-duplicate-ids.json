@@ -1,0 +1,43 @@
+{
+  "id": "local-image-duplicate-ids",
+  "description": "Two images with the same id: an image id is unique within the request. The API's 400 api_usage_error. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "url": "https://files.example.com/one.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "a",
+            "url": "https://files.example.com/two.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error"
+      }
+    }
+  }
+}

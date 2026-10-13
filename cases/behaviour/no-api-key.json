@@ -1,0 +1,27 @@
+{
+  "id": "no-api-key",
+  "description": "Without a key (none passed, DECISIONNODE_API_KEY unset) the call fails before any request is sent. The error is a DecisionNodeError or a subclass of it.",
+  "client": {
+    "api_key": null
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "DecisionNodeError",
+      "subclass_ok": true
+    }
+  }
+}

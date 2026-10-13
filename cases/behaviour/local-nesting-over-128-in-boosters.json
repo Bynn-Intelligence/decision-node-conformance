@@ -1,0 +1,53 @@
+{
+  "id": "local-nesting-over-128-in-boosters",
+  "description": "The nesting limit is on the whole body, boosters included: a booster's options holding 125 arrays inside each other nest the request 129 levels (the body, the boosters list, the booster object, its options, then the arrays), over the 128 the API takes. The API's 400 api_usage_error \"Invalid request.\", raised locally: no request reaches the mock. Nothing else about boosters is checked locally.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "age",
+            "options": {
+              "k": {
+                "$nest": {
+                  "depth": 125,
+                  "value": "x"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error",
+        "message": "Invalid request."
+      }
+    }
+  }
+}

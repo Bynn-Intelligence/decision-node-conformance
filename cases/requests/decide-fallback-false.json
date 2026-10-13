@@ -1,0 +1,54 @@
+{
+  "id": "decide-fallback-false",
+  "description": "fallback=False is sent as \"fallback\": false: a request for decisionnode-moe that no ready worker can take at once gets the 529 instead of an answer from decisionnode-flash.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "I was charged twice.",
+      "questions": {
+        "route": {
+          "$choice": {
+            "instructions": "Where should this go?",
+            "options": [
+              "billing",
+              "bug"
+            ]
+          }
+        }
+      },
+      "model": "decisionnode-moe",
+      "fallback": false
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "I was charged twice.",
+        "questions": {
+          "route": {
+            "type": "choice",
+            "instructions": "Where should this go?",
+            "criteria": {
+              "billing": null,
+              "bug": null
+            }
+          }
+        },
+        "fallback": false
+      }
+    }
+  }
+}

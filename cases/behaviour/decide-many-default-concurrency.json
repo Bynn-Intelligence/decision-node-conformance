@@ -1,0 +1,193 @@
+{
+  "id": "decide-many-default-concurrency",
+  "description": "The default concurrency is 8: twelve requests of 300 ms each never have more than 8 in flight, and run in parallel.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "item 0",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 0?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 1",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 1?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 2",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 2?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 3",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 3?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 4",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 4?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 5",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 5?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 6",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 6?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 7",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 7?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 8",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 8?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 9",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 9?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 10",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 10?"
+              }
+            }
+          }
+        },
+        {
+          "state": "item 11",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item 11?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "rules": [],
+      "otherwise": {
+        "steps": [
+          {
+            "action": "normal",
+            "delay_ms": 300
+          }
+        ],
+        "after": "repeat_last"
+      }
+    }
+  },
+  "expect": {
+    "attempts": 12,
+    "max_in_flight": {
+      "min": 2,
+      "max": 8
+    },
+    "results": [
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      }
+    ]
+  }
+}

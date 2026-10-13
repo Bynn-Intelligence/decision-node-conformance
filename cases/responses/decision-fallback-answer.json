@@ -1,0 +1,53 @@
+{
+  "id": "decision-fallback-answer",
+  "description": "A fallback answer: decisionnode-moe had no ready worker, so decisionnode-flash answered. Decision.model is the body's model, the model that answered, and Decision.fallback is {served_model, requested_model} from x-decisionnode-fallback and x-decisionnode-requested-model. x-decisionnode-requested-model is the canonical form of what the request asked for, here the family id decisionnode-moe; x-decisionnode-fallback names the pinned id that answered.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "I was charged twice.",
+      "questions": {
+        "route": {
+          "$choice": {
+            "instructions": "Where should this go?",
+            "options": [
+              "billing",
+              "bug"
+            ]
+          }
+        }
+      },
+      "model": "decisionnode-moe"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-model": "decisionnode-flash-0.9.0-rc1",
+      "x-decisionnode-fallback": "decisionnode-flash-0.9.0-rc1",
+      "x-decisionnode-requested-model": "decisionnode-moe"
+    },
+    "body_text": "{\"model\": \"decisionnode-flash-0.9.0-rc1\", \"answers\": {\"route\": {\"type\": \"choice\", \"choice\": \"billing\", \"confidence\": 0.62, \"probabilities\": {\"billing\": 0.81, \"bug\": 0.19}}}, \"usage\": {\"input_tokens\": 31, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "model": "decisionnode-flash-0.9.0-rc1",
+      "fallback": {
+        "served_model": "decisionnode-flash-0.9.0-rc1",
+        "requested_model": "decisionnode-moe"
+      },
+      "answers": {
+        "route": {
+          "kind": "choice",
+          "choice": "billing",
+          "confidence": 0.62,
+          "probabilities": {
+            "billing": 0.81,
+            "bug": 0.19
+          }
+        }
+      }
+    }
+  }
+}

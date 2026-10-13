@@ -1,0 +1,49 @@
+{
+  "id": "local-number-step-zero",
+  "description": "A number grid with step 0 (the API's 422 greater_than). Checked locally: the API's own error class is raised and no request reaches the mock. From suite 1.5 the case also checks the error_type the server would send (null: a 422 has a list for its detail) and the API's entries exactly.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "$number": {
+            "instructions": "How many?",
+            "min": 0,
+            "max": 10,
+            "step": 0
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "greater_than",
+            "loc": [
+              "body",
+              "questions",
+              "n",
+              "number",
+              "step"
+            ],
+            "msg": "Input should be greater than 0",
+            "input": 0,
+            "ctx": {
+              "gt": 0
+            }
+          }
+        ]
+      }
+    }
+  }
+}

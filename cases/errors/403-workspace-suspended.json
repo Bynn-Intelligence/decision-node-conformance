@@ -1,0 +1,41 @@
+{
+  "id": "403-workspace-suspended",
+  "description": "A suspended workspace's 403 is a PermissionDeniedError with error_type workspace_suspended.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"workspace_suspended\", \"message\": \"This workspace is suspended.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "workspace_suspended",
+        "message": "This workspace is suspended.",
+        "category": null,
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

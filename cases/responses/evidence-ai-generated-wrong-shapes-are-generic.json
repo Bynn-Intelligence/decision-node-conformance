@@ -1,0 +1,112 @@
+{
+  "id": "evidence-ai-generated-wrong-shapes-are-generic",
+  "description": "An ai_generated reading whose c2pa is not a string, one without the top_generator key, one whose top_generator is a string, not an object, and one without the c2pa_signer key (the API always writes both keys, null when unset): each is a generic reading holding its raw fields, and the decision does not fail. A null top_generator, as on the last one, is valid; the missing key is not.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "ai_generated"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "ai_generated=ok:300"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"synthetic\": {\"type\": \"truth\", \"truth\": 0.08}}, \"evidence\": {\"ai_generated\": {\"version\": \"ai_generated-v1\", \"status\": \"ok\", \"latency_ms\": 300, \"results\": [{\"image\": \"person\", \"generated\": 0.12, \"confidence\": 0.76, \"method\": \"inference\", \"top_generator\": null, \"c2pa_signer\": null, \"c2pa\": true}, {\"image\": \"poster\", \"generated\": 0.93, \"confidence\": 0.86, \"method\": \"inference\", \"c2pa_signer\": null}, {\"image\": \"person\", \"generated\": 0.9, \"confidence\": 0.8, \"method\": \"inference\", \"top_generator\": \"Generator A\", \"c2pa_signer\": null}, {\"image\": \"poster\", \"generated\": 0.04, \"confidence\": 0.92, \"method\": \"inference\", \"top_generator\": null}]}}, \"usage\": {\"input_tokens\": 180, \"output_tokens\": 0, \"booster_tokens\": 78, \"boosters\": 4}}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 180,
+        "output_tokens": 0,
+        "booster_tokens": 78,
+        "boosters": 4
+      },
+      "evidence": {
+        "ai_generated": {
+          "version": "ai_generated-v1",
+          "status": "ok",
+          "latency_ms": 300,
+          "billed_calls": null,
+          "results": [
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "person",
+                "generated": 0.12,
+                "confidence": 0.76,
+                "method": "inference",
+                "top_generator": null,
+                "c2pa_signer": null,
+                "c2pa": true
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "poster",
+                "generated": 0.93,
+                "confidence": 0.86,
+                "method": "inference",
+                "c2pa_signer": null
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "person",
+                "generated": 0.9,
+                "confidence": 0.8,
+                "method": "inference",
+                "top_generator": "Generator A",
+                "c2pa_signer": null
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "poster",
+                "generated": 0.04,
+                "confidence": 0.92,
+                "method": "inference",
+                "top_generator": null
+              }
+            }
+          ]
+        }
+      },
+      "answers": {
+        "synthetic": {
+          "kind": "truth",
+          "truth": 0.08
+        }
+      }
+    }
+  }
+}

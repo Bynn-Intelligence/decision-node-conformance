@@ -1,0 +1,32 @@
+{
+  "id": "collection-object-marked-for-deletion",
+  "description": "A collection whose items are marked for deletion carries deletion {at, reason}, kept as sent.",
+  "call": {
+    "method": "collections.get",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"id\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"type\": \"face\", \"name\": \"Staff, Stockholm office\", \"public\": false, \"items\": 412, \"created_at\": \"2026-10-12T09:00:00Z\", \"deletion\": {\"at\": \"2026-12-11T00:00:00Z\", \"reason\": \"storage_unpaid\"}}"
+  },
+  "expect": {
+    "collection": {
+      "id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "type": "face",
+      "name": "Staff, Stockholm office",
+      "public": false,
+      "items": 412,
+      "created_at": "2026-10-12T09:00:00Z",
+      "deletion": {
+        "at": "2026-12-11T00:00:00Z",
+        "reason": "storage_unpaid"
+      }
+    }
+  }
+}

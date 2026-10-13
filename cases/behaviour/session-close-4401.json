@@ -1,0 +1,78 @@
+{
+  "id": "session-close-4401",
+  "description": "The key was revoked during the session: after one reply the socket closes with 4401, reported as SessionClosed(4401) with reopen false (reopen on 1001, 1006, 1011, 4404, 4408, 4409, 4410).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "session": {
+        "close": {
+          "after_replies": 1,
+          "code": 4401
+        }
+      }
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "frame": "a",
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "timeout_ms": 15000
+      }
+    }
+  ],
+  "expect": {
+    "session_events": [
+      {
+        "reply": {
+          "seq": 1
+        }
+      },
+      {
+        "closed": {
+          "code": 4401,
+          "reopen": false
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "local-box-in-batch-create",
+  "description": "A batch line with a box question and no image: the line is checked as a decide request. Checked locally (SDK specification 1.2): ValidationError with the entries the API answers, and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "frame-1",
+          "state": "s",
+          "questions": {
+            "damage": {
+              "$box": {
+                "instructions": "Draw a box around the damaged package."
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "image_required",
+            "loc": [
+              "body",
+              "questions",
+              "damage",
+              "box"
+            ],
+            "msg": "A box question needs an image in the request",
+            "input": {
+              "type": "box",
+              "instructions": "Draw a box around the damaged package."
+            }
+          }
+        ]
+      }
+    }
+  }
+}

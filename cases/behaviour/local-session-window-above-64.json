@@ -1,0 +1,43 @@
+{
+  "id": "local-session-window-above-64",
+  "description": "open_session with window 65: window is 1 to 64, the API's 422 entry. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      },
+      "window": 65
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "less_than_equal",
+            "loc": [
+              "body",
+              "window"
+            ],
+            "msg": "Input should be less than or equal to 64",
+            "input": 65,
+            "ctx": {
+              "le": 64
+            }
+          }
+        ]
+      }
+    }
+  }
+}

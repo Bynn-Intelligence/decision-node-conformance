@@ -1,0 +1,33 @@
+{
+  "id": "409-batch-results-not-ready",
+  "description": "batches.results answered 409 results_not_ready: DecisionNodeError with status and error_type (batch errors use the classes a status gives; 409 and 410 have none, so the base class).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "batches.results",
+    "args": {
+      "batch_id": "batch_01J9ZB8Q3T"
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Batch batch_01J9ZB8Q3T is running. Results are ready when it has ended."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"results_not_ready\", \"message\": \"Batch batch_01J9ZB8Q3T is running. Results are ready when it has ended.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "results_not_ready",
+        "message": "Batch batch_01J9ZB8Q3T is running. Results are ready when it has ended."
+      }
+    }
+  }
+}

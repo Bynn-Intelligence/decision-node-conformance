@@ -1,0 +1,41 @@
+{
+  "id": "base-error-caught-by-name",
+  "description": "Every SDK exports the base error under the name DecisionNodeError (an alias is enough where the language names it otherwise). The harness catches this ServerError with a catch clause written against the name DecisionNodeError, so the name exists, is public and is a base of every error class.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 500,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "internal error"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_error\", \"message\": \"Internal error.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "ServerError",
+      "catch_as": "DecisionNodeError",
+      "fields": {
+        "status": 500,
+        "message": "Internal error.",
+        "reason": "internal error"
+      }
+    }
+  }
+}

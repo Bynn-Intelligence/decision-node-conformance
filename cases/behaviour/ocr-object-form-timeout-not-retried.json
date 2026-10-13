@@ -1,0 +1,87 @@
+{
+  "id": "ocr-object-form-timeout-not-retried",
+  "description": "ocr named in the object form, here with a prompt, on a helper: the same rule, one attempt, then TimeoutError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "timeout": 1
+  },
+  "call": {
+    "method": "check",
+    "args": {
+      "state": "",
+      "instructions": "Does the receipt total equal the claim?",
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "url": "https://files.example.com/receipt.jpg"
+          }
+        }
+      ],
+      "boosters": [
+        {
+          "$booster": {
+            "name": "ocr",
+            "options": {
+              "prompt": "the invoice total"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "x-decisionnode-boosters": "ocr=ok:2400"
+          },
+          "body": {
+            "model": "decisionnode-moe-0.9.0-rc1",
+            "answers": {
+              "total_matches": {
+                "type": "truth",
+                "truth": 0.97
+              }
+            },
+            "evidence": {
+              "ocr": {
+                "version": "ocr-v1",
+                "status": "ok",
+                "latency_ms": 2400,
+                "billed_calls": 1,
+                "results": [
+                  {
+                    "image": "receipt",
+                    "text": "Total 740.00 SEK",
+                    "truncated": false
+                  }
+                ]
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0,
+              "booster_tokens": 24,
+              "boosters": 1
+            }
+          },
+          "delay_ms": 2000
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "TimeoutError"
+    },
+    "elapsed_ms": {
+      "max": 1900
+    }
+  }
+}

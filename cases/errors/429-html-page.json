@@ -1,0 +1,41 @@
+{
+  "id": "429-html-page",
+  "description": "A 429 whose body is not JSON (an edge's page) is a RateLimitError, never a SessionLimitError: only the body's error_type session_limit_exceeded tells them apart, and a page has none. error_type is empty, retry_after comes from Retry-After, and the message is the client's own description.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "content-type": "text/html",
+      "retry-after": "1"
+    },
+    "body_text": "<html><body><h1>429 Too Many Requests</h1></body></html>"
+  },
+  "expect": {
+    "error": {
+      "class": "RateLimitError",
+      "fields": {
+        "status": 429,
+        "error_type": null,
+        "message": "HTTP 429 Too Many Requests",
+        "retry_after": 1,
+        "request_id": null,
+        "reason": null
+      }
+    }
+  }
+}

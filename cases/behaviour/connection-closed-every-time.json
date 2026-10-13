@@ -1,0 +1,36 @@
+{
+  "id": "connection-closed-every-time",
+  "description": "The connection is closed on every attempt: three attempts, then ConnectionError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "action": "close"
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "outcome": {
+      "error": "ConnectionError"
+    }
+  }
+}

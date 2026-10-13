@@ -1,0 +1,70 @@
+{
+  "id": "upload-timeout-option-bounds-put",
+  "description": "The client option upload_timeout bounds the PUT: with upload_timeout 1 s (the API timeout stays 10 s) and no retries, a PUT the storage answers after 2.5 s fails with TimeoutError and no decision is sent.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "timeout": 10,
+    "max_retries": 0,
+    "upload_timeout": 1
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "PUT"
+          },
+          "steps": [
+            {
+              "action": "normal",
+              "delay_ms": 2500
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "scan",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/"
+      }
+    ],
+    "elapsed_ms": {
+      "min": 900,
+      "max": 2400
+    },
+    "outcome": {
+      "error": "TimeoutError"
+    }
+  }
+}

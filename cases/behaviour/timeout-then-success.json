@@ -1,0 +1,40 @@
+{
+  "id": "timeout-then-success",
+  "description": "A timed-out attempt is retried and the next one succeeds.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "timeout": 0.3
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "action": "normal",
+          "delay_ms": 1500
+        },
+        {
+          "action": "normal"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}

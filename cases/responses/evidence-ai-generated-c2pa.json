@@ -1,0 +1,73 @@
+{
+  "id": "evidence-ai-generated-c2pa",
+  "description": "An ai_generated reading by c2pa: the file's trusted Content Credentials declare the picture generated, which overrides the pixels; c2pa_signer names who signed them, and a c2pa reading never names a top generator (null).",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "ai_generated"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "ai_generated=ok:288"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"synthetic\": {\"type\": \"truth\", \"truth\": 0.99}}, \"evidence\": {\"ai_generated\": {\"version\": \"ai_generated-v1\", \"status\": \"ok\", \"latency_ms\": 288, \"results\": [{\"image\": \"poster\", \"generated\": 1.0, \"confidence\": 1.0, \"method\": \"c2pa\", \"top_generator\": null, \"c2pa_signer\": \"Example Signer\"}]}}, \"usage\": {\"input_tokens\": 212, \"output_tokens\": 0, \"booster_tokens\": 31, \"boosters\": 1}}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 212,
+        "output_tokens": 0,
+        "booster_tokens": 31,
+        "boosters": 1
+      },
+      "evidence": {
+        "ai_generated": {
+          "version": "ai_generated-v1",
+          "status": "ok",
+          "latency_ms": 288,
+          "billed_calls": null,
+          "results": [
+            {
+              "kind": "ai_generated",
+              "image": "poster",
+              "generated": 1.0,
+              "confidence": 1.0,
+              "method": "c2pa",
+              "top_generator": null,
+              "c2pa_signer": "Example Signer",
+              "c2pa": null
+            }
+          ]
+        }
+      },
+      "answers": {
+        "synthetic": {
+          "kind": "truth",
+          "truth": 0.99
+        }
+      }
+    }
+  }
+}

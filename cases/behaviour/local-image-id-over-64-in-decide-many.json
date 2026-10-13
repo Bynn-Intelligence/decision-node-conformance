@@ -1,0 +1,68 @@
+{
+  "id": "local-image-id-over-64-in-decide-many",
+  "description": "decide_many where the second request's second image has a 65-character id: every request is checked before any is sent, so the whole call raises the one BadRequestError and nothing is sent, not even the valid first request.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "",
+          "images": [
+            {
+              "$image": {
+                "id": "front",
+                "url": "https://files.example.com/front.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Is this a receipt?"
+              }
+            }
+          }
+        },
+        {
+          "state": "",
+          "images": [
+            {
+              "$image": {
+                "id": "front",
+                "url": "https://files.example.com/front.jpg"
+              }
+            },
+            {
+              "$image": {
+                "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "url": "https://files.example.com/back.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Is this a receipt?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "Image 1: its id is longer than 64 characters.",
+        "request_id": null
+      }
+    }
+  }
+}

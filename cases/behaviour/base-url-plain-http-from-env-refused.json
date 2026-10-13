@@ -1,0 +1,30 @@
+{
+  "id": "base-url-plain-http-from-env-refused",
+  "description": "The same rule holds when the plain http base URL comes from DECISIONNODE_BASE_URL: an argument error before any request.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "base_url": null
+  },
+  "env": {
+    "DECISIONNODE_BASE_URL": "http://decisions.example.invalid"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "argument_error": true
+    }
+  }
+}

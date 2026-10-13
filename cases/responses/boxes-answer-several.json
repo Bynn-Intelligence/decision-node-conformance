@@ -1,0 +1,89 @@
+{
+  "id": "boxes-answer-several",
+  "description": "A box question asked with max answers a BoxesAnswer: count, present, complete and boxes, each x1, y1, x2, y2 and its confidence, in the response's order (left to right by the centre), typed as received. In the same decision a box question without max answers a BoxAnswer: the shape follows the answer's own fields.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "lot",
+            "url": "https://files.example.com/lot/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "cars": {
+          "$box": {
+            "instructions": "Every car in the lot.",
+            "max": 8
+          }
+        },
+        "nearest": {
+          "$box": {
+            "instructions": "The car nearest the gate."
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"cars\": {\"type\": \"box\", \"count\": 3, \"present\": 0.99, \"complete\": 0.94, \"boxes\": [{\"x1\": 112, \"y1\": 400, \"x2\": 388, \"y2\": 590, \"confidence\": 0.91}, {\"x1\": 402, \"y1\": 395, \"x2\": 660, \"y2\": 598, \"confidence\": 0.9}, {\"x1\": 702, \"y1\": 410, \"x2\": 951, \"y2\": 602, \"confidence\": 0.86}], \"image\": \"lot\", \"width\": 1920, \"height\": 1080}, \"nearest\": {\"type\": \"box\", \"x1\": 402, \"y1\": 395, \"x2\": 660, \"y2\": 598, \"present\": 0.98, \"confidence\": 0.9, \"image\": \"lot\", \"width\": 1920, \"height\": 1080}}, \"usage\": {\"input_tokens\": 410, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "cars": {
+          "kind": "boxes",
+          "count": 3,
+          "present": 0.99,
+          "complete": 0.94,
+          "boxes": [
+            {
+              "x1": 112,
+              "y1": 400,
+              "x2": 388,
+              "y2": 590,
+              "confidence": 0.91
+            },
+            {
+              "x1": 402,
+              "y1": 395,
+              "x2": 660,
+              "y2": 598,
+              "confidence": 0.9
+            },
+            {
+              "x1": 702,
+              "y1": 410,
+              "x2": 951,
+              "y2": 602,
+              "confidence": 0.86
+            }
+          ],
+          "image": "lot",
+          "width": 1920,
+          "height": 1080
+        },
+        "nearest": {
+          "kind": "box",
+          "x1": 402,
+          "y1": 395,
+          "x2": 660,
+          "y2": 598,
+          "present": 0.98,
+          "confidence": 0.9,
+          "image": "lot",
+          "width": 1920,
+          "height": 1080
+        }
+      }
+    }
+  }
+}

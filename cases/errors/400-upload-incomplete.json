@@ -1,0 +1,50 @@
+{
+  "id": "400-upload-incomplete",
+  "description": "A 400 upload_incomplete for an image named by upload_id: BadRequestError with error_type upload_incomplete and the message; the reason header as sent.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "upload_id": "upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Image 'receipt': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 has no bytes yet. PUT the file to its URL first."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"upload_incomplete\", \"message\": \"Image 'receipt': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 has no bytes yet. PUT the file to its URL first.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "upload_incomplete",
+        "message": "Image 'receipt': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 has no bytes yet. PUT the file to its URL first.",
+        "request_id": "req_case_0001",
+        "reason": "Image 'receipt': upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 has no bytes yet. PUT the file to its URL first."
+      }
+    }
+  }
+}

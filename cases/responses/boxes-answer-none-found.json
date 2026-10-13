@@ -1,0 +1,50 @@
+{
+  "id": "boxes-answer-none-found",
+  "description": "Nothing found is an answer, not a failure: count 0, an empty boxes list and a low present, still a BoxesAnswer.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "lot",
+            "url": "https://files.example.com/lot/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "cars": {
+          "$box": {
+            "instructions": "Every car in the lot.",
+            "max": 8
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"cars\": {\"type\": \"box\", \"count\": 0, \"present\": 0.04, \"complete\": 0.97, \"boxes\": [], \"image\": \"lot\", \"width\": 1920, \"height\": 1080}}, \"usage\": {\"input_tokens\": 410, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "cars": {
+          "kind": "boxes",
+          "count": 0,
+          "present": 0.04,
+          "complete": 0.97,
+          "boxes": [],
+          "image": "lot",
+          "width": 1920,
+          "height": 1080
+        }
+      }
+    }
+  }
+}

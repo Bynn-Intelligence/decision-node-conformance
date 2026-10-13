@@ -1,0 +1,46 @@
+{
+  "id": "redirect-301-not-followed",
+  "description": "A 301 to another address over plain HTTP is never followed: one request, a DecisionNodeError with status 301 and nothing requested at the Location.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 301,
+          "headers": {
+            "location": "/v1/redirected-301"
+          },
+          "body_text": ""
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "DecisionNodeError",
+      "fields": {
+        "status": 301
+      }
+    },
+    "unrequested_paths": [
+      "/v1/redirected-301"
+    ]
+  }
+}

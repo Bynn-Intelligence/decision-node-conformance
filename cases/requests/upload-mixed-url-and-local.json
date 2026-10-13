@@ -1,0 +1,120 @@
+{
+  "id": "upload-mixed-url-and-local",
+  "description": "A URL image passes through as {id, url}, never fetched and never uploaded; the local image over the threshold is uploaded; the decision keeps the request's image order.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "diagram",
+            "url": "https://example.com/diagram.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "receipt",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body": {
+          "files": [
+            {
+              "content_type": "image/png",
+              "byte_size": 600000,
+              "checksum": "Yj4NtyxKcKkF+lO1i7hnsQ==",
+              "sha256": "wv0nNpXCdGFIs+MKEBJQBErTjfCC03p7n6a9D4vyOXQ="
+            }
+          ]
+        }
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "Yj4NtyxKcKkF+lO1i7hnsQ==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "wv0nNpXCdGFIs+MKEBJQBErTjfCC03p7n6a9D4vyOXQ="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "c2fd273695c2746148b3e30a101250044ad38df082d37a7b9fa6bd0f8bf23974"
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body_checks": [
+          {
+            "pointer": "/model",
+            "equals": "decisionnode-moe"
+          },
+          {
+            "pointer": "/state",
+            "equals": "s"
+          },
+          {
+            "pointer": "/images/0",
+            "equals": {
+              "id": "diagram",
+              "url": "https://example.com/diagram.png"
+            }
+          },
+          {
+            "pointer": "/images/1/id",
+            "equals": "receipt"
+          },
+          {
+            "pointer": "/images/1/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/1/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/1/url",
+            "absent": true
+          }
+        ]
+      }
+    ]
+  }
+}

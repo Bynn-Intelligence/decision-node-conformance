@@ -1,0 +1,53 @@
+{
+  "id": "retry-after-http-date-capped-at-60s",
+  "description": "Retry-After as an HTTP date an hour away is capped at 60 s.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 503,
+          "headers": {
+            "retry-after": "{http_date+3600}"
+          },
+          "body": {
+            "detail": {
+              "error_type": "api_error",
+              "message": "Unavailable."
+            }
+          }
+        },
+        {
+          "action": "normal"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "decision"
+    },
+    "scheduled_waits_ms": [
+      {
+        "min": 59000,
+        "max": 60000
+      }
+    ]
+  }
+}

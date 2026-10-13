@@ -1,0 +1,109 @@
+{
+  "id": "session-seq-counts-from-one",
+  "description": "send() without seq numbers frames 1, 2, 3; each reply carries its frame's seq.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "frame": "a",
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "send": {
+        "frame": "b",
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "send": {
+        "frame": "c",
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "session_events": [
+      {
+        "reply": {
+          "seq": 1
+        }
+      },
+      {
+        "reply": {
+          "seq": 2
+        }
+      },
+      {
+        "reply": {
+          "seq": 3
+        }
+      },
+      {
+        "ended": true
+      }
+    ],
+    "request_counts": [
+      {
+        "method": "WS",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}/stream$",
+        "count": 3
+      }
+    ]
+  }
+}

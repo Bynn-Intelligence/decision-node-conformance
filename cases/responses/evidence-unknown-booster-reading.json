@@ -1,0 +1,68 @@
+{
+  "id": "evidence-unknown-booster-reading",
+  "description": "The evidence of a booster the SDK does not know: its entry is read as any booster's (version, status, latency_ms) and each reading is a generic reading holding its raw fields. The decision does not fail.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "example_booster"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "example_booster=ok:120"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"adult\": {\"type\": \"truth\", \"truth\": 0.97}}, \"evidence\": {\"example_booster\": {\"version\": \"example_booster-v1\", \"status\": \"ok\", \"latency_ms\": 120, \"results\": [{\"image\": \"person\", \"labels\": [\"person\", \"bicycle\"], \"score\": 0.7}]}}, \"usage\": {\"input_tokens\": 140, \"output_tokens\": 0, \"booster_tokens\": 20, \"boosters\": 1}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "example_booster": {
+          "version": "example_booster-v1",
+          "status": "ok",
+          "latency_ms": 120,
+          "billed_calls": null,
+          "results": [
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "person",
+                "labels": [
+                  "person",
+                  "bicycle"
+                ],
+                "score": 0.7
+              }
+            }
+          ]
+        }
+      },
+      "answers": {
+        "adult": {
+          "kind": "truth",
+          "truth": 0.97
+        }
+      }
+    }
+  }
+}

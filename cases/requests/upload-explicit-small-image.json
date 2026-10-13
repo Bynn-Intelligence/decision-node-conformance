@@ -1,0 +1,61 @@
+{
+  "id": "upload-explicit-small-image",
+  "description": "upload(images) always uploads, whatever the threshold: a 79-byte PNG gets a presign and a PUT, and no decision is sent. It returns one upload_id per image.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "upload",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "path": "fixtures/images/pixel.png"
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body": {
+          "files": [
+            {
+              "content_type": "image/png",
+              "byte_size": 79,
+              "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+              "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+            }
+          ]
+        }
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "d1b6fc4ddb4774dff954be44847cb2fc4a7764a19060746b00be239bcf71ccc2"
+      }
+    ]
+  }
+}

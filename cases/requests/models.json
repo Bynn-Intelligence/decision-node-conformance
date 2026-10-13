@@ -1,0 +1,23 @@
+{
+  "id": "models",
+  "description": "models() sends GET /v1/models with no body.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "models",
+    "args": {}
+  },
+  "expect": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/models",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "401-authentication",
+  "description": "A missing or unknown key is an AuthenticationError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 401,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "unknown API key"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"authentication_error\", \"message\": \"Cannot authenticate with the server. Please check your API key and try again.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer invalid_key",
+      "content-type": "application/json"
+    },
+    "body": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "type": "truth",
+          "instructions": "?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "AuthenticationError",
+      "fields": {
+        "status": 401,
+        "error_type": "authentication_error",
+        "message": "Cannot authenticate with the server. Please check your API key and try again.",
+        "request_id": "req_err_0001",
+        "reason": "unknown API key"
+      }
+    }
+  }
+}

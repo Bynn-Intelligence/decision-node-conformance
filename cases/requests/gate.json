@@ -1,0 +1,69 @@
+{
+  "id": "gate",
+  "description": "gate(action, context) sends the fixed three questions with their fixed wording, identical in every language: a risk score over five levels, a touches-production truth question and an allow, confirm or block choice. The state is {\"action\": ..., \"context\": ...}.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "gate",
+    "args": {
+      "action": "DROP TABLE invoices;",
+      "context": {
+        "environment": "production",
+        "requested_by": "migration script"
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": {
+          "action": "DROP TABLE invoices;",
+          "context": {
+            "environment": "production",
+            "requested_by": "migration script"
+          }
+        },
+        "questions": {
+          "risk": {
+            "type": "score",
+            "instructions": "How much harm could this action cause if it is wrong?",
+            "criteria": [
+              "none",
+              "low",
+              "moderate",
+              "high",
+              "severe"
+            ]
+          },
+          "touches_production": {
+            "type": "truth",
+            "instructions": "Does this action change a production system, production data or anything customers use?"
+          },
+          "verdict": {
+            "type": "choice",
+            "instructions": "Should this action run as it is, wait for a person to confirm it, or be blocked?",
+            "criteria": {
+              "allow": "safe to run without asking",
+              "confirm": "a person should confirm it first",
+              "block": "should not run"
+            }
+          }
+        }
+      },
+      "ordered_keys": [
+        "/questions/verdict/criteria"
+      ]
+    }
+  }
+}

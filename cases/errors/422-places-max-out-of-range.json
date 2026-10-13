@@ -1,0 +1,90 @@
+{
+  "id": "422-places-max-out-of-range",
+  "description": "max outside 2 to 16: the API's 422 less_than_equal at the question's max, a ValidationError with the server's entries. Sent with decide_raw, since the builders refuse it locally.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "",
+        "images": [
+          {
+            "id": "lot",
+            "url": "https://files.example.com/lot/0917.jpg"
+          }
+        ],
+        "questions": {
+          "cars": {
+            "type": "box",
+            "instructions": "Every car in the lot.",
+            "max": 20
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "questions.cars.box.max: Input should be less than or equal to 16"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"less_than_equal\", \"loc\": [\"body\", \"questions\", \"cars\", \"box\", \"max\"], \"msg\": \"Input should be less than or equal to 16\", \"input\": 20, \"ctx\": {\"le\": 16}}]}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "",
+      "images": [
+        {
+          "id": "lot",
+          "url": "https://files.example.com/lot/0917.jpg"
+        }
+      ],
+      "questions": {
+        "cars": {
+          "type": "box",
+          "instructions": "Every car in the lot.",
+          "max": 20
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "error_type": null,
+        "entries": [
+          {
+            "type": "less_than_equal",
+            "loc": [
+              "body",
+              "questions",
+              "cars",
+              "box",
+              "max"
+            ],
+            "msg": "Input should be less than or equal to 16",
+            "input": 20,
+            "ctx": {
+              "le": 16
+            }
+          }
+        ]
+      }
+    }
+  }
+}

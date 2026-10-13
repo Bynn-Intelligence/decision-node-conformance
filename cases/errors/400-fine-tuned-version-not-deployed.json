@@ -1,0 +1,61 @@
+{
+  "id": "400-fine-tuned-version-not-deployed",
+  "description": "A fine-tuned version that is trained but not deployed (listed by /v1/models with status ready) answers no decisions: the 400 \"Unknown model\", a BadRequestError.",
+  "client": {
+    "api_key": "dn_test_ws-acme",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      },
+      "model": "decisionnode-flash@acme/triage:1"
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "unknown model 'decisionnode-flash@acme/triage:1'; GET /v1/models lists the models"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Unknown model: decisionnode-flash@acme/triage:1\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_ws-acme",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-flash@acme/triage:1",
+      "state": "s",
+      "questions": {
+        "q": {
+          "type": "truth",
+          "instructions": "?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Unknown model: decisionnode-flash@acme/triage:1",
+        "reason": "unknown model 'decisionnode-flash@acme/triage:1'; GET /v1/models lists the models",
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

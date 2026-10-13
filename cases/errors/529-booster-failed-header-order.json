@@ -1,0 +1,82 @@
+{
+  "id": "529-booster-failed-header-order",
+  "description": "A required booster that failed: the 529 booster_unavailable, and the boosters field keeps the header's order (ai_generated before age here), never sorted.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "ai_generated",
+        {
+          "$booster": {
+            "name": "age",
+            "require": true
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 529,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "retry-after": "1",
+      "retry-after-ms": "1000",
+      "x-decisionnode-boosters": "ai_generated=ok:340,age=error:15"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"booster_unavailable\", \"message\": \"The booster 'age' failed.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "OverloadedError",
+      "fields": {
+        "status": 529,
+        "error_type": "booster_unavailable",
+        "message": "The booster 'age' failed.",
+        "retry_after": 1.0,
+        "boosters": {
+          "ai_generated": {
+            "status": "ok",
+            "latency_ms": 340
+          },
+          "age": {
+            "status": "error",
+            "latency_ms": 15
+          }
+        },
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

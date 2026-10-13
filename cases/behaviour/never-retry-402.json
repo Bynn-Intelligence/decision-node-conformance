@@ -1,0 +1,48 @@
+{
+  "id": "never-retry-402",
+  "description": "402 is never retried, even with retry headers present: one attempt, then InsufficientCreditError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 402,
+          "headers": {
+            "retry-after-ms": "20"
+          },
+          "body": {
+            "detail": {
+              "error_type": "insufficient_credit_error",
+              "message": "The account has no credit left."
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "InsufficientCreditError",
+      "fields": {
+        "status": 402
+      }
+    }
+  }
+}

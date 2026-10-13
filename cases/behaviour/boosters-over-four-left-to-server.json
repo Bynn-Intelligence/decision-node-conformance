@@ -1,0 +1,47 @@
+{
+  "id": "boosters-over-four-left-to-server",
+  "description": "The SDK checks nothing about boosters: five entries are sent, and the API's 400 api_usage_error comes back with its reason. One attempt.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "age",
+        "ai_generated",
+        "age",
+        "ai_generated",
+        "age"
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Invalid request.",
+        "reason": "boosters: at most 4 boosters, got 5"
+      }
+    }
+  }
+}

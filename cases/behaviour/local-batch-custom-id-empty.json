@@ -1,0 +1,35 @@
+{
+  "id": "local-batch-custom-id-empty",
+  "description": "batches.create with an empty custom_id: a custom_id is a string of 1 to 512 characters, the API's 400 api_usage_error with its documented message. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "",
+          "state": "s",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error",
+        "message": "Line 1: custom_id must be a string of 1 to 512 characters."
+      }
+    }
+  }
+}

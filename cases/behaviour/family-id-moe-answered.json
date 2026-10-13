@@ -1,0 +1,45 @@
+{
+  "id": "family-id-moe-answered",
+  "description": "The family id decisionnode-moe (the current MoE release) is sent as given and answered with the pinned id of the version that answered, decisionnode-moe-<version>. The case checks the family prefix, never the version.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "I was charged twice.",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is a refund asked for?"
+          }
+        }
+      },
+      "model": "decisionnode-moe"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200,
+        "body_checks": [
+          {
+            "pointer": "/model",
+            "equals": "decisionnode-moe"
+          }
+        ]
+      }
+    ],
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": {
+          "$pattern": "^decisionnode-moe-"
+        }
+      }
+    }
+  }
+}

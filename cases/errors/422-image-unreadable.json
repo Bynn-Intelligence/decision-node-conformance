@@ -1,0 +1,49 @@
+{
+  "id": "422-image-unreadable",
+  "description": "An enrollment whose picture cannot be read (not base64, not a JPEG, PNG or WebP, over 10 MiB, unreachable) is the 422 image_unreadable at the body's image, never billed: ValidationError with the server's entries.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.enroll",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "image": {
+        "$image": {
+          "id": "badge",
+          "url": "https://files.example.com/badges/emp-1042.jpg"
+        }
+      },
+      "reference": "emp-1042"
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"image_unreadable\", \"loc\": [\"body\", \"image\"], \"msg\": \"The image could not be read: not a JPEG, PNG or WebP image.\", \"input\": \"badge\"}]}"
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "error_type": null,
+        "entries": [
+          {
+            "type": "image_unreadable",
+            "loc": [
+              "body",
+              "image"
+            ],
+            "msg": "The image could not be read: not a JPEG, PNG or WebP image.",
+            "input": "badge"
+          }
+        ]
+      }
+    }
+  }
+}

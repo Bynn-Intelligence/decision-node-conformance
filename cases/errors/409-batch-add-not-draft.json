@@ -1,0 +1,55 @@
+{
+  "id": "409-batch-add-not-draft",
+  "description": "batches.add answered 409 invalid_batch_state: DecisionNodeError with status and error_type (batch errors use the classes a status gives; 409 and 410 have none, so the base class).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "batches.add",
+    "args": {
+      "batch_id": "batch_01J9ZB8Q3T",
+      "requests": [
+        {
+          "custom_id": "a",
+          "state": "x",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Batch batch_01J9ZB8Q3T is queued. Only a draft takes requests."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"invalid_batch_state\", \"message\": \"Batch batch_01J9ZB8Q3T is queued. Only a draft takes requests.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "invalid_batch_state",
+        "message": "Batch batch_01J9ZB8Q3T is queued. Only a draft takes requests."
+      }
+    }
+  }
+}

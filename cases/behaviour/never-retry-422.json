@@ -1,0 +1,61 @@
+{
+  "id": "never-retry-422",
+  "description": "422 is never retried, even with retry headers present: one attempt, then ValidationError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 422,
+          "headers": {
+            "retry-after-ms": "20"
+          },
+          "body": {
+            "detail": [
+              {
+                "type": "missing",
+                "loc": [
+                  "body",
+                  "questions",
+                  "urgency",
+                  "score",
+                  "criteria"
+                ],
+                "msg": "Field required",
+                "input": {
+                  "type": "score",
+                  "instructions": "How urgent?"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": 422
+      }
+    }
+  }
+}

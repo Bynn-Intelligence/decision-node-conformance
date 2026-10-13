@@ -1,0 +1,51 @@
+{
+  "id": "403-refusal-harm",
+  "description": "A 403 with error_type refusal_error is a RefusalError with its category and the parsed safety header. The blocked category counts as flagged.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-refusal": "harm",
+      "x-decisionnode-safety": "harm=0.964;blocked, self_harm=0.002"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"refusal_error\", \"message\": \"This request was refused under the usage policy: it asks to choose, rank or target people to be harmed.\", \"category\": \"harm\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RefusalError",
+      "fields": {
+        "status": 403,
+        "error_type": "refusal_error",
+        "message": "This request was refused under the usage policy: it asks to choose, rank or target people to be harmed.",
+        "request_id": "req_err_0001",
+        "category": "harm",
+        "safety": {
+          "checked": true,
+          "harm": 0.964,
+          "self_harm": 0.002,
+          "flagged": [
+            "harm"
+          ]
+        }
+      }
+    }
+  }
+}

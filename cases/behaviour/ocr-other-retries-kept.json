@@ -1,0 +1,94 @@
+{
+  "id": "ocr-other-retries-kept",
+  "description": "Only a timeout goes unretried for a decision naming ocr: a 529 is retried as always, and the second attempt answers.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "url": "https://files.example.com/receipt.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "total_matches": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      },
+      "boosters": [
+        "ocr"
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 529,
+          "headers": {
+            "Retry-After": "1",
+            "retry-after-ms": "50"
+          },
+          "body": {
+            "detail": {
+              "error_type": "overloaded_error",
+              "message": "The model has no ready worker. Try again shortly."
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "x-decisionnode-boosters": "ocr=ok:2400"
+          },
+          "body": {
+            "model": "decisionnode-moe-0.9.0-rc1",
+            "answers": {
+              "total_matches": {
+                "type": "truth",
+                "truth": 0.97
+              }
+            },
+            "evidence": {
+              "ocr": {
+                "version": "ocr-v1",
+                "status": "ok",
+                "latency_ms": 2400,
+                "billed_calls": 1,
+                "results": [
+                  {
+                    "image": "receipt",
+                    "text": "Total 740.00 SEK",
+                    "truncated": false
+                  }
+                ]
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0,
+              "booster_tokens": 24,
+              "boosters": 1
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}

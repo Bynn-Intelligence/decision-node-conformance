@@ -1,0 +1,61 @@
+{
+  "id": "reason-escaped-ascii",
+  "description": "The reason header is visible ASCII; non-ASCII text in it arrives escaped and is passed through as received. Sent with decide_raw: from spec 1.1 the builders refuse this request locally (behaviour/local-* cases), so the raw body carries it to the recorded response.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "café": {
+            "type": "choice",
+            "instructions": "?",
+            "criteria": {}
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "question 'caf\\u00e9': a choice needs at least one option"
+    },
+    "body_text": "{\"detail\": \"Choice question must have at least one choice: café\"}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "state": "s",
+      "questions": {
+        "café": {
+          "type": "choice",
+          "instructions": "?",
+          "criteria": {}
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "message": "Choice question must have at least one choice: café",
+        "reason": "question 'caf\\u00e9': a choice needs at least one option"
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "id": "unknown-type-beside-number",
+  "description": "An answer of a type the SDK does not know (rank) beside a number answer: UnknownAnswer with its raw fields, and the number answer parses. The second question is sent as a known type (an unknown question type is refused locally from suite 1.5); the recorded answer is of a type the SDK does not know.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "$number": {
+            "instructions": "How many?"
+          }
+        },
+        "r": {
+          "$choice": {
+            "instructions": "?",
+            "options": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"n\": {\"type\": \"number\", \"number\": 3, \"expected\": 3.1, \"confidence\": 0.5, \"probabilities\": {\"3\": 0.5}}, \"r\": {\"type\": \"rank\", \"order\": [\"a\", \"b\"]}}, \"usage\": {\"input_tokens\": 30, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "n": {
+          "kind": "number",
+          "number": 3,
+          "expected": 3.1
+        },
+        "r": {
+          "kind": "unknown",
+          "type": "rank",
+          "raw": {
+            "type": "rank",
+            "order": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "check-request-image-id-over-64",
+  "description": "check_request runs the image id check: a decide with a 65-character id on its second image raises the error the call would raise, and nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "front",
+            "url": "https://files.example.com/front.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "url": "https://files.example.com/back.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is this a receipt?"
+          }
+        }
+      }
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "Image 1: its id is longer than 64 characters.",
+        "request_id": null
+      }
+    }
+  }
+}

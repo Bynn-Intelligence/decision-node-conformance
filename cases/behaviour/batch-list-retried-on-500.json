@@ -1,0 +1,78 @@
+{
+  "id": "batch-list-retried-on-500",
+  "description": "batches.list is retried on a 5xx like any call (it changes nothing, or is safe to repeat).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "GET",
+            "$path": "/v1/batches"
+          },
+          "steps": [
+            {
+              "status": 500,
+              "body": {
+                "detail": {
+                  "error_type": "api_error",
+                  "message": "Internal error."
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": [
+            {
+              "custom_id": "t1",
+              "state": "I was charged twice.",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.list",
+        "args": {}
+      },
+      "outcome": {
+        "result": "batch_page",
+        "batch_page": {
+          "total": 1
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 3
+  }
+}

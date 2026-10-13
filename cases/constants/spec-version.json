@@ -1,0 +1,10 @@
+{
+  "id": "spec-version",
+  "description": "The SDK states the version of the SDK specification it implements in a public constant: SPEC_VERSION, or SpecVersion in Go and C#.",
+  "constant": "SPEC_VERSION",
+  "names": {
+    "go": "SpecVersion",
+    "dotnet": "SpecVersion"
+  },
+  "equals": "1.3"
+}

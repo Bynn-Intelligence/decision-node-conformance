@@ -1,0 +1,52 @@
+{
+  "id": "number-answer-whole-values",
+  "description": "A car-park count: number 7 (a JSON integer), expected 7.0 (a float that keeps its point), confidence, and probabilities keyed by the value's text exactly as sent, values as received.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "cars": {
+          "$number": {
+            "instructions": "How many cars?",
+            "min": 0,
+            "max": 50
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"cars\": {\"type\": \"number\", \"number\": 7, \"expected\": 7.0, \"confidence\": 0.78, \"probabilities\": {\"5\": 0.006, \"6\": 0.105, \"7\": 0.783, \"8\": 0.098, \"9\": 0.008}}}, \"usage\": {\"input_tokens\": 1412, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "model": "decisionnode-moe-0.9.0-rc1",
+      "usage": {
+        "input_tokens": 1412,
+        "output_tokens": 0
+      },
+      "answers": {
+        "cars": {
+          "kind": "number",
+          "number": 7,
+          "expected": 7.0,
+          "confidence": 0.78,
+          "probabilities": {
+            "5": 0.006,
+            "6": 0.105,
+            "7": 0.783,
+            "8": 0.098,
+            "9": 0.008
+          }
+        }
+      }
+    }
+  }
+}

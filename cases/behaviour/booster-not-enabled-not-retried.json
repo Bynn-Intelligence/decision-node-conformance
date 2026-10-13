@@ -1,0 +1,50 @@
+{
+  "id": "booster-not-enabled-not-retried",
+  "description": "A booster turned off for the workspace: one attempt, a PermissionDeniedError with error_type booster_not_enabled.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "age"
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "boosters": {
+        "disabled": [
+          "age"
+        ]
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "booster_not_enabled"
+      }
+    }
+  }
+}

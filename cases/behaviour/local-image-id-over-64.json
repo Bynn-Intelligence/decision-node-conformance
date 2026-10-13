@@ -1,0 +1,46 @@
+{
+  "id": "local-image-id-over-64",
+  "description": "An image id of 65 characters (each an accented é, 2 bytes in UTF-8: the count is in characters, Unicode code points, not bytes) is over the 64 the API takes. Checked locally: the API's 400 api_usage_error with its message, the image counted from 0, and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "front",
+            "url": "https://files.example.com/front.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+            "url": "https://files.example.com/back.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is this a receipt?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "Image 1: its id is longer than 64 characters.",
+        "request_id": null
+      }
+    }
+  }
+}

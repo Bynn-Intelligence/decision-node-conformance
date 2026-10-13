@@ -1,0 +1,39 @@
+{
+  "id": "302-redirect-not-followed",
+  "description": "Redirects are never followed, so a key is never sent to another URL. A 302 is the base DecisionNodeError carrying the status, and no second request is sent.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 302,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "location": "/v1/redirected-302"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"redirect\", \"message\": \"Moved.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 302,
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "id": "batch-create-lines",
+  "description": "batches.create(requests) sends POST /v1/batches with JSON Lines (or a JSON array): one decide body per request plus its custom_id, the model always sent and an absent state as \"\", the same as decide.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "ticket-1",
+          "state": "I was charged twice.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        },
+        {
+          "custom_id": "ticket-2",
+          "state": "The app crashes.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          },
+          "model": "decisionnode-flash"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/batches",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/(x-ndjson|json)(;.*)?$"
+      },
+      "jsonl": [
+        {
+          "custom_id": "ticket-1",
+          "model": "decisionnode-moe",
+          "state": "I was charged twice.",
+          "questions": {
+            "route": {
+              "type": "choice",
+              "instructions": "Where should this go?",
+              "criteria": {
+                "billing": null,
+                "bug": null
+              }
+            },
+            "refund": {
+              "type": "truth",
+              "instructions": "Is a refund asked for?"
+            }
+          }
+        },
+        {
+          "custom_id": "ticket-2",
+          "model": "decisionnode-flash",
+          "state": "The app crashes.",
+          "questions": {
+            "route": {
+              "type": "choice",
+              "instructions": "Where should this go?",
+              "criteria": {
+                "billing": null,
+                "bug": null
+              }
+            },
+            "refund": {
+              "type": "truth",
+              "instructions": "Is a refund asked for?"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

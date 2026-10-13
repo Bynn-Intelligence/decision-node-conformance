@@ -1,0 +1,73 @@
+{
+  "id": "question-ids-any-string",
+  "description": "Question ids are any string, the empty string included, and are sent in the order given.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "same_as_record_18": {
+          "$truth": {
+            "instructions": "a"
+          }
+        },
+        "plot_price.style?": {
+          "$truth": {
+            "instructions": "b"
+          }
+        },
+        "__overall__::judge": {
+          "$truth": {
+            "instructions": "c"
+          }
+        },
+        "": {
+          "$truth": {
+            "instructions": "d"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "same_as_record_18": {
+            "type": "truth",
+            "instructions": "a"
+          },
+          "plot_price.style?": {
+            "type": "truth",
+            "instructions": "b"
+          },
+          "__overall__::judge": {
+            "type": "truth",
+            "instructions": "c"
+          },
+          "": {
+            "type": "truth",
+            "instructions": "d"
+          }
+        }
+      },
+      "ordered_keys": [
+        "/questions"
+      ]
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "places-max-on-session-open-left-to-server",
+  "description": "A session's box question with max is checked like any session question (max 2 to 16) and otherwise left to the server, which answers a session's point and box questions with its 400, max or not: check_request passes.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "state": "Lot camera 2.",
+      "questions": {
+        "cars": {
+          "$box": {
+            "instructions": "Every car in the lot.",
+            "max": 8
+          }
+        }
+      }
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "result": "checked"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "empty-api-key-without-env",
+  "description": "An explicitly empty api_key with DECISIONNODE_API_KEY unset is no key: the call fails before any request is sent.",
+  "client": {
+    "api_key": ""
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "DecisionNodeError",
+      "subclass_ok": true
+    }
+  }
+}

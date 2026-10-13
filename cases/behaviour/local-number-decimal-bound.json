@@ -1,0 +1,49 @@
+{
+  "id": "local-number-decimal-bound",
+  "description": "A grid with 6 decimals (step 0.000001) whose max is 10^10: on a grid with decimals min and max stay within 10^(15-d) - 10^-d, here 999999999.999999, so every value has at most 15 significant digits. The API's 422 less_than_equal entry. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "$number": {
+            "instructions": "How much?",
+            "min": 0,
+            "max": 10000000000,
+            "step": 1e-06
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "less_than_equal",
+            "loc": [
+              "body",
+              "questions",
+              "n",
+              "number",
+              "max"
+            ],
+            "msg": "Input should be less than or equal to 999999999.999999",
+            "input": 10000000000,
+            "ctx": {
+              "le": 999999999.999999
+            }
+          }
+        ]
+      }
+    }
+  }
+}

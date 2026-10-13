@@ -1,0 +1,119 @@
+{
+  "id": "decide-booster-ocr-prompt-sent",
+  "description": "The ocr booster's prompt option (a built-in task prompt, an instruction or a JSON schema, at most 2,000 characters) is sent in the object form as given: {\"name\": \"ocr\", \"options\": {\"prompt\": ...}}. The SDK checks nothing about it locally; the limit is the API's. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "url": "https://files.example.com/receipt.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "total_matches": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "ocr",
+            "options": {
+              "prompt": "the invoice total and date"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+            "x-decisionnode-boosters": "ocr=ok:180"
+          },
+          "body": {
+            "model": "decisionnode-moe-0.9.0-rc1",
+            "answers": {
+              "total_matches": {
+                "type": "truth",
+                "truth": 0.97
+              }
+            },
+            "evidence": {
+              "ocr": {
+                "version": "ocr-v1",
+                "status": "ok",
+                "latency_ms": 180,
+                "billed_calls": 1,
+                "results": [
+                  {
+                    "image": "receipt",
+                    "text": "Total 740.00 SEK, 2026-09-28",
+                    "truncated": false
+                  }
+                ]
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0,
+              "booster_tokens": 24,
+              "boosters": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "",
+        "images": [
+          {
+            "id": "receipt",
+            "url": "https://files.example.com/receipt.jpg"
+          }
+        ],
+        "questions": {
+          "total_matches": {
+            "type": "truth",
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        },
+        "boosters": [
+          {
+            "name": "ocr",
+            "options": {
+              "prompt": "the invoice total and date"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

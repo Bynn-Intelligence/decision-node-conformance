@@ -1,0 +1,116 @@
+{
+  "id": "evidence-error-unread-pictures",
+  "description": "A booster that failed lists {\"image\": id} with no reading for the picture it was meant to read: a generic reading, billed_calls 0; the other booster's reading is typed as usual and billed.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "ai_generated",
+            "images": [
+              "poster"
+            ]
+          }
+        },
+        {
+          "$booster": {
+            "name": "age",
+            "images": [
+              "person"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "ai_generated=error:15,age=ok:212"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"adult\": {\"type\": \"truth\", \"truth\": 0.71}, \"synthetic\": {\"type\": \"truth\", \"truth\": 0.4}}, \"evidence\": {\"ai_generated\": {\"version\": \"ai_generated-v1\", \"status\": \"error\", \"latency_ms\": 15, \"billed_calls\": 0, \"results\": [{\"image\": \"poster\"}]}, \"age\": {\"version\": \"age-v1\", \"status\": \"ok\", \"latency_ms\": 212, \"billed_calls\": 1, \"results\": [{\"image\": \"person\", \"age_years\": 31, \"low\": 27, \"high\": 36, \"confidence\": 0.78, \"faces\": 1}]}}, \"usage\": {\"input_tokens\": 260, \"output_tokens\": 0, \"booster_tokens\": 30, \"boosters\": 1}}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 260,
+        "output_tokens": 0,
+        "booster_tokens": 30,
+        "boosters": 1
+      },
+      "evidence": {
+        "ai_generated": {
+          "version": "ai_generated-v1",
+          "status": "error",
+          "latency_ms": 15,
+          "billed_calls": 0,
+          "results": [
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "poster"
+              }
+            }
+          ]
+        },
+        "age": {
+          "version": "age-v1",
+          "status": "ok",
+          "latency_ms": 212,
+          "billed_calls": 1,
+          "results": [
+            {
+              "kind": "age",
+              "image": "person",
+              "faces": 1,
+              "age_years": 31,
+              "low": 27,
+              "high": 36,
+              "confidence": 0.78
+            }
+          ]
+        }
+      },
+      "answers": {
+        "adult": {
+          "kind": "truth",
+          "truth": 0.71
+        },
+        "synthetic": {
+          "kind": "truth",
+          "truth": 0.4
+        }
+      }
+    }
+  }
+}

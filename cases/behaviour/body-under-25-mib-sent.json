@@ -1,0 +1,35 @@
+{
+  "id": "body-under-25-mib-sent",
+  "description": "decide() whose state is 26,214,144 characters: the encoded body is under 26,214,400 bytes in any JSON encoding (at most 105 bytes of the rest), so it is sent. The mock then refuses it as over the token limit (ContextLimitError), which proves it left the client. The size check counts the encoded body, not the state, and the limit is 26,214,400 bytes, not 25,000,000.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "$text": {
+          "repeat": "a",
+          "times": 26214144
+        }
+      },
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "ContextLimitError",
+      "fields": {
+        "status": 400,
+        "error_type": "max_tokens_exceeded"
+      }
+    }
+  }
+}

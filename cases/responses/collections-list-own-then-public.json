@@ -1,0 +1,37 @@
+{
+  "id": "collections-list-own-then-public",
+  "description": "collections.list returns the list of the body's collections: the workspace's own, newest first, then the public ones it may use, which carry no deletion. The SDK keeps the order.",
+  "call": {
+    "method": "collections.list",
+    "args": {}
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"collections\": [{\"id\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"type\": \"face\", \"name\": \"Staff, Stockholm office\", \"public\": false, \"items\": 412, \"created_at\": \"2026-10-12T09:00:00Z\", \"deletion\": null}, {\"id\": \"celebrities\", \"type\": \"face\", \"name\": \"celebrities\", \"public\": true, \"items\": 1200, \"created_at\": \"2026-10-12T00:00:00Z\"}]}"
+  },
+  "expect": {
+    "collections": [
+      {
+        "id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+        "type": "face",
+        "name": "Staff, Stockholm office",
+        "public": false,
+        "items": 412,
+        "created_at": "2026-10-12T09:00:00Z",
+        "deletion": null
+      },
+      {
+        "id": "celebrities",
+        "type": "face",
+        "name": "celebrities",
+        "public": true,
+        "items": 1200,
+        "created_at": "2026-10-12T00:00:00Z"
+      }
+    ]
+  }
+}

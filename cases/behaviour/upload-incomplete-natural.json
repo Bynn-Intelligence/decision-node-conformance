@@ -1,0 +1,85 @@
+{
+  "id": "upload-incomplete-natural",
+  "description": "The storage answers the first PUT 200 without keeping the bytes: the decision gets the mock's own 400 upload_incomplete, and the SDK uploads again (this PUT lands) and resends once.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "PUT"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "body_text": ""
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 6,
+    "outcome": {
+      "result": "decision"
+    },
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 400
+      },
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200
+      }
+    ]
+  }
+}

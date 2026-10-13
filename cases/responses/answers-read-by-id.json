@@ -1,0 +1,56 @@
+{
+  "id": "answers-read-by-id",
+  "description": "Answers are read by id, never by position: the body lists them in another order than the request.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "first": {
+          "$truth": {
+            "instructions": "1"
+          }
+        },
+        "second": {
+          "$truth": {
+            "instructions": "2"
+          }
+        },
+        "third": {
+          "$truth": {
+            "instructions": "3"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "23",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\":\"decisionnode-moe-0.9.0-rc1\",\"answers\":{\"third\":{\"type\":\"truth\",\"truth\":0.3},\"first\":{\"type\":\"truth\",\"truth\":0.1},\"second\":{\"type\":\"truth\",\"truth\":0.2}},\"usage\":{\"input_tokens\":20,\"output_tokens\":0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "first": {
+          "kind": "truth",
+          "truth": 0.1
+        },
+        "second": {
+          "kind": "truth",
+          "truth": 0.2
+        },
+        "third": {
+          "kind": "truth",
+          "truth": 0.3
+        }
+      }
+    }
+  }
+}

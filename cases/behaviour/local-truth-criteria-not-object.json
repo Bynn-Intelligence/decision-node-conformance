@@ -1,0 +1,43 @@
+{
+  "id": "local-truth-criteria-not-object",
+  "description": "A truth question whose criteria is a string, not an object with true and false: the API's 422 dict_type entry. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "type": "truth",
+          "instructions": "?",
+          "criteria": "yes"
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "dict_type",
+            "loc": [
+              "body",
+              "questions",
+              "q",
+              "truth",
+              "criteria"
+            ],
+            "msg": "Input should be a valid dictionary",
+            "input": "yes"
+          }
+        ]
+      }
+    }
+  }
+}

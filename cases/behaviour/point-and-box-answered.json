@@ -1,0 +1,66 @@
+{
+  "id": "point-and-box-answered",
+  "description": "Point and box questions on one image reach the API and come back as PointAnswer and BoxAnswer, beside a truth answer.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "pick": {
+          "$point": {
+            "instructions": "Point to the yellow package closest to the robot arm."
+          }
+        },
+        "damage": {
+          "$box": {
+            "instructions": "Draw a box around the damaged package.",
+            "units": "normalized"
+          }
+        },
+        "any_damage": {
+          "$truth": {
+            "instructions": "Is any package on the belt damaged?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": {
+          "$pattern": "^decisionnode-moe-"
+        },
+        "answers": {
+          "pick": {
+            "kind": "point",
+            "image": "belt",
+            "width": 1920,
+            "height": 1080
+          },
+          "damage": {
+            "kind": "box",
+            "image": "belt",
+            "width": 1920,
+            "height": 1080
+          },
+          "any_damage": {
+            "kind": "truth"
+          }
+        }
+      }
+    }
+  }
+}

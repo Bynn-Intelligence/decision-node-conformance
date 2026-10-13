@@ -1,0 +1,40 @@
+{
+  "id": "413-html-edge-page",
+  "description": "The edge answers a 413 with its own HTML page, not the JSON envelope. The error is classified by its status alone (RequestTooLargeError); error_type is empty, and the message is the client's own description, \"HTTP 413 Content Too Large\", from the fixed status-text table, never the HTTP library's wording. The page is never read into any field. There is no x-request-id, so no request id.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 413,
+    "headers": {
+      "content-type": "text/html"
+    },
+    "body_text": "<html><body><h1>413 Request Entity Too Large</h1></body></html>"
+  },
+  "expect": {
+    "error": {
+      "class": "RequestTooLargeError",
+      "fields": {
+        "status": 413,
+        "error_type": null,
+        "message": "HTTP 413 Content Too Large",
+        "request_id": null,
+        "reason": null
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "local-places-max-below-2",
+  "description": "max 1: max is 2 to 16. Checked locally: ValidationError with the entry the API answers, greater_than_equal with ctx ge 2, and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "lot",
+            "url": "https://files.example.com/lot/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "cars": {
+          "$box": {
+            "instructions": "Every car in the lot.",
+            "max": 1
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "greater_than_equal",
+            "loc": [
+              "body",
+              "questions",
+              "cars",
+              "box",
+              "max"
+            ],
+            "msg": "Input should be greater than or equal to 2",
+            "input": 1,
+            "ctx": {
+              "ge": 2
+            }
+          }
+        ]
+      }
+    }
+  }
+}

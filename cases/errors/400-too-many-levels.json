@@ -1,0 +1,86 @@
+{
+  "id": "400-too-many-levels",
+  "description": "A 400 whose detail is a plain string: error_type is empty and message is the string. Sent with decide_raw: from spec 1.1 the builders refuse this request locally (behaviour/local-* cases), so the raw body carries it to the recorded response.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "q": {
+            "type": "score",
+            "instructions": "?",
+            "criteria": [
+              "l0",
+              "l1",
+              "l2",
+              "l3",
+              "l4",
+              "l5",
+              "l6",
+              "l7",
+              "l8",
+              "l9",
+              "l10"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "question 'q': a score takes up to 10 levels, got 11"
+    },
+    "body_text": "{\"detail\": \"Too many score levels. Must have at most 10 levels.\"}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "type": "score",
+          "instructions": "?",
+          "criteria": [
+            "l0",
+            "l1",
+            "l2",
+            "l3",
+            "l4",
+            "l5",
+            "l6",
+            "l7",
+            "l8",
+            "l9",
+            "l10"
+          ]
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": null,
+        "message": "Too many score levels. Must have at most 10 levels.",
+        "reason": "question 'q': a score takes up to 10 levels, got 11"
+      }
+    }
+  }
+}

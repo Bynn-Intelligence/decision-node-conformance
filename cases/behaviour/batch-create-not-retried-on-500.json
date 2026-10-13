@@ -1,0 +1,67 @@
+{
+  "id": "batch-create-not-retried-on-500",
+  "description": "batches.create answered 500: not retried (the call may have taken effect, and a repeat would create a second draft). ServerError after one attempt.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path_suffix": "/v1/batches"
+          },
+          "steps": [
+            {
+              "status": 500,
+              "body": {
+                "detail": {
+                  "error_type": "api_error",
+                  "message": "Internal error."
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "t1",
+          "state": "I was charged twice.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "ServerError",
+      "fields": {
+        "status": 500
+      }
+    }
+  }
+}

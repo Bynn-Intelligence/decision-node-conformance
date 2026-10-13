@@ -1,0 +1,25 @@
+{
+  "id": "collections-get-sent",
+  "description": "collections.get sends GET /v1/collections/{id}: the id goes in the path as given, a public collection's name included. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.get",
+    "args": {
+      "collection_id": "celebrities"
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/collections/celebrities",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      }
+    }
+  }
+}

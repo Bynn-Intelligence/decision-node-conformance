@@ -1,0 +1,798 @@
+{
+  "id": "upload-sixteen-images-one-presign",
+  "description": "Sixteen images of 40,000 to 40,015 bytes: each is under the threshold, but the request's local images total 640,120 bytes, so all sixteen are uploaded through one presign of sixteen files (the API's maximum from SDK specification 1.2), sixteen PUTs, then the decision.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "p00",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 40000
+          }
+        },
+        {
+          "$image": {
+            "id": "p01",
+            "path": "fixtures/images/pixel.jpg",
+            "pad_to": 40001
+          }
+        },
+        {
+          "$image": {
+            "id": "p02",
+            "path": "fixtures/images/pixel.webp",
+            "pad_to": 40002
+          }
+        },
+        {
+          "$image": {
+            "id": "p03",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 40003
+          }
+        },
+        {
+          "$image": {
+            "id": "p04",
+            "path": "fixtures/images/pixel.jpg",
+            "pad_to": 40004
+          }
+        },
+        {
+          "$image": {
+            "id": "p05",
+            "path": "fixtures/images/pixel.webp",
+            "pad_to": 40005
+          }
+        },
+        {
+          "$image": {
+            "id": "p06",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 40006
+          }
+        },
+        {
+          "$image": {
+            "id": "p07",
+            "path": "fixtures/images/pixel.jpg",
+            "pad_to": 40007
+          }
+        },
+        {
+          "$image": {
+            "id": "p08",
+            "path": "fixtures/images/pixel.webp",
+            "pad_to": 40008
+          }
+        },
+        {
+          "$image": {
+            "id": "p09",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 40009
+          }
+        },
+        {
+          "$image": {
+            "id": "p10",
+            "path": "fixtures/images/pixel.jpg",
+            "pad_to": 40010
+          }
+        },
+        {
+          "$image": {
+            "id": "p11",
+            "path": "fixtures/images/pixel.webp",
+            "pad_to": 40011
+          }
+        },
+        {
+          "$image": {
+            "id": "p12",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 40012
+          }
+        },
+        {
+          "$image": {
+            "id": "p13",
+            "path": "fixtures/images/pixel.jpg",
+            "pad_to": 40013
+          }
+        },
+        {
+          "$image": {
+            "id": "p14",
+            "path": "fixtures/images/pixel.webp",
+            "pad_to": 40014
+          }
+        },
+        {
+          "$image": {
+            "id": "p15",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 40015
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is every page signed?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body": {
+          "files": [
+            {
+              "content_type": "image/png",
+              "byte_size": 40000,
+              "checksum": "BnlelyAVsSFLANsNKjoKvQ==",
+              "sha256": "3EW0M8MJ39Et5ITydYN6CQ+zgnQXvKnUzpgLBPGgdSQ="
+            },
+            {
+              "content_type": "image/jpeg",
+              "byte_size": 40001,
+              "checksum": "di+cjPVhy2ZUNKHs1FHIKg==",
+              "sha256": "Ajjk/ENGSnRmoBUEAD5/Ont84CohOBCpyn74409nPp4="
+            },
+            {
+              "content_type": "image/webp",
+              "byte_size": 40002,
+              "checksum": "yn3Ex82uAA27CKCtRc3djw==",
+              "sha256": "cyygzDzWnUHswfHKV4WlLGWvUoHsmGYpyyTZvdwVasA="
+            },
+            {
+              "content_type": "image/png",
+              "byte_size": 40003,
+              "checksum": "t7QFZlUtvXp1XM1/z28/qw==",
+              "sha256": "VenYwYEXt15GgI5GIXWFTYgzJlFtFMx8vvUizjbP9sc="
+            },
+            {
+              "content_type": "image/jpeg",
+              "byte_size": 40004,
+              "checksum": "C7slwFWqP4vYbOmkTFAdhw==",
+              "sha256": "aBQGMs9HD3i1g/UC7THEDQWj16WwM3Bnzjj+yNg3sP4="
+            },
+            {
+              "content_type": "image/webp",
+              "byte_size": 40005,
+              "checksum": "ss/ov4Pq1bNsldDSJtMEgw==",
+              "sha256": "zgsjZOsJq4E+K8WRw60bXNpRpSrVvuvNYBptuKr3MKo="
+            },
+            {
+              "content_type": "image/png",
+              "byte_size": 40006,
+              "checksum": "MFzcbUhVCNoDodILZokQ2A==",
+              "sha256": "pfynTVDCEOFalW60HiDrHiPO59PUa4SZgV1RB4FeJ3k="
+            },
+            {
+              "content_type": "image/jpeg",
+              "byte_size": 40007,
+              "checksum": "zp6R3dk1b0ZTb7lTP9eDSg==",
+              "sha256": "04zNfNvmr04u+tnog1B1Wcad2MkDig2v/sGELA4OnZM="
+            },
+            {
+              "content_type": "image/webp",
+              "byte_size": 40008,
+              "checksum": "QWoTPGLVHZkDqTLCGma5fw==",
+              "sha256": "wT2rroQEAsWRysHhURsNmJOrbEJ2zE5zAA5iNEulC7s="
+            },
+            {
+              "content_type": "image/png",
+              "byte_size": 40009,
+              "checksum": "KnqNLtLks08HR/0mpVO9DA==",
+              "sha256": "lYUDg0gWafelUIlCjeT7oZw7Rzaqh0bGd+Z1zeMnv/0="
+            },
+            {
+              "content_type": "image/jpeg",
+              "byte_size": 40010,
+              "checksum": "eu6YvoSrEacU/D/9rJniig==",
+              "sha256": "FmctQ7DjN9d5VOnbg15ibz+uG8pMLm+qFIzJyX5Y6NA="
+            },
+            {
+              "content_type": "image/webp",
+              "byte_size": 40011,
+              "checksum": "vdbyhyhwbq0KhliOUjnC3w==",
+              "sha256": "Q/gHGWAQEBZWOmFommLBw97S1ZwZqi9IWRv/QKI4jSI="
+            },
+            {
+              "content_type": "image/png",
+              "byte_size": 40012,
+              "checksum": "BYut+Bp9Iv7PvNWqQZgY0Q==",
+              "sha256": "s/f46GUaUNyqs7bFNK0YupyaPLF2K+B23NiswXPg3kI="
+            },
+            {
+              "content_type": "image/jpeg",
+              "byte_size": 40013,
+              "checksum": "8A+sktB++snhFiQtIrAdSw==",
+              "sha256": "TME24jhfffNf/PYUcxvpxZqevx4fQWqqLVf73h5M8vw="
+            },
+            {
+              "content_type": "image/webp",
+              "byte_size": 40014,
+              "checksum": "7lsLBdKaudqQZTAqt6pNmg==",
+              "sha256": "bcNesDWSYqJKJQiOvASUxfYIHJCh5EbSBlscJ+sztEQ="
+            },
+            {
+              "content_type": "image/png",
+              "byte_size": 40015,
+              "checksum": "ZqfaBO4yOcTA65lbqNDQ9g==",
+              "sha256": "mipd2fAAFzqGU6j0ucOzoOHWFQL7tfivGssh806nnvY="
+            }
+          ]
+        }
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "BnlelyAVsSFLANsNKjoKvQ==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "3EW0M8MJ39Et5ITydYN6CQ+zgnQXvKnUzpgLBPGgdSQ="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "dc45b433c309dfd12de484f275837a090fb3827417bca9d4ce980b04f1a07524",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/jpeg",
+          "content-md5": "di+cjPVhy2ZUNKHs1FHIKg==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "Ajjk/ENGSnRmoBUEAD5/Ont84CohOBCpyn74409nPp4="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "0238e4fc43464a7466a01504003e7f3a7b7ce02a213810a9ca7ef8e34f673e9e",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/webp",
+          "content-md5": "yn3Ex82uAA27CKCtRc3djw==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "cyygzDzWnUHswfHKV4WlLGWvUoHsmGYpyyTZvdwVasA="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "732ca0cc3cd69d41ecc1f1ca5785a52c65af5281ec986629cb24d9bddc156ac0",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "t7QFZlUtvXp1XM1/z28/qw==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "VenYwYEXt15GgI5GIXWFTYgzJlFtFMx8vvUizjbP9sc="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "55e9d8c18117b75e46808e462175854d883326516d14cc7cbef522ce36cff6c7",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/jpeg",
+          "content-md5": "C7slwFWqP4vYbOmkTFAdhw==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "aBQGMs9HD3i1g/UC7THEDQWj16WwM3Bnzjj+yNg3sP4="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "68140632cf470f78b583f502ed31c40d05a3d7a5b0337067ce38fec8d837b0fe",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/webp",
+          "content-md5": "ss/ov4Pq1bNsldDSJtMEgw==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "zgsjZOsJq4E+K8WRw60bXNpRpSrVvuvNYBptuKr3MKo="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "ce0b2364eb09ab813e2bc591c3ad1b5cda51a52ad5beebcd601a6db8aaf730aa",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "MFzcbUhVCNoDodILZokQ2A==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "pfynTVDCEOFalW60HiDrHiPO59PUa4SZgV1RB4FeJ3k="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "a5fca74d50c210e15a956eb41e20eb1e23cee7d3d46b8499815d5107815e2779",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/jpeg",
+          "content-md5": "zp6R3dk1b0ZTb7lTP9eDSg==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "04zNfNvmr04u+tnog1B1Wcad2MkDig2v/sGELA4OnZM="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "d38ccd7cdbe6af4e2efad9e883507559c69dd8c9038a0daffec1842c0e0e9d93",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/webp",
+          "content-md5": "QWoTPGLVHZkDqTLCGma5fw==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "wT2rroQEAsWRysHhURsNmJOrbEJ2zE5zAA5iNEulC7s="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "c13dabae840402c591cac1e1511b0d9893ab6c4276cc4e73000e62344ba50bbb",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "KnqNLtLks08HR/0mpVO9DA==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "lYUDg0gWafelUIlCjeT7oZw7Rzaqh0bGd+Z1zeMnv/0="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "95850383481669f7a55089428de4fba19c3b4736aa8746c677e675cde327bffd",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/jpeg",
+          "content-md5": "eu6YvoSrEacU/D/9rJniig==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "FmctQ7DjN9d5VOnbg15ibz+uG8pMLm+qFIzJyX5Y6NA="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "16672d43b0e337d77954e9db835e626f3fae1bca4c2e6faa148cc9c97e58e8d0",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/webp",
+          "content-md5": "vdbyhyhwbq0KhliOUjnC3w==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "Q/gHGWAQEBZWOmFommLBw97S1ZwZqi9IWRv/QKI4jSI="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "43f8071960101016563a61689a62c1c3ded2d59c19aa2f48591bff40a2388d22",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "BYut+Bp9Iv7PvNWqQZgY0Q==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "s/f46GUaUNyqs7bFNK0YupyaPLF2K+B23NiswXPg3kI="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "b3f7f8e8651a50dcaab3b6c534ad18ba9c9a3cb1762be076dcd8acc173e0de42",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/jpeg",
+          "content-md5": "8A+sktB++snhFiQtIrAdSw==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "TME24jhfffNf/PYUcxvpxZqevx4fQWqqLVf73h5M8vw="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "4cc136e2385f7df35ffcf614731be9c59a9ebf1e1f416aaa2d57fbde1e4cf2fc",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/webp",
+          "content-md5": "7lsLBdKaudqQZTAqt6pNmg==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "bcNesDWSYqJKJQiOvASUxfYIHJCh5EbSBlscJ+sztEQ="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "6dc35eb0359262a24a25088ebc0494c5f6081c90a1e446d2065b1c27eb33b444",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "ZqfaBO4yOcTA65lbqNDQ9g==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "mipd2fAAFzqGU6j0ucOzoOHWFQL7tfivGssh806nnvY="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "9a2a5dd9f000173a8653a8f4b9c3b3a0e1d61502fbb5f8af1acb21f34ea79ef6",
+        "parallel": true
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body_checks": [
+          {
+            "pointer": "/model",
+            "equals": "decisionnode-moe"
+          },
+          {
+            "pointer": "/state",
+            "equals": "s"
+          },
+          {
+            "pointer": "/images/0/id",
+            "equals": "p00"
+          },
+          {
+            "pointer": "/images/0/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/0/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/0/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/1/id",
+            "equals": "p01"
+          },
+          {
+            "pointer": "/images/1/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/1/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/1/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/2/id",
+            "equals": "p02"
+          },
+          {
+            "pointer": "/images/2/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/2/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/2/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/3/id",
+            "equals": "p03"
+          },
+          {
+            "pointer": "/images/3/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/3/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/3/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/4/id",
+            "equals": "p04"
+          },
+          {
+            "pointer": "/images/4/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/4/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/4/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/5/id",
+            "equals": "p05"
+          },
+          {
+            "pointer": "/images/5/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/5/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/5/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/6/id",
+            "equals": "p06"
+          },
+          {
+            "pointer": "/images/6/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/6/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/6/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/7/id",
+            "equals": "p07"
+          },
+          {
+            "pointer": "/images/7/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/7/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/7/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/8/id",
+            "equals": "p08"
+          },
+          {
+            "pointer": "/images/8/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/8/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/8/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/9/id",
+            "equals": "p09"
+          },
+          {
+            "pointer": "/images/9/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/9/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/9/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/10/id",
+            "equals": "p10"
+          },
+          {
+            "pointer": "/images/10/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/10/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/10/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/11/id",
+            "equals": "p11"
+          },
+          {
+            "pointer": "/images/11/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/11/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/11/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/12/id",
+            "equals": "p12"
+          },
+          {
+            "pointer": "/images/12/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/12/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/12/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/13/id",
+            "equals": "p13"
+          },
+          {
+            "pointer": "/images/13/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/13/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/13/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/14/id",
+            "equals": "p14"
+          },
+          {
+            "pointer": "/images/14/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/14/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/14/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/15/id",
+            "equals": "p15"
+          },
+          {
+            "pointer": "/images/15/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/15/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/15/url",
+            "absent": true
+          }
+        ]
+      }
+    ]
+  }
+}

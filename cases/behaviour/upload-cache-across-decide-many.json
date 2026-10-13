@@ -1,0 +1,80 @@
+{
+  "id": "upload-cache-across-decide-many",
+  "description": "decide_many with concurrency 1 and two requests holding the same large image: the cache is the client's, so the second request reuses the first one's upload. One presign in all.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "concurrency": 1,
+      "requests": [
+        {
+          "state": "a",
+          "images": [
+            {
+              "$image": {
+                "id": "r",
+                "path": "fixtures/images/pixel.png",
+                "pad_to": 600000
+              }
+            }
+          ],
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        },
+        {
+          "state": "b",
+          "images": [
+            {
+              "$image": {
+                "id": "r",
+                "path": "fixtures/images/pixel.png",
+                "pad_to": 600000
+              }
+            }
+          ],
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "results": [
+      {
+        "result": "decision"
+      },
+      {
+        "result": "decision"
+      }
+    ],
+    "request_counts": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "count": 1
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "count": 1
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "count": 2
+      }
+    ]
+  }
+}

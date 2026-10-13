@@ -1,0 +1,46 @@
+{
+  "id": "local-image-id-over-64-before-duplicate",
+  "description": "Two images with the same 65-character id: the checks run image by image (an empty id, then the length, then a repeated id), so the first image is reported as too long, not the second as a duplicate. Checked locally; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "url": "https://files.example.com/front.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "url": "https://files.example.com/back.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is this a receipt?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "Image 0: its id is longer than 64 characters.",
+        "request_id": null
+      }
+    }
+  }
+}

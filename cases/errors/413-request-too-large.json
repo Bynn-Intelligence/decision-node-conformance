@@ -1,0 +1,43 @@
+{
+  "id": "413-request-too-large",
+  "description": "A 413 request_too_large_error (a body over 26,214,400 bytes, 25 MiB) is a RequestTooLargeError, derived from DecisionNodeError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 413,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "the body is 26214500 bytes; the limit is 26214400"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"request_too_large_error\", \"message\": \"The request body is over 26,214,400 bytes (25 MiB). Send large images as uploads (POST /v1/uploads) and name them by upload_id.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RequestTooLargeError",
+      "catch_as": "DecisionNodeError",
+      "fields": {
+        "status": 413,
+        "error_type": "request_too_large_error",
+        "message": "The request body is over 26,214,400 bytes (25 MiB). Send large images as uploads (POST /v1/uploads) and name them by upload_id.",
+        "request_id": "req_err_0001",
+        "reason": "the body is 26214500 bytes; the limit is 26214400"
+      }
+    }
+  }
+}

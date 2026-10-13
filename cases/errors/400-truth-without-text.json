@@ -1,0 +1,58 @@
+{
+  "id": "400-truth-without-text",
+  "description": "A truth question with neither instructions nor criteria is a 400. Sent with decide_raw: from spec 1.1 the builders refuse this request locally (behaviour/local-* cases), so the raw body carries it to the recorded response.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "q": {
+            "type": "truth"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "question 'q': a truth question needs instructions or criteria"
+    },
+    "body_text": "{\"detail\": \"Truth question must have criteria or instructions: q\"}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "type": "truth"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": null,
+        "message": "Truth question must have criteria or instructions: q",
+        "reason": "question 'q': a truth question needs instructions or criteria"
+      }
+    }
+  }
+}

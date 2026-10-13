@@ -1,0 +1,45 @@
+{
+  "id": "classify-list",
+  "description": "classify with a list of names sends null descriptions.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "classify",
+    "args": {
+      "state": "Paid in kronor",
+      "instructions": "Currency?",
+      "options": [
+        "SEK",
+        "EUR"
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "Paid in kronor",
+        "questions": {
+          "classify": {
+            "type": "choice",
+            "instructions": "Currency?",
+            "criteria": {
+              "SEK": null,
+              "EUR": null
+            }
+          }
+        }
+      }
+    }
+  }
+}

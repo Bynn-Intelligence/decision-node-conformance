@@ -1,0 +1,43 @@
+{
+  "id": "local-session-ttl-above-3600",
+  "description": "open_session with ttl_seconds 3601: ttl_seconds is 1 to 3,600, the API's 422 entry. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      },
+      "ttl_seconds": 3601
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "less_than_equal",
+            "loc": [
+              "body",
+              "ttl_seconds"
+            ],
+            "msg": "Input should be less than or equal to 3600",
+            "input": 3601,
+            "ctx": {
+              "le": 3600
+            }
+          }
+        ]
+      }
+    }
+  }
+}

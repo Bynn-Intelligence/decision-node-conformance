@@ -1,0 +1,63 @@
+{
+  "id": "400-number-without-instructions",
+  "description": "A number question without instructions: a 400 with a plain-string detail: BadRequestError, error_type empty, message the string.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "cars": {
+            "type": "number",
+            "min": 0,
+            "max": 50
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "question 'cars': a number question needs instructions"
+    },
+    "body_text": "{\"detail\": \"Number question must have instructions: cars\"}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "s",
+      "questions": {
+        "cars": {
+          "type": "number",
+          "min": 0,
+          "max": 50
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": null,
+        "message": "Number question must have instructions: cars",
+        "reason": "question 'cars': a number question needs instructions"
+      }
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "max-retries-zero",
+  "description": "max_retries 0: one attempt only.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 529,
+          "headers": {
+            "retry-after-ms": "20"
+          },
+          "body": {
+            "detail": {
+              "error_type": "overloaded_error",
+              "message": "The service is overloaded. Try again shortly."
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "OverloadedError"
+    }
+  }
+}

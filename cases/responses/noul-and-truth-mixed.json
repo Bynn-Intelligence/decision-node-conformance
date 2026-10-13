@@ -1,0 +1,46 @@
+{
+  "id": "noul-and-truth-mixed",
+  "description": "One response may mix truth and noul answers: both are TruthAnswer.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "a": {
+          "$truth": {
+            "instructions": "?"
+          }
+        },
+        "b": {
+          "type": "noul",
+          "instructions": "?"
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "12",
+      "x-decisionnode-safety": "harm=0.003, self_harm=0.001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"a\": {\"type\": \"truth\", \"truth\": 0.12}, \"b\": {\"type\": \"noul\", \"noul\": 0.8200000000000001}}, \"usage\": {\"input_tokens\": 40, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "a": {
+          "kind": "truth",
+          "truth": 0.12
+        },
+        "b": {
+          "kind": "truth",
+          "truth": 0.8200000000000001
+        }
+      }
+    }
+  }
+}

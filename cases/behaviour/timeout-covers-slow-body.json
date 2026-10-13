@@ -1,0 +1,46 @@
+{
+  "id": "timeout-covers-slow-body",
+  "description": "The mock sends the status and headers at once, then the body in 8 pieces 250 ms apart (2 s in all). Every piece arrives well inside 0.5 s of the one before, so only a timeout that covers the whole attempt, to the last byte of the body, fires: TimeoutError after one attempt, long before the body is complete.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "timeout": 0.5,
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "action": "normal",
+          "trickle": {
+            "chunks": 8,
+            "interval_ms": 250
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "TimeoutError"
+    },
+    "elapsed_ms": {
+      "min": 400,
+      "max": 1500
+    }
+  }
+}

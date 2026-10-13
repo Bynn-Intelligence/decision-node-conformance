@@ -1,0 +1,148 @@
+{
+  "id": "collections-lifecycle",
+  "description": "Against the mock: create a collection, enroll a face, list the items, delete the item, then delete the collection; each step answered as the API does, and the deleted collection is then not found.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Staff"
+        }
+      },
+      "outcome": {
+        "result": "collection",
+        "collection": {
+          "type": "face",
+          "name": "Staff",
+          "public": false,
+          "items": 0,
+          "deletion": null
+        }
+      }
+    },
+    {
+      "save_as": "item",
+      "call": {
+        "method": "collections.enroll",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "image": {
+            "$image": {
+              "id": "badge",
+              "url": "https://files.example.com/badges/emp-1042.jpg"
+            }
+          },
+          "reference": "emp-1042",
+          "label": "Reception"
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "reference": "emp-1042",
+          "label": "Reception",
+          "usage": {
+            "enrollments": 1
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.get",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "collection",
+        "collection": {
+          "items": 1
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list_items",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "limit": 5
+        }
+      },
+      "outcome": {
+        "result": "item_page",
+        "item_page": {
+          "offset": 0,
+          "limit": 5,
+          "total": 1,
+          "next_offset": null
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.delete_item",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "item_id": {
+            "$ref": "item.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "deleted",
+        "deleted": {
+          "deleted": true
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.delete",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "deleted",
+        "deleted": {
+          "deleted": true
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.get",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          }
+        }
+      },
+      "outcome": {
+        "error": "NotFoundError",
+        "fields": {
+          "status": 404,
+          "error_type": "collection_not_found"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 7
+  }
+}

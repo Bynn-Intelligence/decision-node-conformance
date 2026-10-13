@@ -1,0 +1,72 @@
+{
+  "id": "upload-put-retries-exhausted",
+  "description": "Every PUT is answered 503 SlowDown: three attempts with max_retries 2, then the base DecisionNodeError with status 503, error_type upload_failed and reason SlowDown.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "PUT"
+          },
+          "steps": [
+            {
+              "status": 503,
+              "headers": {
+                "content-type": "application/xml"
+              },
+              "body_text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Error><Code>SlowDown</Code><Message>Please reduce your request rate.</Message><RequestId>MOCK0001</RequestId></Error>"
+            }
+          ],
+          "after": "repeat_last"
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 4,
+    "outcome": {
+      "error": "DecisionNodeError",
+      "fields": {
+        "status": 503,
+        "error_type": "upload_failed",
+        "reason": "SlowDown"
+      }
+    },
+    "scheduled_waits_ms": [
+      {
+        "min": 0,
+        "max": 8000
+      },
+      {
+        "min": 0,
+        "max": 8000
+      }
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "request-case.schema.json",
+  "title": "Request case",
+  "description": "A described SDK call and the exact HTTP request it must send. Header names compare case-insensitively. body compares as JSON values: objects by key regardless of order, numbers by value. ordered_keys lists JSON pointers to objects whose key order must also be the order given in the call. body_checks replaces body when only the structure is fixed. mock (optional) is a scenario registered as request/<id>: the harness adds x-mock-scenario: request/<id> so a call that needs an answer (a batch by id) gets one. expect.requests replaces expect.request when one call sends several requests (an upload: the presign, the PUTs, then the decision).",
+  "type": "object",
+  "required": [
+    "id",
+    "description",
+    "client",
+    "call",
+    "expect"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/case_id"
+    },
+    "description": {
+      "type": "string"
+    },
+    "client": {
+      "$ref": "common.schema.json#/$defs/client"
+    },
+    "env": {
+      "$ref": "common.schema.json#/$defs/env"
+    },
+    "call": {
+      "$ref": "common.schema.json#/$defs/call"
+    },
+    "expect": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "request": {
+          "$ref": "common.schema.json#/$defs/request_expectation"
+        },
+        "requests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.schema.json#/$defs/request_expectation"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "mock": {
+      "type": "object",
+      "required": [
+        "scenario"
+      ],
+      "properties": {
+        "scenario": {
+          "$ref": "common.schema.json#/$defs/scenario"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

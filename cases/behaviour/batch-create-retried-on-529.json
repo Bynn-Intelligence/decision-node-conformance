@@ -1,0 +1,73 @@
+{
+  "id": "batch-create-retried-on-529",
+  "description": "batches.create answered 529: retried after the wait the server asks for (the API applied nothing).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path_suffix": "/v1/batches"
+          },
+          "steps": [
+            {
+              "status": 529,
+              "body": {
+                "detail": {
+                  "error_type": "overloaded_error",
+                  "message": "Try later."
+                }
+              },
+              "headers": {
+                "retry-after-ms": "50"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "t1",
+          "state": "I was charged twice.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "batch",
+      "batch": {
+        "state": "draft",
+        "counters": {
+          "requests": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "id": "run-batch-honours-retry-after",
+  "description": "When the batch's get carries Retry-After (30 s here) longer than poll_interval (10 s), run_batch waits what the server asks.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "batch": {
+        "get_retry_after": 30,
+        "polls_to_running": 1,
+        "polls_to_end": 3
+      }
+    }
+  },
+  "call": {
+    "method": "run_batch",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "t1",
+          "state": "I was charged twice.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ],
+      "poll_interval": 10
+    }
+  },
+  "expect": {
+    "scheduled_waits_ms": [
+      {
+        "min": 10000,
+        "max": 10000
+      },
+      {
+        "min": 30000,
+        "max": 30000
+      },
+      {
+        "min": 30000,
+        "max": 30000
+      }
+    ],
+    "outcome": {
+      "result": "batch_run",
+      "batch": {
+        "state": "completed"
+      }
+    },
+    "request_counts": [
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/batches/batch_[0-9A-Z]{10}$",
+        "count": 3
+      }
+    ]
+  }
+}

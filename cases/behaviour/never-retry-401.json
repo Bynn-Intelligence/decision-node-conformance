@@ -1,0 +1,48 @@
+{
+  "id": "never-retry-401",
+  "description": "401 is never retried, even with retry headers present: one attempt, then AuthenticationError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 401,
+          "headers": {
+            "retry-after-ms": "20"
+          },
+          "body": {
+            "detail": {
+              "error_type": "authentication_error",
+              "message": "Cannot authenticate with the server. Please check your API key and try again."
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "AuthenticationError",
+      "fields": {
+        "status": 401
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "id": "gate-with-images-and-model",
+  "description": "gate takes images and model like decide: they are sent beside the fixed questions, and the per-call model replaces the client's.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "gate",
+    "args": {
+      "action": "Restart the payments service.",
+      "context": {
+        "ticket": "OPS-12"
+      },
+      "images": [
+        {
+          "$image": {
+            "id": "screen",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "diagram",
+            "url": "https://example.com/diagram.png"
+          }
+        }
+      ],
+      "model": "decisionnode-flash"
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-flash",
+        "state": {
+          "action": "Restart the payments service.",
+          "context": {
+            "ticket": "OPS-12"
+          }
+        },
+        "questions": {
+          "risk": {
+            "type": "score",
+            "instructions": "How much harm could this action cause if it is wrong?",
+            "criteria": [
+              "none",
+              "low",
+              "moderate",
+              "high",
+              "severe"
+            ]
+          },
+          "touches_production": {
+            "type": "truth",
+            "instructions": "Does this action change a production system, production data or anything customers use?"
+          },
+          "verdict": {
+            "type": "choice",
+            "instructions": "Should this action run as it is, wait for a person to confirm it, or be blocked?",
+            "criteria": {
+              "allow": "safe to run without asking",
+              "confirm": "a person should confirm it first",
+              "block": "should not run"
+            }
+          }
+        },
+        "images": [
+          {
+            "id": "screen",
+            "media_type": "image/png",
+            "data": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGM8ISfHwMDAxMDAwMDAAAANBAEIfXHKZgAAAABJRU5ErkJggg=="
+          },
+          {
+            "id": "diagram",
+            "url": "https://example.com/diagram.png"
+          }
+        ]
+      },
+      "ordered_keys": [
+        "/questions/verdict/criteria"
+      ]
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "headers-case-insensitive",
+  "description": "Header names are matched without regard to case.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json",
+      "X-Request-Id": "req_upper",
+      "X-DecisionNode-Model": "decisionnode-moe",
+      "X-DecisionNode-Latency-Ms": "7",
+      "X-DecisionNode-Safety": "harm=0.010, self_harm=0.020"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"q\": {\"type\": \"truth\", \"truth\": 0.5}}, \"usage\": {\"input_tokens\": 9, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "request_id": "req_upper",
+      "latency_ms": 7,
+      "safety": {
+        "checked": true,
+        "harm": 0.01,
+        "self_harm": 0.02,
+        "flagged": []
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "local-box-image-not-string",
+  "description": "A box question whose image is a number. Checked locally (SDK specification 1.2): ValidationError with the entries the API answers, and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "damage": {
+          "type": "box",
+          "instructions": "Draw a box around the damaged package.",
+          "image": 0
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "string_type",
+            "loc": [
+              "body",
+              "questions",
+              "damage",
+              "box",
+              "image"
+            ],
+            "msg": "Input should be a valid string",
+            "input": 0
+          }
+        ]
+      }
+    }
+  }
+}

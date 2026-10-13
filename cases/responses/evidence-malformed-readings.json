@@ -1,0 +1,121 @@
+{
+  "id": "evidence-malformed-readings",
+  "description": "A reading with a field of the wrong type (age_years as a string) or a field missing (generated) is a generic reading holding its raw fields; the well-formed reading beside it is typed and the decision does not fail.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "age",
+        {
+          "$booster": {
+            "name": "ai_generated",
+            "images": [
+              "poster"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "age=ok:212,ai_generated=ok:340"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"adult\": {\"type\": \"truth\", \"truth\": 0.97}, \"synthetic\": {\"type\": \"truth\", \"truth\": 0.91}}, \"evidence\": {\"age\": {\"version\": \"age-v1\", \"status\": \"ok\", \"latency_ms\": 212, \"results\": [{\"image\": \"person\", \"age_years\": \"27\", \"low\": 22, \"high\": 33, \"confidence\": 0.81, \"faces\": 1}, {\"image\": \"poster\", \"faces\": 0}]}, \"ai_generated\": {\"version\": \"ai_generated-v1\", \"status\": \"ok\", \"latency_ms\": 340, \"results\": [{\"image\": \"poster\", \"confidence\": 0.86, \"method\": \"inference\", \"top_generator\": {\"name\": \"Generator A\", \"probability\": 0.71}, \"c2pa_signer\": null}]}}, \"usage\": {\"input_tokens\": 341, \"output_tokens\": 0, \"booster_tokens\": 72, \"boosters\": 3}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "age": {
+          "version": "age-v1",
+          "status": "ok",
+          "latency_ms": 212,
+          "billed_calls": null,
+          "results": [
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "person",
+                "age_years": "27",
+                "low": 22,
+                "high": 33,
+                "confidence": 0.81,
+                "faces": 1
+              }
+            },
+            {
+              "kind": "age",
+              "image": "poster",
+              "faces": 0,
+              "age_years": null,
+              "low": null,
+              "high": null,
+              "confidence": null
+            }
+          ]
+        },
+        "ai_generated": {
+          "version": "ai_generated-v1",
+          "status": "ok",
+          "latency_ms": 340,
+          "billed_calls": null,
+          "results": [
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "poster",
+                "confidence": 0.86,
+                "method": "inference",
+                "top_generator": {
+                  "name": "Generator A",
+                  "probability": 0.71
+                },
+                "c2pa_signer": null
+              }
+            }
+          ]
+        }
+      },
+      "answers": {
+        "adult": {
+          "kind": "truth",
+          "truth": 0.97
+        },
+        "synthetic": {
+          "kind": "truth",
+          "truth": 0.91
+        }
+      }
+    }
+  }
+}

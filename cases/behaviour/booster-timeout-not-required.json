@@ -1,0 +1,64 @@
+{
+  "id": "booster-timeout-not-required",
+  "description": "A booster that is not required and times out: the decision runs without its reading, evidence says timeout with no results, nothing is billed for it, and nothing is retried. The entry lists the picture the booster was meant to read, {\"image\": \"person\"} with no reading: a generic reading.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "age"
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "boosters": {
+        "status": {
+          "age": "timeout"
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "evidence": {
+          "age": {
+            "version": "age-v1",
+            "status": "timeout",
+            "latency_ms": 800,
+            "billed_calls": 0,
+            "results": [
+              {
+                "kind": "unknown",
+                "raw": {
+                  "image": "person"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

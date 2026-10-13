@@ -1,0 +1,52 @@
+{
+  "id": "local-places-max-not-integer",
+  "description": "max 2.5: not an integer. Checked locally: ValidationError with int_type; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "lot",
+            "url": "https://files.example.com/lot/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "cars": {
+          "$box": {
+            "instructions": "Every car in the lot.",
+            "max": 2.5
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "int_type",
+            "loc": [
+              "body",
+              "questions",
+              "cars",
+              "box",
+              "max"
+            ],
+            "msg": "Input should be a valid integer",
+            "input": 2.5
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "id": "batch-create-not-retried-on-timeout",
+  "description": "batches.create that times out is not retried: TimeoutError after one attempt.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2,
+    "timeout": 0.5
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path_suffix": "/v1/batches"
+          },
+          "steps": [
+            {
+              "action": "normal",
+              "delay_ms": 1500
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "t1",
+          "state": "I was charged twice.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "TimeoutError"
+    }
+  }
+}

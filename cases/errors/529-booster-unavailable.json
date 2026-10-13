@@ -1,0 +1,82 @@
+{
+  "id": "529-booster-unavailable",
+  "description": "A required booster that did not answer in time is the 529 booster_unavailable: an OverloadedError with that error_type and retry_after, whose boosters field is the x-decisionnode-boosters header parsed (each booster's status and time, in header order).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "age",
+            "require": true
+          }
+        },
+        "ai_generated"
+      ]
+    }
+  },
+  "response": {
+    "status": 529,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "retry-after": "1",
+      "retry-after-ms": "250",
+      "x-decisionnode-boosters": "age=timeout:800,ai_generated=ok:340"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"booster_unavailable\", \"message\": \"The booster 'age' did not answer in time.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "OverloadedError",
+      "fields": {
+        "status": 529,
+        "error_type": "booster_unavailable",
+        "message": "The booster 'age' did not answer in time.",
+        "retry_after": 0.25,
+        "boosters": {
+          "age": {
+            "status": "timeout",
+            "latency_ms": 800
+          },
+          "ai_generated": {
+            "status": "ok",
+            "latency_ms": 340
+          }
+        },
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

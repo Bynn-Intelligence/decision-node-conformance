@@ -1,0 +1,49 @@
+{
+  "id": "check-clean-decide",
+  "description": "A valid decide request (a URL image, a local image of 600,000 bytes that sending would upload, a number and a truth question) checks clean: check_request returns nothing and no request reaches the mock, not even the presign. check_request runs the checks the call would run and sends nothing.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "u",
+            "url": "https://files.example.com/receipt.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "scan",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "n": {
+          "$number": {
+            "instructions": "How many?",
+            "min": 0,
+            "max": 50
+          }
+        },
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "result": "checked"
+    }
+  }
+}

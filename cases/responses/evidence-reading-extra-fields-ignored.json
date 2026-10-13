@@ -1,0 +1,76 @@
+{
+  "id": "evidence-reading-extra-fields-ignored",
+  "description": "A reading with fields the SDK does not know (region, model_note) is still a typed reading: unknown fields are ignored, as they are inside an answer. Only a missing or wrongly typed field makes a reading generic.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "ai_generated"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "ai_generated=ok:300"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"synthetic\": {\"type\": \"truth\", \"truth\": 0.08}}, \"evidence\": {\"ai_generated\": {\"version\": \"ai_generated-v1\", \"status\": \"ok\", \"latency_ms\": 300, \"results\": [{\"image\": \"poster\", \"generated\": 0.93, \"confidence\": 0.86, \"method\": \"inference\", \"top_generator\": {\"name\": \"Generator A\", \"probability\": 0.71}, \"c2pa_signer\": null, \"region\": {\"x\": 4, \"y\": 8}, \"model_note\": \"v2 head\"}]}}, \"usage\": {\"input_tokens\": 180, \"output_tokens\": 0, \"booster_tokens\": 24, \"boosters\": 1}}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 180,
+        "output_tokens": 0,
+        "booster_tokens": 24,
+        "boosters": 1
+      },
+      "evidence": {
+        "ai_generated": {
+          "version": "ai_generated-v1",
+          "status": "ok",
+          "latency_ms": 300,
+          "billed_calls": null,
+          "results": [
+            {
+              "kind": "ai_generated",
+              "image": "poster",
+              "generated": 0.93,
+              "confidence": 0.86,
+              "method": "inference",
+              "top_generator": {
+                "name": "Generator A",
+                "probability": 0.71
+              },
+              "c2pa_signer": null,
+              "c2pa": null
+            }
+          ]
+        }
+      },
+      "answers": {
+        "synthetic": {
+          "kind": "truth",
+          "truth": 0.08
+        }
+      }
+    }
+  }
+}

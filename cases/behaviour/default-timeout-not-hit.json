@@ -1,0 +1,36 @@
+{
+  "id": "default-timeout-not-hit",
+  "description": "A response that takes 1 s is well inside the default 10 s timeout: one attempt, success.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "action": "normal",
+          "delay_ms": 1000
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}

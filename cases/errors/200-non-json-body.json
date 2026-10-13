@@ -1,0 +1,38 @@
+{
+  "id": "200-non-json-body",
+  "description": "Success is 200 to 299 only, and its body must be JSON. A 200 whose body is not JSON is a ServerError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "<html><body>Service temporarily unavailable</body></html>"
+  },
+  "expect": {
+    "error": {
+      "class": "ServerError",
+      "fields": {
+        "status": 200,
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

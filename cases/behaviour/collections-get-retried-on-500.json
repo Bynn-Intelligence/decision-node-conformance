@@ -1,0 +1,45 @@
+{
+  "id": "collections-get-retried-on-500",
+  "description": "Reading a collection is retried on a 5xx as any read: a 500, then the answer.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.get",
+    "args": {
+      "collection_id": "celebrities"
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 500,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "detail": {
+              "error_type": "api_error",
+              "message": "Something went wrong on our side."
+            }
+          }
+        },
+        {
+          "action": "normal"
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "collection",
+      "collection": {
+        "id": "celebrities",
+        "public": true
+      }
+    }
+  }
+}

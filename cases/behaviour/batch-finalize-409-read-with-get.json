@@ -1,0 +1,102 @@
+{
+  "id": "batch-finalize-409-read-with-get",
+  "description": "A finalize sent once is answered 409 invalid_batch_state although it took effect (the mock applies it, then answers 409): the SDK reads the batch with get and returns it, queued.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "batch": {
+        "polls_to_running": 5
+      },
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path_suffix": "/finalize"
+          },
+          "steps": [
+            {
+              "status": 409,
+              "body": {
+                "detail": {
+                  "error_type": "invalid_batch_state",
+                  "message": "Batch is queued. Only a draft can be finalized."
+                }
+              },
+              "after_normal": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": [
+            {
+              "custom_id": "t1",
+              "state": "I was charged twice.",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.finalize",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "state": "queued"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/batches",
+        "status": 201
+      },
+      {
+        "method": "POST",
+        "path_pattern": "^/v1/batches/batch_[0-9A-Z]{10}/finalize$",
+        "status": 409
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/batches/batch_[0-9A-Z]{10}$",
+        "status": 200
+      }
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "id": "local-number-min-as-string",
+  "description": "A wire-form number question whose min is the string \"5\": never coerced, the API's 422 float_type entry. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "type": "number",
+          "instructions": "How many?",
+          "min": "5",
+          "max": 10
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "float_type",
+            "loc": [
+              "body",
+              "questions",
+              "n",
+              "number",
+              "min"
+            ],
+            "msg": "Input should be a valid number",
+            "input": "5"
+          }
+        ]
+      }
+    }
+  }
+}

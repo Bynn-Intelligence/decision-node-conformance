@@ -1,0 +1,42 @@
+{
+  "id": "400-max-tokens-exceeded",
+  "description": "Over the context limit: a 400 whose error_type is max_tokens_exceeded is a ContextLimitError. The body has no message, so the error's message is \"\"; the count and the limit are in the reason.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "the request is 10604 tokens, the limit of decisionnode-flash is 8192"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"max_tokens_exceeded\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "ContextLimitError",
+      "fields": {
+        "status": 400,
+        "error_type": "max_tokens_exceeded",
+        "message": "",
+        "request_id": "req_err_0001",
+        "reason": "the request is 10604 tokens, the limit of decisionnode-flash is 8192"
+      }
+    }
+  }
+}

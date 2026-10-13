@@ -1,0 +1,38 @@
+{
+  "id": "503-server-error",
+  "description": "503 is a ServerError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 503,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_error\", \"message\": \"Service unavailable.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "ServerError",
+      "fields": {
+        "status": 503,
+        "error_type": "api_error"
+      }
+    }
+  }
+}

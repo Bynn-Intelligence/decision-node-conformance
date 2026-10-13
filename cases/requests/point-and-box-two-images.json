@@ -1,0 +1,82 @@
+{
+  "id": "point-and-box-two-images",
+  "description": "Two images: each point and box question names the image it looks in.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "Two cameras on line 3.",
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "dock",
+            "url": "https://files.example.com/dock/0001.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "pick": {
+          "$point": {
+            "instructions": "Point to the yellow package closest to the robot arm.",
+            "image": "belt"
+          }
+        },
+        "pallet": {
+          "$box": {
+            "instructions": "Draw a box around the pallet.",
+            "image": "dock",
+            "units": "normalized"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "Two cameras on line 3.",
+        "images": [
+          {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          },
+          {
+            "id": "dock",
+            "url": "https://files.example.com/dock/0001.jpg"
+          }
+        ],
+        "questions": {
+          "pick": {
+            "type": "point",
+            "instructions": "Point to the yellow package closest to the robot arm.",
+            "image": "belt"
+          },
+          "pallet": {
+            "type": "box",
+            "instructions": "Draw a box around the pallet.",
+            "image": "dock",
+            "units": "normalized"
+          }
+        }
+      }
+    }
+  }
+}

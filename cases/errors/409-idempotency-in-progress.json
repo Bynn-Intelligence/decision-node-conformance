@@ -1,0 +1,43 @@
+{
+  "id": "409-idempotency-in-progress",
+  "description": "The 409 idempotency_in_progress, read as sent when no retry is left (max_retries 0): the base error with its error_type, its message and x-decisionnode-error as the reason.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.enroll",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "image": {
+        "$image": {
+          "id": "badge",
+          "url": "https://files.example.com/badges/emp-1042.jpg"
+        }
+      },
+      "reference": "emp-1042"
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "Retry-After": "1",
+      "x-decisionnode-retry-after-ms": "1000",
+      "x-decisionnode-error": "A request with this Idempotency-Key is still running. Try again shortly."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"idempotency_in_progress\", \"message\": \"A request with this Idempotency-Key is still running. Try again shortly.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "idempotency_in_progress",
+        "message": "A request with this Idempotency-Key is still running. Try again shortly.",
+        "reason": "A request with this Idempotency-Key is still running. Try again shortly."
+      }
+    }
+  }
+}

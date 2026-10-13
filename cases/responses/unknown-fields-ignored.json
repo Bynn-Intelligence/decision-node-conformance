@@ -1,0 +1,62 @@
+{
+  "id": "unknown-fields-ignored",
+  "description": "Unknown fields in the body, in usage and inside an answer are ignored by the typed result and kept in raw.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "23",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"q\": {\"type\": \"truth\", \"truth\": 0.5, \"explanation_tokens\": 3}}, \"usage\": {\"input_tokens\": 9, \"output_tokens\": 0, \"cached_tokens\": 4}, \"cost_usd\": 0.0001, \"trace\": {\"region\": \"eu\"}}"
+  },
+  "expect": {
+    "decision": {
+      "model": "decisionnode-moe-0.9.0-rc1",
+      "usage": {
+        "input_tokens": 9,
+        "output_tokens": 0
+      },
+      "answers": {
+        "q": {
+          "kind": "truth",
+          "truth": 0.5
+        }
+      },
+      "raw": {
+        "model": "decisionnode-moe-0.9.0-rc1",
+        "answers": {
+          "q": {
+            "type": "truth",
+            "truth": 0.5,
+            "explanation_tokens": 3
+          }
+        },
+        "usage": {
+          "input_tokens": 9,
+          "output_tokens": 0,
+          "cached_tokens": 4
+        },
+        "cost_usd": 0.0001,
+        "trace": {
+          "region": "eu"
+        }
+      }
+    }
+  }
+}

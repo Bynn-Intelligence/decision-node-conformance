@@ -1,0 +1,226 @@
+# Changelog
+
+## 1.13 (for SDK specification 1.3)
+
+Collections and face recognition. `SPEC_VERSION` stays `"1.3"`, unreleased, so the change folds into it.
+
+- Calls: `collections.create(name, type)`, `collections.list()`, `collections.get(collection_id)`, `collections.delete(collection_id)`, `collections.enroll(collection_id, image, reference, label)`, `collections.list_items(collection_id, offset, limit)` and `collections.delete_item(collection_id, item_id)`, each returning the API's object as sent; `list()` returns the body's list. `list_items` checks `offset` and `limit` locally, as `batches.list` does.
+- Local checks, the limits a client may hold: a type other than `face`, a name not 1 to 80 characters, a reference not 1 to 64 of `[A-Za-z0-9_.:-]`, a label over 128 characters, each a `ValidationError` with the API's entry before any request; the enrollment's image is checked as a decision's.
+- Idempotency: `create` and `enroll` send `Idempotency-Key`, a new UUID (version 4) per call, the same on every attempt, and so retry like any call, a `409` `idempotency_in_progress` too (after its `Retry-After`); a `409` `idempotency_key_reused` is raised.
+- The idempotency messages: the 400 for a malformed key or one sent twice, the 409s with their sentences in `x-decisionnode-error`, and `idempotency_in_progress` with `Retry-After: 1`; a recorded `idempotency_in_progress` case.
+- A reference is checked against `^[A-Za-z0-9_.:-]{1,64}$` after its length, so an empty one is `string_pattern_mismatch`; an enrollment's picture is checked locally only for its URL, every other fault being the server's `422` `image_unreadable` (never billed); `wanted-persons` named where it is not enabled, a `GET` of it included, is the `403` `collection_not_enabled`; a create or an enrollment the workspace cannot pay is the `402` `insufficient_credit` (`InsufficientCreditError`). Cases: the two 402s, `image_unreadable` recorded and from the mock, the `GET` of `wanted-persons`, a refused enrollment URL; the reference cases follow the pattern.
+- Errors read as sent, with their messages: `404` `collection_not_found` and `item_not_found` (`NotFoundError`), `403` `collection_read_only`, `collection_not_enabled` and `collections_region_unavailable` (`PermissionDeniedError`), `400` `collection_type_mismatch` (`BadRequestError`), `409` `collections_limit_reached` and `items_limit_reached` (the base error, as every `409`), `422` `no_face` (`ValidationError`).
+- The booster `face_recognition` replaces `wanted_person`, which was never released: options `collection` and `threshold`, sent as given; `FaceRecognitionReading` (`image`, `faces`, `matches`, each a `box`, a `score`, the `collection`, the `reference`, and `name` or `label`, empty when absent). The `wanted_person` cases became `face_recognition` cases; `WantedPersonReading` is gone.
+- Case format: the methods `collections.*`; the expectations `collection`, `collections`, `item`, `item_page` and `deleted`; the scenario setting `collections` (`wanted_persons`, `faces`, `max_collections`, `max_items`, `region_unavailable`).
+- Mock: the seven routes, kept per mock session and workspace; the public `celebrities` and, when the scenario says so, `wanted-persons`, both read-only.
+- Mock: batches, collections and items are ordered by a creation counter, never a clock reading. Then the `face_recognition` booster, served: `collection` and `threshold` checked before any reading (the `400` `api_usage_error`, the `404` `collection_not_found`, the `403` `collection_not_enabled`), and a deterministic reading per picture against the collection named; collection and item ids derived from their names, so cases can expect them; the `booster_unknown` reason lists `face_recognition`. The collections POSTs take `Idempotency-Key`: a repeat replays the first answer, a key reused with another request or still running is its `409`. Case format: the behaviour expectation `same_header` (one value on every attempt). Cases on the key: the three POST requests carry it and a read and a delete do not; `create` and `enroll` retried with one key after a `500`; an `idempotency_in_progress` retried; an enrollment's lost answer replayed, the face enrolled once; `idempotency_key_reused` raised. Eight booster cases: an own collection's match with its label, celebrities with and without a threshold, wanted persons enabled and not, an unknown collection, no collection, a threshold out of range.
+
+Cases: 697 in all (requests 122, responses 104, errors 97, behaviour 372, constants 2): 62 new, 3 renamed from `wanted_person`.
+
+| Area | New cases |
+|---|---|
+| Requests: each of the seven calls on the wire, an enrollment without a label, `list_items` with its query, `face_recognition`'s options | 9 |
+| Responses: a collection, one marked for deletion, a created one, the list (own then public), an enrolled item, a page of items, a delete; `face_recognition` readings for an own collection, for the public ones (a name, a reference only) and malformed ones as generic | 10 |
+| Errors: `collection_not_found`, `collection_read_only`, `item_not_found`, `no_face`, `collection_not_enabled`, `collection_type_mismatch`, `collections_limit_reached`, `items_limit_reached`, `collections_region_unavailable` | 9 |
+| Behaviour: a whole lifecycle against the mock, the list with the public collections, the public ones read-only, no face found, `list_items`' local checks (three), `create` and `enroll` not retried on a `500`, `create` retried on a `529`, a read retried on a `500`; the mock's collection limit; the name, type, reference and label checked locally (seven) | 19 |
+
+## 1.12 (for SDK specification 1.3)
+
+Several places in one answer: a `point` or `box` question takes `max`, an integer from 2 to 16, and is then answered with up to `max` places. `SPEC_VERSION` stays `"1.3"`: the SDKs have not released it yet, so the change folds into it, as the point and box types folded into 1.2 with suite 1.8.
+
+- Builders: `$point` and `$box` take `max`, sent in the question only when given.
+- Answers: `PointsAnswer` (`count`, `present`, `complete`, `points` with `x`, `y`, `confidence`, `image`, `width`, `height`) and `BoxesAnswer` (the same with `boxes`, each `x1`, `y1`, `x2`, `y2`, `confidence`), told by the answer's own list, so a decision mixes both shapes and a batch line's decision is typed alike. The places keep the response's order (left to right by the centre, ties from the top) and their numbers as sent. A several-places answer with a field missing or of the wrong type is an `UnknownAnswer`.
+- Local checks: `max` not an integer, under 2 or over 16 is a `ValidationError` with the API's entries before any request. The capability is the server's alone: an SDK never refuses `max` on it, not even from a held `/v1/models` entry without `places`, since the gateway judges it per server and version; its `422` `not_supported` comes back as a `ValidationError`.
+- Mock: answers the several-places shape for a question with `max`; lists `places: {"max_places": 16}` on every model entry; the scenario setting `places` (`{"max_places": 0}`) turns the capability off, and then the listing leaves `places` out and a question with `max` is the `422` `not_supported` on `/v1/decide` and on batch lines.
+
+Cases: 635 in all (requests 114, responses 96, errors 83, behaviour 340, constants 2): 19 new.
+
+| Area | New cases |
+|---|---|
+| Requests: `max` on a box (with its image) and on a point (with normalized units), in `decide_many` beside a request without it, and on a batch line | 4 |
+| Responses: a `BoxesAnswer` beside a `BoxAnswer` in one decision, a `PointsAnswer` in normalized units, nothing found (count 0, an empty list), and five malformed several-places answers as `UnknownAnswer` | 4 |
+| Errors: `max` over 16 answered by the server (sent with `decide_raw`) | 1 |
+| Behaviour: `max` under 2, over 16 and not an integer refused locally; the mock's several-places answers beside a single box; the mock's `not_supported` with the capability off; sent after `models()` without `places` and answered by that `422`, and after `models()` with it; in `decide_many` and in `run_batch`; a session's open left to the server | 10 |
+
+## 1.11 (for SDK specification 1.3)
+
+SDK specification 1.3: boosters and fine-tuned models. `SPEC_VERSION` is `"1.3"`.
+
+Readings of three more boosters: `face_detection`, `wanted_person` and `ocr`. Cases send ocr's `prompt` and wanted_person's `threshold` as given, and type their readings: `FaceDetectionReading` (`faces` and `detections`, each a `box` `{x1, y1, x2, y2}` and a `confidence`; pixels, or fractions kept as sent when every place question asks for normalized units), `WantedPersonReading` (`faces` and `matches`, each a `box`, a `score` and a `reference`) and `OcrReading` (`text`, `truncated`), a malformed one of each generic. The mock reads only `age` and `ai_generated` and answers any other name with `booster_unknown`.
+
+OCR timeout: a decision whose `boosters` name `ocr` waits 30 s per attempt when the client's `timeout` is not set, and the `timeout` as set otherwise; it is never retried after a timeout, and its other retries stay. Five behaviour cases: an explicit 1 s timeout used as given and not retried, the object form on a helper, the 30 s default (an answer in 11 s), a 529 still retried, and the rule per item in `decide_many`.
+
+Usage cost: every answer's `usage` carries `cost`, `{usd, model_usd, boosters_usd, free_tier}`, read as sent and never summed by the client (`usd` is the server's). Cases for a plain answer, a boosted answer with the split, a free-tier answer, an answer without `cost` (empty) and a batch result line; the mock writes `cost` on every answer, a batch line, a session's open and its frame replies.
+
+Model ids: the family ids `decisionnode-moe` and `decisionnode-flash` mean the current release, and every case sends them; the default model is `decisionnode-moe` (it was `decisionnode-latest`). A pinned id is `decisionnode-<family>-<version>` and every answer names one; a case that checks the mock's answer checks the family prefix with the new `{"$pattern": regex}` expectation, never a version. The older ids `decisionnode-1.0`, `decisionnode-1.0-flash`, `decisionnode-latest` and `decisionnode-flash-latest`, and the older fine-tuned base `decisionnode-1.0@`, stay accepted: one case each sends one unchanged and expects the family's pinned id. The mock lists each family id (its `version` and `current_version` the current pinned id) followed by its pinned ids, resolves the older ids without listing them, and writes fine-tuned names on the family base, each entry naming its `family`; `responses/models-by-family` records the listing as the API sends it, a family with no version served included.
+
+Cases: 616 in all (requests 110, responses 92, errors 82, behaviour 330, constants 2): 117 new; every case that named a model moved to the family ids (and its recorded answers to pinned ids). Every other 1.10 case is byte-identical.
+
+| Area | New cases |
+|---|---|
+| Requests: `boosters` by name, as `Booster` objects (with `images`, `require`, `options`), a plain wire-form object beside a `Booster` with `require` false (order kept), an empty list left out, on `check`, per request in `decide_many`, on a batch line (and absent on a line without); a fine-tuned model name, plain and pinned, sent as given, also as the client's model; `fallback` false and true on `decide`, false on a helper and on a batch line; a `Booster` with no option sent as the bare name, so a list of them is the plain list | 16 |
+| Responses: `evidence` with an age reading, an age reading with no face, an `ai_generated` reading by inference with a top generator, a photograph (`top_generator` null), a trusted `c2pa` reading with a signer and no top generator, one with `"c2pa": "untrusted"` and an unknown `c2pa` value kept, a reading with unknown fields still typed, wrongly shaped `ai_generated` readings as generic readings, a `timeout` and a `skipped` entry, the response's order and an unknown status kept, an unknown booster's and malformed readings as generic readings, `usage.booster_tokens` and `usage.boosters` present and absent; `Decision.model` as a pinned fine-tuned name; `models()` with fine-tuned entries (`fine_tuned`, `base`, `adapter_version`, `status`) beside a catalogue entry; a fallback answer into `Decision.fallback`, and an answer without one; `billed_calls` per entry (2 and 1, 0 on a timeout and a skip, a reading reused from the cache billed like any other, empty when absent) summing to `usage.boosters`; the pictures a timed-out or failed booster did not read, and an undecodable picture, as generic readings; a batch result line without a body read as a JSON null body (empty message, the class by status) | 20 |
+| Errors: `booster_unknown`, `booster_input_mismatch` (no image, an image that is not the request's), a malformed list as `api_usage_error` with its reason, `booster_not_enabled` and `workspace_suspended` as `PermissionDeniedError`, `booster_unavailable` as `OverloadedError` with `boosters` parsed from `x-decisionnode-boosters` in header order, a refusal of a boosted request still a `RefusalError`, boosters on a session open refused, another workspace's fine-tuned model and an undeployed version as the 400 `Unknown model`; the 413 `request_too_large_error` as `RequestTooLargeError`; a 413 HTML page from the edge as `RequestTooLargeError` with the client's own message; a 429 page that is not JSON as `RateLimitError`, never `SessionLimitError` | 15 |
+| Behaviour: the mock's readings, a booster that times out or fails without `require` (the decision stands) and with it (the `529`, retried twice, then raised), a booster turned off and an unknown one not retried, a list over four and a duplicate left to the server, `check_request` checking no booster, a fine-tuned model answered and refused by the mock, a batch line with boosters; a booster's `options` nested past the 128 levels refused locally, and at exactly 128 sent; the 25 MiB body limit: a body over it refused locally on `decide`, `decide_many`, a batch line and `check_request`, one under it sent, a 413 not retried, large images uploaded so the body stays under it; the mock's fallback to Flash, the `529` of `fallback: false` retried then raised; a booster object with the old key `booster` left to the server; an image id over 64 characters (code points) refused locally on `decide`, a helper, `decide_many` (the whole call), a batch line and `check_request`, before a duplicate check, a session frame's image not checked (it goes without its id), and ids of 64 accented and of 64 non-BMP characters sent; a 413 HTML page not retried, a 408 HTML page retried then raised as the base class, and a 408 page then success; a 429 page on `open_session` retried as any 429 | 38 |
+
+Changed: `constants/spec-version` is `"1.3"`; `errors/413-presign-request-too-large-error` and `errors/413-batch-add-too-large` expect `RequestTooLargeError` (the base `DecisionNodeError` before), since every 413 is one; `errors/502-non-json-body` and `errors/418-unmapped-status`, whose bodies are not JSON, now expect the client's own message (`HTTP 502 Bad Gateway`, `HTTP 418 (request id req_err_0001)`).
+
+Case format: the error class `RequestTooLargeError`; a mock step's `no_request_id`; the `$booster` builder (`name`, `images`, `require`, `options`), whose wire form is `{"name", "images"?, "require"?, "options"?}` (the key is `name`); a decision's `fallback`; the scenario setting `workers`; a decision's `evidence` (entries with `billed_calls`; readings of kind `age`, `ai_generated` with `c2pa`, or `unknown`) and `usage.booster_tokens` and `usage.boosters`; an error's `boosters`; `fine_tuned`, `base`, `adapter_version` and `status` on an expected `models()` entry; the scenario setting `boosters` (`disabled`, `status`). `evidence` and `boosters` compare whole and in their order. The nesting limit is on the whole body, so `boosters` and their `options` count toward it in every SDK's local check; nothing else about boosters is checked locally.
+
+Mock: an image id over 64 characters is the 400 `Image <n>: its id is longer than 64 characters.` (counted from 0); a recorded response or error case is replayed without an `x-request-id` when it has none; each `evidence` entry has `billed_calls`, and a booster that timed out or failed lists `{"image": id}` for each picture it was meant to read; a booster object is `{"name", ...}`, and one without `name` or with another key is the 400 `api_usage_error`; a live `/v1/decide` for a model the `workers` setting makes cold falls back from `decisionnode-1.0` to Flash with the two headers, or answers the `529` (`fallback: false`, or no fallback); a `/v1/decide` body over 26,214,400 bytes (25 MiB; 64 MB before) is the `413` `request_too_large_error`; a session's socket is attached before the handshake is answered, so an `end()` right after `connect()` always closes it with `1000` (it could be refused with `4404` before). `boosters` on `/v1/decide` and batch lines, checked before any booster runs, with fixed readings per image (`top_generator` only above 0.69, never a signer or `c2pa`), `evidence`, the booster usage and `x-decisionnode-boosters`; the settings `boosters` (in a scenario or `POST /_mock/boosters`) turn a booster off or make it time out or fail; `POST /v1/sessions` refuses boosters. Fine-tuned models of the workspace `acme` (keys holding `ws-acme`): resolved to their pinned name, listed by `/v1/models` with their base's limits, and the 400 `Unknown model` for every other workspace, version or name.
+
+## 1.10 (for SDK specification 1.2)
+
+Every decision goes to `POST /v1/decide`. `SPEC_VERSION` stays `"1.2"`.
+
+Cases: 499 in all (requests 92, responses 58, errors 67, behaviour 280, constants 2): 19 removed, for a call no SDK offers; none new or changed. Every other 1.9 case is byte-identical.
+
+## 1.9 (for SDK specification 1.2)
+
+The SDKs follow the API's documentation, which answers more than 16 images, or more than 4 videos, with a `422` `too_long` on `["body", "images"]` or `["body", "videos"]`. `SPEC_VERSION` stays `"1.2"`.
+
+Cases: 518 in all (requests 97, responses 59, errors 72, behaviour 288, constants 2): 3 new, 6 changed. Every other 1.8 case is byte-identical.
+
+New: the count entries after a question's entry in one list; seventeen images and five videos as two entries; `upload()` of seventeen images refused with the presign's `400`.
+
+Changed: `behaviour/local-image-too-many`, `local-image-too-many-with-urls`, `local-image-in-helper`, `local-video-too-many` and `local-video-in-batch-create` expect the `ValidationError` with the `too_long` entry (a `BadRequestError` `api_usage_error` before).
+
+Changed too: `behaviour/video-frames-over-limit-left-to-server` sends 129 frames, over the documented 128 a request (65 over a provisional 64 before); the SDKs still never count frames.
+
+Mock: more than 16 images or 4 videos is the `422` `too_long`, its `input` the list as received; the frame limit is the documented 128 a request.
+
+## 1.8 (for SDK specification 1.2)
+
+The point and box question types, added to SDK specification 1.2 before any SDK release. `SPEC_VERSION` stays `"1.2"`.
+
+Cases: 515 in all (requests 97, responses 59, errors 72, behaviour 285, constants 2): 22 new, 1 changed. Every other 1.7 case is byte-identical.
+
+| Area | New cases |
+|---|---|
+| The builders' wire forms on one and on two images (`image` and `units` left out and given, a plain wire-form question), and in a batch line | 3 |
+| Answers: `PointAnswer` and `BoxAnswer` in pixels and normalized, a low `present`, a malformed answer and a boolean coordinate as `UnknownAnswer` | 5 |
+| Local checks with the API's `422` entries: no image in the request, no `image` with two images, an unknown image id, a video's id, an `image` that is not a string, unknown `units`, several faults in one list, a fault in a batch line and through `check_request`; missing instructions (`400`) | 11 |
+| A clean check, the mock's answers, and a point among a session's questions checked at open | 3 |
+
+Changed 1.7 case: `errors/400-unknown-question-type` records the reason that lists `point` and `box` among the types.
+
+Case format, additions: the `$point` and `$box` builders; answer kinds `point` and `box` with their fields.
+
+Mock: `point` and `box` on `/v1/decide` and batch lines, with the local rules' `422` entries and the missing-instructions `400`, answered as deterministic places on an image of 1920 by 1080 pixels; the unknown-type reason lists them.
+
+## 1.7 (for SDK specification 1.2)
+
+SDK specification 1.2: up to 16 images a request (4 before) and videos sent as frames with their times. `SPEC_VERSION` is `"1.2"`.
+
+Cases: 493 in all (requests 94, responses 54, errors 72, behaviour 271, constants 2): 45 new, 7 changed.
+
+| Area | New cases |
+|---|---|
+| Sixteen images: sent inline in one request, uploaded through one presign of sixteen files, accepted by the mock; a check that finds sixteen images and four videos clean | 4 |
+| The videos request body, exactly: fps, start and end given and left out, frames from bytes (media type detected or given) and from base64 text, images beside videos, a plain wire-form video, an empty list left out | 6 |
+| Videos on `check`, `number` and a batch line | 4 |
+| Local video checks, each with the server's message and no request: more than 4 videos, an empty id, a repeated id, an id shared with an image, no frames, a negative time, a repeated and a decreasing time, a GIF media type, bytes of no known format, base64 text without a media type, fps 5 and 0, a negative start, an end not after the start, `end: 0` alone, and the checks in a helper, `decide_many`, a batch line and `check_request` | 22 |
+| Left to the server: 65 frames (over the provisional 64) and a frame whose bytes are not its media type, each sent once and the server's 400 raised; a frame outside the window not checked | 3 |
+| The mock's video usage: three frames read, 1.5 seconds | 1 |
+| Responses: `usage.video_frames`, `usage.video_seconds` (every digit kept) and `warnings` parsed; `warnings` an empty list and the usage fields empty when absent | 4 |
+| Errors: a video file refused, a window without a frame | 2 |
+
+Changed 1.6 cases:
+
+- `behaviour/local-image-too-many`, `local-image-too-many-with-urls` and `local-image-in-helper`: seventeen images (fifteen local and two URLs in the second), refused with `Too many images: 17, the limit is 16.`; the first two now also check the message.
+- `errors/400-presign-api-usage-error`: the natural request presigns seventeen files and the recorded message is `files: 1 to 16 files, got 17.`
+- `requests/upload-four-images-one-presign`: the description no longer calls four files the maximum. The case is otherwise unchanged.
+- `constants/spec-version`: `"1.2"`.
+
+Case format, additions: the `$video` and `$frame` builders (`Video` and `VideoFrame`); a decision expectation's `usage.video_frames`, `usage.video_seconds` and `warnings`.
+
+Harnesses: consecutive `parallel` request entries are matched by assignment (each entry to a recorded request not yet taken, backtracking when a later one finds none), never by trying every order: `upload-sixteen-images-one-presign` holds sixteen parallel PUTs.
+
+Mock: 16 images a request and 1 to 16 files a presign; `videos` on `/v1/decide` and batch lines in the frames form, with the API's form checks and messages, the provisional limit of 64 frames a request, each frame inside the window checked against its media type, the sampling rule, and `usage.video_frames` and `usage.video_seconds` in the response; the too-many-images message is the API's (`Too many images: 17, the limit is 16.`).
+
+## 1.6 (for SDK specification 1.1)
+
+Consistency across the SDKs. `SPEC_VERSION` is unchanged.
+
+Cases: 448 in all (requests 82, responses 50, errors 70, behaviour 244, constants 2): 17 new. Every 1.5 case is byte-identical.
+
+| Area | New cases |
+|---|---|
+| `check_request` and `Session.check_frame`: valid requests check clean with no request (decide with an image sending would upload, open_session, batches.create, a frame); a 422 entry, a plain-string 400, an image fault, a URL refusal, an open_session 422, a repeated `custom_id` and an unknown frame question id raise what sending raises, with no request | 11 |
+| Held `/v1/models` limits found by an alias the list states (sessions and number questions), and a model the list does not state left to the server | 3 |
+| The storage PUT's own timeout: a slow PUT inside it succeeds under a 1 s API timeout; `upload_timeout` bounds it | 2 |
+| Batch results of 1,200 lines read whole | 1 |
+
+Case format, additions: `"check": true` on a call and on a `send` step, with the outcome `{"result": "checked"}`; `$list` (`{count, item}`, `{i}` replaced by the index); the client's `upload_timeout`; `count` and `batch_results_sample` for `batch_results` and `batch_run` outcomes.
+
+Mock: every `/v1/models` entry names its pinned `version` and its `alias`. A slow PUT is a scenario step with `delay_ms` on a `$method` `PUT` rule, as before.
+
+## 1.5 (for SDK specification 1.1)
+
+The goal: maximum throughput and minimum response time; the server never sees a request the client could have refused. The SDK specification stays 1.1: `SPEC_VERSION` is unchanged.
+
+Cases: 431 in all (requests 82, responses 50, errors 70, behaviour 227, constants 2): 52 new, 32 changed, 1 removed. Every other 1.4 case is byte-identical.
+
+| Area | New cases |
+|---|---|
+| Question rules checked locally (unknown type, no type, no criteria, wrong field types, empty levels, state type) | 11 |
+| Number grid rules checked locally (`float_type`, 2^53, decimals, the decimal bound) | 4 |
+| Image rules checked locally (repeated ids, an upload reference's media type, URL port, user information, blocked literal addresses) and the 2,048-character bound passing | 7 |
+| The 128-level nesting limit, refused and passing | 2 |
+| `open_session` window and ttl_seconds | 5 |
+| Frames refused by `Session.send` | 7 |
+| `batches.list` paging, `custom_id` rules, an empty add | 7 |
+| Limits held from `/v1/models` (sessions served, `max_window`, number support, `requests_per_batch`, `max_custom_id_chars`) and the checks skipped when none is held | 7 |
+| A PUT answered 403 after its URL's 5 minutes: presigned again once, and raised the second time | 2 |
+
+Changed 1.4 cases:
+
+- Every 1.4 local case (`local-*`, `image-bytes-unknown-format-refused`, `decide-many-invalid-request-image`) now checks the `error_type` the server would send: null for the faults the API answers with a plain-string 400 (choice, score, truth, number instructions), with the documented message; `api_usage_error` for an image; `image_url_refused` for a URL over 2,048 characters; `api_usage_error` for a URL that is not https; and for the number grid faults the API's 422 `entries` exactly.
+- `behaviour/session-frame-error-validation`: the server-side frame error is now a frame over `max_frame_tokens` (a token count only the server makes); the unknown question id it used is refused locally (`local-frame-unknown-question-id`).
+- `errors/400-unknown-question-type`, `422-missing-criteria`: the call is `decide_raw` with the same wire body; the reason for an unknown type now lists `number`.
+- `errors/422-session-window-out-of-range`, `400-batch-list-bad-limit`: the call passes the local checks (no `window`, no `limit`); the mock replays the recorded response, and `natural_request` keeps the request that gets it.
+- `responses/unknown-answer-type`, `unknown-type-beside-number`: the question is sent as a known type; the recorded answer is still of a type the SDK does not know.
+
+Case format, additions: `$nest` (`{depth, value}`); the client's `clock: "mock"` (the SDK's injectable clock reads `GET /_mock/clock`); `outcome` on a `send` step (the frame must be refused locally); the scenario step's `advance_clock_seconds`.
+
+Mock (still one standard-library file, started the same way):
+
+- Stays up through a whole run: a listen backlog of 128 (the default of 5 refused connections when 8 or more arrived at once); keep-alive connections idle for 60 s are closed, so the idle pools of many short-lived clients do not pile up threads; nothing is written to stderr unless asked (`--verbose`, or the new `--log-file <path>`), so a harness that pipes stderr without reading it can no longer stall the mock on a full pipe; a fault inside a handler answers `500 mock_error` instead of dropping the connection; a fault on a session's socket closes it with `1011`; a client that drops a socket mid-stream, a malformed control frame or a body nested thousands of levels deep (which crashed the request recorder) ends that request or socket only.
+- `GET /_mock/clock?session=<id>` reads the session's clock; a scenario step's `advance_clock_seconds` moves it before the step acts.
+- The API's rules it did not check: the 128-level nesting limit (400 `Invalid request.`) on every body and in frames; image URLs over 2,048 characters, with user information, on a port other than 443 or on a literal blocked address (400 `image_url_refused`).
+- The reason for an unknown question type lists `truth, noul, choice, score and number`; a WebSocket message over 1 MiB closes with `1009` (it was 16 MiB).
+
+The 1.4 cases pass against this mock except one check of the mock's own (`errors/400-unknown-question-type` compares its natural reason, which now lists `number`); an SDK harness ignores `natural_request`.
+
+## 1.4 (for SDK specification 1.1)
+
+Every public call: uploads, number questions, truth read from `noul`, sessions and the Batch API, with the rules on images (local checks before any request, inline under a threshold, uploads at or above it).
+
+Cases: 380 in all, 210 new (requests 47 to 83, responses 27 to 50, errors 37 to 70, behaviour 58 to 175, constants 1 to 2).
+
+| Area | New cases |
+|---|---|
+| Uploads and images (inline threshold, presign, PUT, cache, stale references, storage failures, recorded upload errors) | 59 |
+| Local request checks (no request reaches the mock) | 10 |
+| Number questions | 20 |
+| Truth and the `noul` alias | 8 |
+| Sessions (open, stream, frame errors, every close code, pings, timers, `supervise`) | 46 |
+| Batches (the seven calls, retry rules, splitting, lifecycle, `run_batch`) | 54 |
+| `/v1/models` fields of spec 1.1 | 1 |
+| `DEFAULT_INLINE_THRESHOLD` | 1 |
+
+Changed 1.3 cases, each because spec 1.1 changed the rule it checks:
+
+- `constants/spec-version`: `"1.1"`.
+- `errors/400-choice-without-options`, `400-too-many-levels`, `400-too-many-options`, `400-truth-without-text`, `reason-escaped-ascii`: the call is `decide_raw` with the same wire body, since the builders now refuse these requests locally; the recorded response and the expected error are unchanged.
+- `behaviour/image-bytes-unknown-format-refused`, `decide-many-invalid-request-image`: bytes that are not JPEG, PNG or WebP raise `BadRequestError` locally, no longer an argument error.
+
+Every other 1.3 case is unchanged. Small images still go inline, so the 1.3 image request cases hold under spec 1.1.
+
+Case format, all additions (the 1.3 forms keep their meaning): `$number`, `$text`, `$ref`; `$image` with `upload_id` and `pad_to`; the client's `inline_threshold`; request cases with `mock` and `expect.requests`, `path_pattern`, `query`, `body_base64`, `body_sha256`, `jsonl`, `jsonl_count`, `jsonl_checks`, `parallel`, and body checks with `pattern` and `absent`; response cases with `batch`, `batch_page`, `batch_results` and `session`; behaviour cases with `steps` (calls, session actions, the mock clock) and the expectations `request_sequence`, `request_counts`, `session_events` and `pongs`; the answer kind `number`.
+
+Mock (still one standard-library file, started the same way): `POST /v1/uploads` with an object store at `/_mock/s3/`, upload references on every path, number and `noul` answers, the session endpoints with a WebSocket, the seven batch endpoints, the control endpoints `/_mock/clock`, `/_mock/workspace`, `/_mock/truth`, `/_mock/batches`, `/_mock/sessions` and `/_mock/uploads`, scenario rules by method and path, scenario settings, `after_normal` steps and `{mock_url}` in step headers. The 1.3 cases pass unchanged against this mock.
+
+## 1.3
+
+The first published suite, for SDK specification 1.0: `POST /v1/decide` and `GET /v1/models`.

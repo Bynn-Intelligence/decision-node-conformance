@@ -1,0 +1,73 @@
+{
+  "id": "score-with-images-and-model",
+  "description": "score takes images and model like decide.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "score",
+    "args": {
+      "state": "A product photo.",
+      "instructions": "How damaged is the item?",
+      "levels": [
+        "none",
+        "light",
+        "heavy"
+      ],
+      "images": [
+        {
+          "$image": {
+            "id": "screen",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "diagram",
+            "url": "https://example.com/diagram.png"
+          }
+        }
+      ],
+      "model": "decisionnode-flash"
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-flash",
+        "state": "A product photo.",
+        "questions": {
+          "score": {
+            "type": "score",
+            "instructions": "How damaged is the item?",
+            "criteria": [
+              "none",
+              "light",
+              "heavy"
+            ]
+          }
+        },
+        "images": [
+          {
+            "id": "screen",
+            "media_type": "image/png",
+            "data": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGM8ISfHwMDAxMDAwMDAAAANBAEIfXHKZgAAAABJRU5ErkJggg=="
+          },
+          {
+            "id": "diagram",
+            "url": "https://example.com/diagram.png"
+          }
+        ]
+      }
+    }
+  }
+}

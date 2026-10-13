@@ -1,0 +1,38 @@
+{
+  "id": "502-non-json-body",
+  "description": "Any other 5xx is a ServerError, also when the body is not JSON (a proxy's HTML page). error_type is empty. The message is the client's own description, \"HTTP 502 Bad Gateway\" (there is no x-request-id); the page is never read.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 502,
+    "headers": {
+      "content-type": "text/html"
+    },
+    "body_text": "<html><body>Bad gateway</body></html>"
+  },
+  "expect": {
+    "error": {
+      "class": "ServerError",
+      "fields": {
+        "status": 502,
+        "error_type": null,
+        "message": "HTTP 502 Bad Gateway"
+      }
+    }
+  }
+}

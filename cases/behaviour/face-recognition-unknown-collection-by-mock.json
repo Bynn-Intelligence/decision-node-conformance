@@ -1,0 +1,49 @@
+{
+  "id": "face-recognition-unknown-collection-by-mock",
+  "description": "A collection that does not exist, or is another workspace's: the 404 collection_not_found before any model runs, not retried.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "face_recognition",
+            "options": {
+              "collection": "col_00000000000000000000000000000000"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "NotFoundError",
+      "fields": {
+        "status": 404,
+        "error_type": "collection_not_found",
+        "message": "Collection not found: col_00000000000000000000000000000000."
+      }
+    }
+  }
+}

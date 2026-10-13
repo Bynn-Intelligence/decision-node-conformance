@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "constant-case.schema.json",
+  "title": "Constant case",
+  "description": "A public constant the SDK must export, and its value. No request is sent.",
+  "type": "object",
+  "required": [
+    "id",
+    "description",
+    "constant",
+    "equals"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/case_id"
+    },
+    "description": {
+      "type": "string"
+    },
+    "constant": {
+      "type": "string",
+      "description": "The constant's neutral name."
+    },
+    "names": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "The name in languages that spell it differently, by language name (python, node, go, java, dotnet, ruby, php, rust)."
+    },
+    "equals": {
+      "description": "The value, compared exactly."
+    }
+  },
+  "additionalProperties": false
+}

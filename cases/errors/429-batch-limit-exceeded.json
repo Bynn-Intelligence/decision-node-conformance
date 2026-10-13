@@ -1,0 +1,57 @@
+{
+  "id": "429-batch-limit-exceeded",
+  "description": "batches.create answered 429 batch_limit_exceeded: RateLimitError with status and error_type (batch errors use the classes a status gives; 409 and 410 have none, so the base class).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "a",
+          "state": "x",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This key already has 10 active batches.",
+      "retry-after": "30",
+      "retry-after-ms": "30000"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"batch_limit_exceeded\", \"message\": \"This key already has 10 active batches.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RateLimitError",
+      "fields": {
+        "status": 429,
+        "error_type": "batch_limit_exceeded",
+        "message": "This key already has 10 active batches.",
+        "retry_after": 30
+      }
+    }
+  }
+}

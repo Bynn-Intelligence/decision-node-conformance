@@ -1,0 +1,91 @@
+{
+  "id": "run-batch-line-with-boosters",
+  "description": "A batch line with boosters is answered as the live call: its result's decision carries evidence and the booster usage, and its headers x-decisionnode-boosters.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "run_batch",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "p1",
+          "state": "",
+          "images": [
+            {
+              "$image": {
+                "id": "person",
+                "url": "https://files.example.com/person.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "adult": {
+              "$truth": {
+                "instructions": "Is the person in the first picture an adult?"
+              }
+            }
+          },
+          "boosters": [
+            "age"
+          ]
+        }
+      ],
+      "poll_interval": 10
+    }
+  },
+  "expect": {
+    "request_counts": [
+      {
+        "method": "POST",
+        "path": "/v1/batches",
+        "count": 1
+      }
+    ],
+    "outcome": {
+      "result": "batch_run",
+      "batch": {
+        "state": "completed",
+        "counters": {
+          "completed": 1
+        }
+      },
+      "batch_results": [
+        {
+          "custom_id": "p1",
+          "status": 200,
+          "headers": {
+            "x-decisionnode-boosters": "age=ok:212"
+          },
+          "decision": {
+            "evidence": {
+              "age": {
+                "version": "age-v1",
+                "status": "ok",
+                "latency_ms": 212,
+                "billed_calls": 1,
+                "results": [
+                  {
+                    "kind": "age",
+                    "image": "person",
+                    "faces": 1,
+                    "age_years": 33,
+                    "low": 30,
+                    "high": 39,
+                    "confidence": 0.86
+                  }
+                ]
+              }
+            },
+            "usage": {
+              "input_tokens": 824,
+              "output_tokens": 0,
+              "booster_tokens": 24,
+              "boosters": 1
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "id": "500-server-error",
+  "description": "A 500 is a ServerError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 500,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_error\", \"message\": \"Internal server error.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "ServerError",
+      "fields": {
+        "status": 500,
+        "error_type": "api_error",
+        "message": "Internal server error.",
+        "request_id": "req_err_0001",
+        "reason": null
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "id": "evidence-face-detection-normalized",
+  "description": "With every place question of the request asking for normalized units, a face_detection box is in fractions of the image (4 decimals) and is typed as received, never converted or rounded. faces counts every face found; detections lists at most 64, so faces can be larger than the list.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "visitor": {
+          "$box": {
+            "instructions": "Draw a box around the person at the gate.",
+            "units": "normalized"
+          }
+        }
+      },
+      "boosters": [
+        "face_detection"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "face_detection=ok:210"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"visitor\": {\"type\": \"box\", \"x1\": 0.31, \"y1\": 0.25, \"x2\": 0.42, \"y2\": 0.88, \"present\": 0.95, \"confidence\": 0.81, \"image\": \"gate\", \"width\": 1280, \"height\": 720}}, \"evidence\": {\"face_detection\": {\"version\": \"face_detection-v1\", \"status\": \"ok\", \"latency_ms\": 210, \"billed_calls\": 1, \"results\": [{\"image\": \"gate\", \"faces\": 70, \"detections\": [{\"box\": {\"x1\": 0.3219, \"y1\": 0.2611, \"x2\": 0.3797, \"y2\": 0.3806}, \"confidence\": 0.97}]}]}}, \"usage\": {\"input_tokens\": 310, \"output_tokens\": 0, \"booster_tokens\": 52, \"boosters\": 1}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "face_detection": {
+          "version": "face_detection-v1",
+          "status": "ok",
+          "latency_ms": 210,
+          "billed_calls": 1,
+          "results": [
+            {
+              "kind": "face_detection",
+              "image": "gate",
+              "faces": 70,
+              "detections": [
+                {
+                  "box": {
+                    "x1": 0.3219,
+                    "y1": 0.2611,
+                    "x2": 0.3797,
+                    "y2": 0.3806
+                  },
+                  "confidence": 0.97
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

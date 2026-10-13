@@ -1,0 +1,71 @@
+{
+  "id": "retry-529-honours-retry-after-ms",
+  "description": "Two 529s then a success: 3 attempts. The wait is retry-after-ms (200 ms), not Retry-After (1 s): each gap is at least 200 ms and well under 1 s.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 529,
+          "headers": {
+            "retry-after": "1",
+            "retry-after-ms": "200"
+          },
+          "body": {
+            "detail": {
+              "error_type": "overloaded_error",
+              "message": "The service is overloaded. Try again shortly."
+            }
+          }
+        },
+        {
+          "status": 529,
+          "headers": {
+            "retry-after": "1",
+            "retry-after-ms": "200"
+          },
+          "body": {
+            "detail": {
+              "error_type": "overloaded_error",
+              "message": "The service is overloaded. Try again shortly."
+            }
+          }
+        },
+        {
+          "action": "normal"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "outcome": {
+      "result": "decision"
+    },
+    "gaps_ms": [
+      {
+        "min": 190,
+        "max": 900
+      },
+      {
+        "min": 190,
+        "max": 900
+      }
+    ]
+  }
+}

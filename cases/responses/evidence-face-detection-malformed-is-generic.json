@@ -1,0 +1,117 @@
+{
+  "id": "evidence-face-detection-malformed-is-generic",
+  "description": "A face_detection reading whose faces is not a whole number, whose detections is not a list or is missing (it is always sent, empty when no face is found), or with a detection whose box lacks a corner or whose confidence is not a number, is a generic reading holding its raw fields; the decision does not fail.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        "face_detection"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "face_detection=ok:210"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"someone_at_gate\": {\"type\": \"truth\", \"truth\": 0.91}}, \"evidence\": {\"face_detection\": {\"version\": \"face_detection-v1\", \"status\": \"ok\", \"latency_ms\": 210, \"billed_calls\": 5, \"results\": [{\"image\": \"gate\", \"faces\": \"2\", \"detections\": []}, {\"image\": \"gate\", \"faces\": 1, \"detections\": {\"box\": {\"x1\": 1, \"y1\": 2, \"x2\": 3, \"y2\": 4}, \"confidence\": 0.5}}, {\"image\": \"gate\", \"faces\": 1, \"detections\": [{\"box\": {\"x1\": 1, \"y1\": 2, \"x2\": 3}, \"confidence\": 0.5}]}, {\"image\": \"gate\", \"faces\": 1, \"detections\": [{\"box\": {\"x1\": 1, \"y1\": 2, \"x2\": 3, \"y2\": 4}, \"confidence\": \"high\"}]}, {\"image\": \"gate\", \"faces\": 1}]}}, \"usage\": {\"input_tokens\": 310, \"output_tokens\": 0, \"booster_tokens\": 52, \"boosters\": 5}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "face_detection": {
+          "version": "face_detection-v1",
+          "status": "ok",
+          "latency_ms": 210,
+          "billed_calls": 5,
+          "results": [
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": "2",
+                "detections": []
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1,
+                "detections": {
+                  "box": {
+                    "x1": 1,
+                    "y1": 2,
+                    "x2": 3,
+                    "y2": 4
+                  },
+                  "confidence": 0.5
+                }
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1,
+                "detections": [
+                  {
+                    "box": {
+                      "x1": 1,
+                      "y1": 2,
+                      "x2": 3
+                    },
+                    "confidence": 0.5
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1,
+                "detections": [
+                  {
+                    "box": {
+                      "x1": 1,
+                      "y1": 2,
+                      "x2": 3,
+                      "y2": 4
+                    },
+                    "confidence": "high"
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

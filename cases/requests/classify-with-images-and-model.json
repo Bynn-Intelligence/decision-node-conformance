@@ -1,0 +1,60 @@
+{
+  "id": "classify-with-images-and-model",
+  "description": "classify takes images and model like decide.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "classify",
+    "args": {
+      "state": "A photo from a damage claim.",
+      "instructions": "What is shown?",
+      "options": {
+        "car": "a vehicle",
+        "house": "a building"
+      },
+      "images": [
+        {
+          "$image": {
+            "id": "diagram",
+            "url": "https://example.com/diagram.png"
+          }
+        }
+      ],
+      "model": "decisionnode-moe"
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "A photo from a damage claim.",
+        "questions": {
+          "classify": {
+            "type": "choice",
+            "instructions": "What is shown?",
+            "criteria": {
+              "car": "a vehicle",
+              "house": "a building"
+            }
+          }
+        },
+        "images": [
+          {
+            "id": "diagram",
+            "url": "https://example.com/diagram.png"
+          }
+        ]
+      }
+    }
+  }
+}

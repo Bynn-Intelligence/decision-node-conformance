@@ -1,0 +1,41 @@
+{
+  "id": "402-insufficient-credit",
+  "description": "Out of credit is an InsufficientCreditError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 402,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"insufficient_credit_error\", \"message\": \"The account has no credit left.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "InsufficientCreditError",
+      "fields": {
+        "status": 402,
+        "error_type": "insufficient_credit_error",
+        "message": "The account has no credit left.",
+        "request_id": "req_err_0001",
+        "reason": null
+      }
+    }
+  }
+}

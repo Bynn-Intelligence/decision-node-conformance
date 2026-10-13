@@ -1,0 +1,59 @@
+{
+  "id": "choice-option-names-verbatim",
+  "description": "Option names come back byte for byte, the empty string, spaces at either end, punctuation, numeric strings and non-ASCII included, and are matched without trimming or case folding.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "Total due: $1,315.50",
+      "questions": {
+        "pick": {
+          "$choice": {
+            "instructions": "Which label fits?",
+            "options": [
+              "",
+              " padded ",
+              "$1,315.50",
+              "01",
+              "None",
+              "option with spaces",
+              "true",
+              "Ünïcödé – ok?"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "23",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"pick\": {\"type\": \"choice\", \"choice\": \"$1,315.50\", \"confidence\": 0.54, \"probabilities\": {\"\": 0.05, \" padded \": 0.05, \"$1,315.50\": 0.6, \"01\": 0.05, \"None\": 0.05, \"option with spaces\": 0.1, \"true\": 0.04, \"Ünïcödé – ok?\": 0.060000000000000005}}}, \"usage\": {\"input_tokens\": 51, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "pick": {
+          "kind": "choice",
+          "choice": "$1,315.50",
+          "confidence": 0.54,
+          "probabilities": {
+            "": 0.05,
+            " padded ": 0.05,
+            "$1,315.50": 0.6,
+            "01": 0.05,
+            "None": 0.05,
+            "option with spaces": 0.1,
+            "true": 0.04,
+            "Ünïcödé – ok?": 0.060000000000000005
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "id": "decide-many-box-max-sent",
+  "description": "decide_many passes each request's max through as given: the first request asks for several boxes, the second for one.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "",
+          "images": [
+            {
+              "$image": {
+                "id": "lot",
+                "url": "https://files.example.com/lot/0917.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "cars": {
+              "$box": {
+                "instructions": "Every car in the lot.",
+                "max": 8
+              }
+            }
+          }
+        },
+        {
+          "state": "",
+          "images": [
+            {
+              "$image": {
+                "id": "lot",
+                "url": "https://files.example.com/lot/0917.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "car": {
+              "$box": {
+                "instructions": "The car nearest the gate."
+              }
+            }
+          }
+        }
+      ],
+      "concurrency": 1
+    }
+  },
+  "expect": {
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body": {
+          "model": "decisionnode-moe",
+          "state": "",
+          "images": [
+            {
+              "id": "lot",
+              "url": "https://files.example.com/lot/0917.jpg"
+            }
+          ],
+          "questions": {
+            "cars": {
+              "type": "box",
+              "instructions": "Every car in the lot.",
+              "max": 8
+            }
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body": {
+          "model": "decisionnode-moe",
+          "state": "",
+          "images": [
+            {
+              "id": "lot",
+              "url": "https://files.example.com/lot/0917.jpg"
+            }
+          ],
+          "questions": {
+            "car": {
+              "type": "box",
+              "instructions": "The car nearest the gate."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

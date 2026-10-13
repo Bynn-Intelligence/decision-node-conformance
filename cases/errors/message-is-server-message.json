@@ -1,0 +1,41 @@
+{
+  "id": "message-is-server-message",
+  "description": "The error's own message (the message every error in the language carries) is the server's message exactly, and reason is the x-decisionnode-error header. There is no second message field.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "question 'q': a score takes up to 10 levels, got 11"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"invalid_request_error\", \"message\": \"A score question takes 1 to 10 levels.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "invalid_request_error",
+        "message": "A score question takes 1 to 10 levels.",
+        "reason": "question 'q': a score takes up to 10 levels, got 11"
+      }
+    }
+  }
+}

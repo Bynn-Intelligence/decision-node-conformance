@@ -1,0 +1,39 @@
+{
+  "id": "check-image-gif",
+  "description": "check_request on a decide request with GIF bytes declared as image/gif raises what decide raises: BadRequestError, api_usage_error. check_request runs the checks the call would run and sends nothing.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "g",
+            "path": "fixtures/images/pixel.gif",
+            "media_type": "image/gif"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error"
+      }
+    }
+  }
+}

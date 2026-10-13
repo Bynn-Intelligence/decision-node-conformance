@@ -1,0 +1,73 @@
+{
+  "id": "evidence-ai-generated-photograph",
+  "description": "A photograph: an inference reading below the likely-generated cut names no top generator, so top_generator is null, and the file has no trusted Content Credentials (c2pa_signer null, no c2pa field). The reading is a typed AiGeneratedReading with those fields empty.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "ai_generated"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "ai_generated=ok:300"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"synthetic\": {\"type\": \"truth\", \"truth\": 0.08}}, \"evidence\": {\"ai_generated\": {\"version\": \"ai_generated-v1\", \"status\": \"ok\", \"latency_ms\": 300, \"results\": [{\"image\": \"person\", \"generated\": 0.04, \"confidence\": 0.92, \"method\": \"inference\", \"top_generator\": null, \"c2pa_signer\": null}]}}, \"usage\": {\"input_tokens\": 180, \"output_tokens\": 0, \"booster_tokens\": 24, \"boosters\": 1}}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 180,
+        "output_tokens": 0,
+        "booster_tokens": 24,
+        "boosters": 1
+      },
+      "evidence": {
+        "ai_generated": {
+          "version": "ai_generated-v1",
+          "status": "ok",
+          "latency_ms": 300,
+          "billed_calls": null,
+          "results": [
+            {
+              "kind": "ai_generated",
+              "image": "person",
+              "generated": 0.04,
+              "confidence": 0.92,
+              "method": "inference",
+              "top_generator": null,
+              "c2pa_signer": null,
+              "c2pa": null
+            }
+          ]
+        }
+      },
+      "answers": {
+        "synthetic": {
+          "kind": "truth",
+          "truth": 0.08
+        }
+      }
+    }
+  }
+}

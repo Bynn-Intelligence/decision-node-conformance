@@ -1,0 +1,27 @@
+{
+  "id": "point-on-session-open-accepted",
+  "description": "A session's questions may include a point: its image is a frame's, so the image rules are not checked at open, and the session opens.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "state": "Line 3.",
+      "questions": {
+        "pick": {
+          "$point": {
+            "instructions": "Point to the yellow package closest to the robot arm."
+          }
+        }
+      }
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "result": "checked"
+    }
+  }
+}

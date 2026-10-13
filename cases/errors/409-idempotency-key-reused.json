@@ -1,0 +1,41 @@
+{
+  "id": "409-idempotency-key-reused",
+  "description": "A key the workspace already used with a different request (another body, or the other collections POST) is the 409 idempotency_key_reused, the base error as every 409; nothing is done, and it is never retried.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.enroll",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "image": {
+        "$image": {
+          "id": "badge",
+          "url": "https://files.example.com/badges/emp-1042.jpg"
+        }
+      },
+      "reference": "emp-1042"
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This Idempotency-Key was already used with a different request."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"idempotency_key_reused\", \"message\": \"This Idempotency-Key was already used with a different request.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "idempotency_key_reused",
+        "message": "This Idempotency-Key was already used with a different request.",
+        "reason": "This Idempotency-Key was already used with a different request."
+      }
+    }
+  }
+}

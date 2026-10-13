@@ -1,0 +1,81 @@
+{
+  "id": "422-number-min-above-max",
+  "description": "A number grid whose min is above its max: the API's 422, ValidationError with the server's entries. Sent with decide_raw, since the builders refuse it locally.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "cars": {
+            "type": "number",
+            "instructions": "How many cars?",
+            "min": 60,
+            "max": 50
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "question 'cars': min 60 is above max 50"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"less_than_equal\", \"loc\": [\"body\", \"questions\", \"cars\", \"number\", \"min\"], \"msg\": \"Input should be less than or equal to 50\", \"input\": 60, \"ctx\": {\"le\": 50}}]}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "s",
+      "questions": {
+        "cars": {
+          "type": "number",
+          "instructions": "How many cars?",
+          "min": 60,
+          "max": 50
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "error_type": null,
+        "entries": [
+          {
+            "type": "less_than_equal",
+            "loc": [
+              "body",
+              "questions",
+              "cars",
+              "number",
+              "min"
+            ],
+            "msg": "Input should be less than or equal to 50",
+            "input": 60,
+            "ctx": {
+              "le": 50
+            }
+          }
+        ],
+        "reason": "question 'cars': min 60 is above max 50"
+      }
+    }
+  }
+}

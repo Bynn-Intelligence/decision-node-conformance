@@ -1,0 +1,39 @@
+{
+  "id": "429-retry-after-seconds",
+  "description": "Without retry-after-ms, retry_after comes from Retry-After in seconds.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "Retry-After": "3"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"rate_limit_error\", \"message\": \"Rate limit exceeded.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RateLimitError",
+      "fields": {
+        "status": 429,
+        "retry_after": 3.0
+      }
+    }
+  }
+}

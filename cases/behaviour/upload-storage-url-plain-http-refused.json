@@ -1,0 +1,79 @@
+{
+  "id": "upload-storage-url-plain-http-refused",
+  "description": "A presign answer whose URL is plain http to a host that is not loopback: the bytes are never sent there. The SDK raises before any PUT, either its argument error or a DecisionNodeError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$path": "/v1/uploads"
+          },
+          "steps": [
+            {
+              "status": 201,
+              "body": {
+                "uploads": [
+                  {
+                    "upload_id": "upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+                    "url": "http://storage.example.com/uploads/default/obj?X-Amz-Signature=x",
+                    "method": "PUT",
+                    "headers": {
+                      "Content-Type": "image/png",
+                      "Content-MD5": "Yj4NtyxKcKkF+lO1i7hnsQ==",
+                      "If-None-Match": "*"
+                    },
+                    "expires_at": "2099-01-01T00:00:00Z"
+                  }
+                ],
+                "expires_in": 300
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "one_of": [
+      {
+        "attempts": 1,
+        "outcome": {
+          "argument_error": true
+        }
+      },
+      {
+        "attempts": 1,
+        "outcome": {
+          "error": "DecisionNodeError",
+          "subclass_ok": true
+        }
+      }
+    ]
+  }
+}

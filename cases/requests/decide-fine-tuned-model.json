@@ -1,0 +1,44 @@
+{
+  "id": "decide-fine-tuned-model",
+  "description": "A fine-tuned model's name (<base>@<workspace-slug>/<name>) is free text: sent exactly as given, never parsed or checked.",
+  "client": {
+    "api_key": "dn_test_ws-acme"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "Claim 4471: two refunds for one order.",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      },
+      "model": "decisionnode-moe@acme/fraud"
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_ws-acme"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe@acme/fraud",
+        "state": "Claim 4471: two refunds for one order.",
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "id": "429-html-page-retried",
+  "description": "open_session answered by a 429 page that is not JSON, then normally: the 429 is a RateLimitError, retried as any 429, so the session opens on the second attempt. (A SessionLimitError, told apart only by the body's error_type, is never retried: compare session-limit-not-retried.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$path": "/v1/sessions"
+          },
+          "steps": [
+            {
+              "status": 429,
+              "headers": {
+                "content-type": "text/html",
+                "retry-after-ms": "50"
+              },
+              "body_text": "<html><body><h1>429 Too Many Requests</h1></body></html>",
+              "no_request_id": true
+            },
+            {
+              "action": "normal"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "session"
+    }
+  }
+}

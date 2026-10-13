@@ -1,0 +1,44 @@
+{
+  "id": "local-score-empty-levels",
+  "description": "A score with an empty list of levels: the API's 422 too_short entry (an empty list of levels). Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$score": {
+            "instructions": "How urgent?",
+            "levels": []
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "too_short",
+            "loc": [
+              "body",
+              "questions",
+              "q",
+              "score",
+              "criteria"
+            ],
+            "msg": "List should have at least 1 item after validation, not 0",
+            "input": []
+          }
+        ]
+      }
+    }
+  }
+}

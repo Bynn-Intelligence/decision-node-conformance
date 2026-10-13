@@ -1,0 +1,220 @@
+{
+  "id": "local-image-too-many-with-urls",
+  "description": "Fifteen local images and two URL images: URLs count toward the 16 as well. Checked locally: the API's 422 too_long on the list, in its exact shape (a local image listed by its id and media type, its bytes left out), and no request reaches the mock. From suite 1.9 a ValidationError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "i0",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i1",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i2",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i3",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i4",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i5",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i6",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i7",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i8",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i9",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i10",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i11",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i12",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i13",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "i14",
+            "path": "fixtures/images/pixel.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "u0",
+            "url": "https://example.com/0.png"
+          }
+        },
+        {
+          "$image": {
+            "id": "u1",
+            "url": "https://example.com/1.png"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "error_type": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "too_long",
+            "loc": [
+              "body",
+              "images"
+            ],
+            "msg": "List should have at most 16 items after validation, not 17",
+            "input": [
+              {
+                "id": "i0",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i1",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i2",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i3",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i4",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i5",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i6",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i7",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i8",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i9",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i10",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i11",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i12",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i13",
+                "media_type": "image/png"
+              },
+              {
+                "id": "i14",
+                "media_type": "image/png"
+              },
+              {
+                "id": "u0",
+                "url": "https://example.com/0.png"
+              },
+              {
+                "id": "u1",
+                "url": "https://example.com/1.png"
+              }
+            ],
+            "ctx": {
+              "field_type": "List",
+              "max_length": 16,
+              "actual_length": 17
+            }
+          }
+        ]
+      }
+    }
+  }
+}

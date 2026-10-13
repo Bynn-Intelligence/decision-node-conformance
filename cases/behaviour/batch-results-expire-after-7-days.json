@@ -1,0 +1,75 @@
+{
+  "id": "batch-results-expire-after-7-days",
+  "description": "Results are kept 7 days after the batch ends: 8 days later (mock clock) results answer 410 results_expired, the base DecisionNodeError with that status.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": [
+            {
+              "custom_id": "t1",
+              "state": "I was charged twice.",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.cancel",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      }
+    },
+    {
+      "mock_clock": {
+        "advance_seconds": 691200
+      }
+    },
+    {
+      "call": {
+        "method": "batches.results",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "error": "DecisionNodeError",
+        "fields": {
+          "status": 410,
+          "error_type": "results_expired"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 3
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "collections-list-public",
+  "description": "collections.list against the mock: the workspace's own collections, newest first, then celebrities; wanted-persons only once the workspace may use it (the scenario's collections setting).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "collections": {
+        "wanted_persons": true
+      }
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Older"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Newer"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list",
+        "args": {}
+      },
+      "outcome": {
+        "result": "collections",
+        "collections": [
+          {
+            "name": "Newer",
+            "public": false
+          },
+          {
+            "name": "Older",
+            "public": false
+          },
+          {
+            "id": "celebrities",
+            "public": true
+          },
+          {
+            "id": "wanted-persons",
+            "public": true
+          }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 3
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "truth-legacy-noul-switch",
+  "description": "The mock answers truth questions in the legacy form {\"type\": \"noul\", \"noul\": x} (scenario switch truth_as_noul): decide and check read them as TruthAnswer.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "truth_as_noul": true
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": "s",
+          "questions": {
+            "t": {
+              "$truth": {
+                "instructions": "Escalate?"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "t": {
+              "kind": "truth"
+            }
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "check",
+        "args": {
+          "state": "s",
+          "instructions": "Escalate?"
+        }
+      },
+      "outcome": {
+        "result": "answer",
+        "answer": {
+          "kind": "truth"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 2
+  }
+}

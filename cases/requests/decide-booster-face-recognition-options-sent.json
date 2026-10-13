@@ -1,0 +1,121 @@
+{
+  "id": "decide-booster-face-recognition-options-sent",
+  "description": "The face_recognition booster's options (collection, a public collection's name or the id of one of the workspace's own, required; threshold, a number from 0 to 1) are sent in the object form as given. The SDK checks nothing about them locally; the rules are the API's. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "face_recognition",
+            "options": {
+              "collection": "celebrities",
+              "threshold": 0.6
+            }
+          }
+        }
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+            "x-decisionnode-boosters": "face_recognition=ok:190"
+          },
+          "body": {
+            "model": "decisionnode-moe-0.9.0-rc1",
+            "answers": {
+              "someone_at_gate": {
+                "type": "truth",
+                "truth": 0.96
+              }
+            },
+            "evidence": {
+              "face_recognition": {
+                "version": "face_recognition-v1",
+                "status": "ok",
+                "latency_ms": 190,
+                "billed_calls": 1,
+                "results": [
+                  {
+                    "image": "gate",
+                    "faces": 1,
+                    "matches": []
+                  }
+                ]
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0,
+              "booster_tokens": 24,
+              "boosters": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "",
+        "images": [
+          {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        ],
+        "questions": {
+          "someone_at_gate": {
+            "type": "truth",
+            "instructions": "Is someone standing at the gate?"
+          }
+        },
+        "boosters": [
+          {
+            "name": "face_recognition",
+            "options": {
+              "collection": "celebrities",
+              "threshold": 0.6
+            }
+          }
+        ]
+      }
+    }
+  }
+}

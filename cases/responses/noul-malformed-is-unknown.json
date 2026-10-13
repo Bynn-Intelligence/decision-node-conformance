@@ -1,0 +1,42 @@
+{
+  "id": "noul-malformed-is-unknown",
+  "description": "A noul answer whose value is a string is malformed: UnknownAnswer with type noul and its raw fields.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "12",
+      "x-decisionnode-safety": "harm=0.003, self_harm=0.001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"q\": {\"type\": \"noul\", \"noul\": \"0.94\"}}, \"usage\": {\"input_tokens\": 40, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "q": {
+          "kind": "unknown",
+          "type": "noul",
+          "raw": {
+            "type": "noul",
+            "noul": "0.94"
+          }
+        }
+      }
+    }
+  }
+}

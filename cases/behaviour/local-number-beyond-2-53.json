@@ -1,0 +1,48 @@
+{
+  "id": "local-number-beyond-2-53",
+  "description": "A number grid whose max is 2 x 10^16, beyond plus or minus 2^53: the API's 422 less_than_equal entry. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "$number": {
+            "instructions": "How many?",
+            "min": 0,
+            "max": 20000000000000000
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "less_than_equal",
+            "loc": [
+              "body",
+              "questions",
+              "n",
+              "number",
+              "max"
+            ],
+            "msg": "Input should be less than or equal to 9007199254740992",
+            "input": 20000000000000000,
+            "ctx": {
+              "le": 9007199254740992
+            }
+          }
+        ]
+      }
+    }
+  }
+}

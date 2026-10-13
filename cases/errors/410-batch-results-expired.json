@@ -1,0 +1,33 @@
+{
+  "id": "410-batch-results-expired",
+  "description": "batches.results answered 410 results_expired: DecisionNodeError with status and error_type (batch errors use the classes a status gives; 409 and 410 have none, so the base class).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "batches.results",
+    "args": {
+      "batch_id": "batch_01J9ZB8Q3T"
+    }
+  },
+  "response": {
+    "status": 410,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "The results of batch batch_01J9ZB8Q3T were deleted 7 days after it ended."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"results_expired\", \"message\": \"The results of batch batch_01J9ZB8Q3T were deleted 7 days after it ended.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 410,
+        "error_type": "results_expired",
+        "message": "The results of batch batch_01J9ZB8Q3T were deleted 7 days after it ended."
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "booster-error-not-required",
+  "description": "A booster that is not required and fails: the decision runs without its reading and evidence says error. The entry lists the picture the booster was meant to read, {\"image\": \"person\"} with no reading: a generic reading.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "age"
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "boosters": {
+        "status": {
+          "age": "error"
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "evidence": {
+          "age": {
+            "version": "age-v1",
+            "status": "error",
+            "latency_ms": 5,
+            "billed_calls": 0,
+            "results": [
+              {
+                "kind": "unknown",
+                "raw": {
+                  "image": "person"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

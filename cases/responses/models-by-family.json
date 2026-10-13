@@ -1,0 +1,101 @@
+{
+  "id": "models-by-family",
+  "description": "/v1/models by family: each family's entry first, its version and current_version naming its current pinned id (current_version null and version the family id while no version is served), then one entry per pinned id served; a fine-tuned entry names its family. The older ids are accepted but not listed. Every field besides name, description and release_date stays in limits as sent, a null included.",
+  "call": {
+    "method": "models",
+    "args": {}
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"models\": [{\"name\": \"decisionnode-moe\", \"description\": \"DecisionNode MoE, the main model.\", \"release_date\": \"2026-10-01\", \"version\": \"decisionnode-moe-0.9.1\", \"alias\": \"decisionnode-moe\", \"current_version\": \"decisionnode-moe-0.9.1\", \"max_input_tokens\": 32768, \"max_images\": 4}, {\"name\": \"decisionnode-moe-0.9.1\", \"description\": \"DecisionNode MoE, pinned\", \"release_date\": \"2026-10-01\", \"version\": \"decisionnode-moe-0.9.1\", \"alias\": \"decisionnode-moe\", \"max_input_tokens\": 32768, \"max_images\": 4}, {\"name\": \"decisionnode-moe-0.9.0-rc1\", \"description\": \"DecisionNode MoE, pinned\", \"release_date\": \"2026-10-01\", \"version\": \"decisionnode-moe-0.9.0-rc1\", \"alias\": \"decisionnode-moe\", \"max_input_tokens\": 32768, \"max_images\": 4}, {\"name\": \"decisionnode-flash\", \"description\": \"DecisionNode Flash, the fast and lower-cost model.\", \"release_date\": \"2026-10-01\", \"version\": \"decisionnode-flash\", \"alias\": \"decisionnode-flash\", \"current_version\": null, \"max_input_tokens\": 8192, \"max_images\": 4}, {\"name\": \"decisionnode-flash@acme/triage:1\", \"description\": \"Fine-tuned from DecisionNode Flash\", \"release_date\": \"2026-10-09\", \"version\": \"decisionnode-flash@acme/triage:1\", \"max_input_tokens\": 8192, \"max_images\": 4, \"fine_tuned\": true, \"base\": \"decisionnode-flash\", \"family\": \"decisionnode-flash\", \"adapter_version\": 1, \"status\": \"ready\"}]}"
+  },
+  "expect": {
+    "models": [
+      {
+        "name": "decisionnode-moe",
+        "description": "DecisionNode MoE, the main model.",
+        "release_date": "2026-10-01",
+        "limits": {
+          "version": "decisionnode-moe-0.9.1",
+          "alias": "decisionnode-moe",
+          "current_version": "decisionnode-moe-0.9.1",
+          "max_input_tokens": 32768,
+          "max_images": 4
+        },
+        "fine_tuned": null,
+        "base": null,
+        "adapter_version": null,
+        "status": null
+      },
+      {
+        "name": "decisionnode-moe-0.9.1",
+        "description": "DecisionNode MoE, pinned",
+        "release_date": "2026-10-01",
+        "limits": {
+          "version": "decisionnode-moe-0.9.1",
+          "alias": "decisionnode-moe",
+          "max_input_tokens": 32768,
+          "max_images": 4
+        },
+        "fine_tuned": null,
+        "base": null,
+        "adapter_version": null,
+        "status": null
+      },
+      {
+        "name": "decisionnode-moe-0.9.0-rc1",
+        "description": "DecisionNode MoE, pinned",
+        "release_date": "2026-10-01",
+        "limits": {
+          "version": "decisionnode-moe-0.9.0-rc1",
+          "alias": "decisionnode-moe",
+          "max_input_tokens": 32768,
+          "max_images": 4
+        },
+        "fine_tuned": null,
+        "base": null,
+        "adapter_version": null,
+        "status": null
+      },
+      {
+        "name": "decisionnode-flash",
+        "description": "DecisionNode Flash, the fast and lower-cost model.",
+        "release_date": "2026-10-01",
+        "limits": {
+          "version": "decisionnode-flash",
+          "alias": "decisionnode-flash",
+          "current_version": null,
+          "max_input_tokens": 8192,
+          "max_images": 4
+        },
+        "fine_tuned": null,
+        "base": null,
+        "adapter_version": null,
+        "status": null
+      },
+      {
+        "name": "decisionnode-flash@acme/triage:1",
+        "description": "Fine-tuned from DecisionNode Flash",
+        "release_date": "2026-10-09",
+        "limits": {
+          "version": "decisionnode-flash@acme/triage:1",
+          "max_input_tokens": 8192,
+          "max_images": 4,
+          "fine_tuned": true,
+          "base": "decisionnode-flash",
+          "family": "decisionnode-flash",
+          "adapter_version": 1,
+          "status": "ready"
+        },
+        "fine_tuned": true,
+        "base": "decisionnode-flash",
+        "adapter_version": 1,
+        "status": "ready"
+      }
+    ]
+  }
+}

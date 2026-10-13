@@ -1,0 +1,41 @@
+{
+  "id": "run-batch-poll-interval-below-minimum",
+  "description": "run_batch with poll_interval below 10 s is an argument error before any request (the poll interval is at least 10 s).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "run_batch",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "t1",
+          "state": "I was charged twice.",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ],
+      "poll_interval": 5
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "argument_error": true
+    }
+  }
+}

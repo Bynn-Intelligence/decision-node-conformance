@@ -1,0 +1,45 @@
+{
+  "id": "family-id-flash-answered",
+  "description": "The family id decisionnode-flash is sent as given and answered with the pinned id decisionnode-flash-<version>; only the prefix is checked.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "I was charged twice.",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is a refund asked for?"
+          }
+        }
+      },
+      "model": "decisionnode-flash"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200,
+        "body_checks": [
+          {
+            "pointer": "/model",
+            "equals": "decisionnode-flash"
+          }
+        ]
+      }
+    ],
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": {
+          "$pattern": "^decisionnode-flash-"
+        }
+      }
+    }
+  }
+}

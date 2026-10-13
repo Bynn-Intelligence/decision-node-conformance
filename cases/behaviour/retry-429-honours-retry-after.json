@@ -1,0 +1,53 @@
+{
+  "id": "retry-429-honours-retry-after",
+  "description": "A 429 with Retry-After only: the wait is that many seconds.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 429,
+          "headers": {
+            "retry-after": "1"
+          },
+          "body": {
+            "detail": {
+              "error_type": "rate_limit_error",
+              "message": "Rate limit exceeded."
+            }
+          }
+        },
+        {
+          "action": "normal"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "decision"
+    },
+    "gaps_ms": [
+      {
+        "min": 990,
+        "max": 2500
+      }
+    ]
+  }
+}

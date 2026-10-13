@@ -1,0 +1,55 @@
+{
+  "id": "nesting-128-in-boosters-sent",
+  "description": "A booster's options holding 124 arrays inside each other nest the request exactly 128 levels: within the limit, so the request is sent. The API then refuses the setting the booster does not have (its 400 api_usage_error, with the reason), which proves the request left the client. One attempt.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "age",
+            "options": {
+              "k": {
+                "$nest": {
+                  "depth": 124,
+                  "value": "x"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Invalid request.",
+        "reason": "boosters: 'k' is not a setting of the booster 'age'"
+      }
+    }
+  }
+}

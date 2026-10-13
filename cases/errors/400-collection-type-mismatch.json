@@ -1,0 +1,57 @@
+{
+  "id": "400-collection-type-mismatch",
+  "description": "face_recognition on a collection whose type is not face is the 400 collection_type_mismatch: BadRequestError with that error_type.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is someone at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "face_recognition",
+            "options": {
+              "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"collection_type_mismatch\", \"message\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 is not a face collection.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "collection_type_mismatch",
+        "message": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 is not a face collection."
+      }
+    }
+  }
+}

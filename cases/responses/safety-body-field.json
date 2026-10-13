@@ -1,0 +1,57 @@
+{
+  "id": "safety-body-field",
+  "description": "With x-decisionnode-safety-body the body carries a safety field too. decision.safety is still read from the header; the body field stays in raw.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "23",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"q\": {\"type\": \"truth\", \"truth\": 0.5}}, \"usage\": {\"input_tokens\": 9, \"output_tokens\": 0}, \"safety\": {\"checked\": true, \"harm\": 0.0312, \"self_harm\": 0.0041, \"flagged\": []}}"
+  },
+  "expect": {
+    "decision": {
+      "safety": {
+        "checked": true,
+        "harm": 0.031,
+        "self_harm": 0.004,
+        "flagged": []
+      },
+      "raw": {
+        "model": "decisionnode-moe-0.9.0-rc1",
+        "answers": {
+          "q": {
+            "type": "truth",
+            "truth": 0.5
+          }
+        },
+        "usage": {
+          "input_tokens": 9,
+          "output_tokens": 0
+        },
+        "safety": {
+          "checked": true,
+          "harm": 0.0312,
+          "self_harm": 0.0041,
+          "flagged": []
+        }
+      }
+    }
+  }
+}

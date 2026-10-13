@@ -1,0 +1,48 @@
+{
+  "id": "408-html-edge-page",
+  "description": "The edge answers every attempt with a 408 HTML page and an x-request-id. A 408 is retried as every call is (3 attempts), then raised as the base DecisionNodeError, no subclass: status 408, error_type empty, the request id from the header, and the message \"HTTP 408 Request Timeout (request id req_edge_0408)\".",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 408,
+          "headers": {
+            "content-type": "text/html",
+            "x-request-id": "req_edge_0408"
+          },
+          "body_text": "<html><body><h1>408 Request Time-out</h1></body></html>"
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "outcome": {
+      "error": "DecisionNodeError",
+      "fields": {
+        "status": 408,
+        "error_type": null,
+        "message": "HTTP 408 Request Timeout (request id req_edge_0408)",
+        "request_id": "req_edge_0408",
+        "reason": null
+      }
+    }
+  }
+}

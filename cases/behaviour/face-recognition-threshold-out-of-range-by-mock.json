@@ -1,0 +1,50 @@
+{
+  "id": "face-recognition-threshold-out-of-range-by-mock",
+  "description": "face_recognition with a threshold of 1.5 (it is 0 to 1): the API's 400 api_usage_error \"Invalid request.\", not retried. The SDK checks booster options nothing locally; the rule is the server's.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "face_recognition",
+            "options": {
+              "collection": "celebrities",
+              "threshold": 1.5
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Invalid request."
+      }
+    }
+  }
+}

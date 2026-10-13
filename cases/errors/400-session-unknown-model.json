@@ -1,0 +1,57 @@
+{
+  "id": "400-session-unknown-model",
+  "description": "open_session with an unknown model: 400 api_usage_error, BadRequestError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      },
+      "model": "decisionnode-9"
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "unknown model 'decisionnode-9'; GET /v1/models lists the models"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Unknown model: decisionnode-9\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/sessions",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-9",
+      "questions": {
+        "abort": {
+          "type": "truth",
+          "instructions": "Abort?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Unknown model: decisionnode-9"
+      }
+    }
+  }
+}

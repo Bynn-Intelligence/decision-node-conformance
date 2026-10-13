@@ -1,0 +1,71 @@
+{
+  "id": "upload-put-own-timeout",
+  "description": "The storage PUT has its own timeout (upload_timeout, default 60 s), apart from the API attempt's: with timeout 1 s and no retries, a PUT the storage answers after 1.5 s still succeeds, and the decision follows.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "timeout": 1,
+    "max_retries": 0
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "PUT"
+          },
+          "steps": [
+            {
+              "action": "normal",
+              "delay_ms": 1500
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "scan",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200
+      }
+    ],
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}

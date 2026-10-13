@@ -1,0 +1,71 @@
+{
+  "id": "batch-list-pagination",
+  "description": "Three drafts: list(limit=2) gives total 3 and next_offset 2; list(offset=2, limit=2) gives the last one and next_offset null.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": []
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": []
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": []
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.list",
+        "args": {
+          "limit": 2
+        }
+      },
+      "outcome": {
+        "result": "batch_page",
+        "batch_page": {
+          "offset": 0,
+          "limit": 2,
+          "total": 3,
+          "next_offset": 2
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.list",
+        "args": {
+          "offset": 2,
+          "limit": 2
+        }
+      },
+      "outcome": {
+        "result": "batch_page",
+        "batch_page": {
+          "offset": 2,
+          "limit": 2,
+          "total": 3,
+          "next_offset": null
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 5
+  }
+}

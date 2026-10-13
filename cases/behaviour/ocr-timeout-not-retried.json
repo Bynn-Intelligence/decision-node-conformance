@@ -1,0 +1,86 @@
+{
+  "id": "ocr-timeout-not-retried",
+  "description": "A decision whose boosters name ocr is never retried after a timeout: the server finishes the timed-out attempt and may bill it. With the client's timeout set to 1 s, that timeout is used as given (never raised to the 30 s an ocr request waits by default), and an answer that takes 2 s is one attempt, then TimeoutError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "timeout": 1
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "url": "https://files.example.com/receipt.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "total_matches": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      },
+      "boosters": [
+        "ocr"
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "x-decisionnode-boosters": "ocr=ok:2400"
+          },
+          "body": {
+            "model": "decisionnode-moe-0.9.0-rc1",
+            "answers": {
+              "total_matches": {
+                "type": "truth",
+                "truth": 0.97
+              }
+            },
+            "evidence": {
+              "ocr": {
+                "version": "ocr-v1",
+                "status": "ok",
+                "latency_ms": 2400,
+                "billed_calls": 1,
+                "results": [
+                  {
+                    "image": "receipt",
+                    "text": "Total 740.00 SEK",
+                    "truncated": false
+                  }
+                ]
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0,
+              "booster_tokens": 24,
+              "boosters": 1
+            }
+          },
+          "delay_ms": 2000
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "TimeoutError"
+    },
+    "elapsed_ms": {
+      "max": 1900
+    }
+  }
+}

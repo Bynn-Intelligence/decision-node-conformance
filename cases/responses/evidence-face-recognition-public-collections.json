@@ -1,0 +1,97 @@
+{
+  "id": "evidence-face-recognition-public-collections",
+  "description": "A celebrity match names the person (name) and a wanted-persons match carries only its reference (wanted: or missing: and a notice id), never a name; both FaceRecognitionReadings, typed as received.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "yard",
+            "url": "https://files.example.com/yard/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "face_recognition",
+            "options": {
+              "collection": "celebrities"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "face_recognition=ok:210"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"someone_at_gate\": {\"type\": \"truth\", \"truth\": 0.91}}, \"evidence\": {\"face_recognition\": {\"version\": \"face_recognition-v1\", \"status\": \"ok\", \"latency_ms\": 210, \"billed_calls\": 1, \"results\": [{\"image\": \"gate\", \"faces\": 2, \"matches\": [{\"box\": {\"x1\": 120, \"y1\": 210, \"x2\": 171, \"y2\": 268}, \"score\": 0.88, \"collection\": \"celebrities\", \"reference\": \"celeb-00412\", \"name\": \"A Public Figure\"}, {\"box\": {\"x1\": 301, \"y1\": 140, \"x2\": 388, \"y2\": 252}, \"score\": 0.81, \"collection\": \"wanted-persons\", \"reference\": \"wanted:2024-12345\"}]}]}}, \"usage\": {\"input_tokens\": 310, \"output_tokens\": 0, \"booster_tokens\": 52, \"boosters\": 2}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "face_recognition": {
+          "version": "face_recognition-v1",
+          "status": "ok",
+          "latency_ms": 210,
+          "billed_calls": 1,
+          "results": [
+            {
+              "kind": "face_recognition",
+              "image": "gate",
+              "faces": 2,
+              "matches": [
+                {
+                  "box": {
+                    "x1": 120,
+                    "y1": 210,
+                    "x2": 171,
+                    "y2": 268
+                  },
+                  "score": 0.88,
+                  "collection": "celebrities",
+                  "reference": "celeb-00412",
+                  "name": "A Public Figure",
+                  "label": null
+                },
+                {
+                  "box": {
+                    "x1": 301,
+                    "y1": 140,
+                    "x2": 388,
+                    "y2": 252
+                  },
+                  "score": 0.81,
+                  "collection": "wanted-persons",
+                  "reference": "wanted:2024-12345",
+                  "name": null,
+                  "label": null
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

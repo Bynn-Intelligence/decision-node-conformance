@@ -1,0 +1,42 @@
+{
+  "id": "never-retry-context-limit",
+  "description": "A 400 max_tokens_exceeded is not retried.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 400,
+          "headers": {},
+          "body": {
+            "detail": {
+              "error_type": "max_tokens_exceeded"
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "ContextLimitError"
+    }
+  }
+}

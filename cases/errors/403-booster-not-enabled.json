@@ -1,0 +1,53 @@
+{
+  "id": "403-booster-not-enabled",
+  "description": "A booster turned off for the workspace is a 403 booster_not_enabled: a PermissionDeniedError (every 403 whose error_type is not refusal_error), never a RefusalError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "age"
+      ]
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"booster_not_enabled\", \"message\": \"The booster 'age' is not enabled for this workspace.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "booster_not_enabled",
+        "message": "The booster 'age' is not enabled for this workspace.",
+        "category": null,
+        "boosters": {},
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

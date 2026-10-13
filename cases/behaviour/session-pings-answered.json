@@ -1,0 +1,81 @@
+{
+  "id": "session-pings-answered",
+  "description": "The server pings every 100 ms (mock); the client answers each with a pong on its own. Pings are not frames and never show as events.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "session": {
+        "ping_interval_ms": 100
+      }
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "sleep_ms": 600
+    },
+    {
+      "send": {
+        "frame": "a",
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "pongs": {
+      "min": 2
+    },
+    "session_events": [
+      {
+        "reply": {
+          "seq": 1
+        }
+      },
+      {
+        "ended": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,1862 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "common.schema.json",
+  "title": "Shared definitions of the DecisionNode SDK conformance cases",
+  "$defs": {
+    "case_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Unique within its directory and equal to the file name without .json."
+    },
+    "client": {
+      "type": "object",
+      "description": "Arguments for the client constructor, by neutral name. A key that is absent is not passed. A key whose value is null is also not passed (so the environment or the default applies). An empty string is passed as an empty string; the SDK must treat it as not given. base_url is absent in most cases: the runner points the client at the mock. timeout is in seconds.",
+      "properties": {
+        "api_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "base_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "{mock_url} and {mock_port} are replaced with the mock's base URL and port."
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timeout": {
+          "type": "number",
+          "description": "Seconds. A value of 0 or below is passed as is; the SDK must refuse it with an argument error."
+        },
+        "max_retries": {
+          "type": "integer",
+          "description": "A negative value is passed as is; the SDK must refuse it with an argument error."
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "http_client": {
+          "const": "caller_following_redirects",
+          "description": "The harness builds an HTTP client of its own, of the kind the SDK accepts as http_client, configured to follow redirects (the usual default of most HTTP libraries), and passes it. The SDK must still never follow a redirect: it wraps or copies the client, or refuses it with an argument error. A harness whose SDK takes no HTTP client leaves the argument out and runs the case with the default client."
+        },
+        "inline_threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Spec 1.1: bytes. Local images that total under it in one request go inline as base64; at or above it they are uploaded. Absent: the SDK's DEFAULT_INLINE_THRESHOLD (524288)."
+        },
+        "upload_timeout": {
+          "type": "number",
+          "description": "Suite 1.6: seconds for one storage PUT attempt, apart from timeout (the API attempt's). Absent: 60."
+        },
+        "clock": {
+          "const": "mock",
+          "description": "Suite 1.5: the harness replaces the SDK's injectable clock (the time it judges upload URLs and cache entries by) with one that reads GET /_mock/clock?session=<id> (epoch_seconds), so the SDK's time moves with the mock's."
+        }
+      },
+      "additionalProperties": false
+    },
+    "env": {
+      "type": "object",
+      "description": "Environment variables set for the case. Before every case the runner unsets DECISIONNODE_API_KEY, DECISIONNODE_BASE_URL and DECISIONNODE_MODEL, then sets these. The value {mock_url} is replaced with the mock's base URL.",
+      "propertyNames": {
+        "enum": [
+          "DECISIONNODE_API_KEY",
+          "DECISIONNODE_BASE_URL",
+          "DECISIONNODE_MODEL"
+        ]
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "call": {
+      "type": "object",
+      "description": "One SDK call by neutral method name and neutral argument names. Inside args, an object with the single key $truth, $choice, $score or $image stands for a builder call; every other value is passed as plain data. Spec 1.1 adds $number (instructions, min, max, step) and $text ({repeat, times}: the string repeated, for large bodies), and inside behaviour steps {\"$ref\": \"name.path\"} for a value saved by an earlier step. Suite 1.5 adds $nest ({depth, value}: value inside depth arrays, for the nesting limit without a deep case file). Suite 1.6 adds $list ({count, item}: count copies of item, {i} in its strings replaced by the 0-based index) and check: true (the same request handed to the SDK's check_request instead of being sent; methods decide, open_session, batches.create, batches.add). Suite 1.7 adds $video ({id, frames, fps?, start?, end?}: Video(id, frames, fps, start, end)) with each frame a $frame ({t, path | data_base64 | data_text, media_type?}: VideoFrame(t, data, media_type)), for SDK specification 1.2. Suite 1.8 adds $point and $box ({instructions, image?, units?}: point(instructions, image, units) and box(instructions, image, units)). Suite 1.11 adds $booster ({name, images?, require?, options?}: Booster(name, images, require, options), each argument passed only when present) for SDK specification 1.3; a booster given as a plain name string, or as a plain wire-form object, is passed as is. Suite 1.13 adds the collections calls: collections.create(name, type), collections.list(), collections.get(collection_id), collections.delete(collection_id), collections.enroll(collection_id, image, reference, label?), collections.list_items(collection_id, offset?, limit?) and collections.delete_item(collection_id, item_id).",
+      "required": [
+        "method",
+        "args"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "decide",
+            "decide_many",
+            "check",
+            "classify",
+            "score",
+            "gate",
+            "models",
+            "decide_raw",
+            "number",
+            "upload",
+            "open_session",
+            "supervise",
+            "batches.create",
+            "batches.add",
+            "batches.finalize",
+            "batches.get",
+            "batches.list",
+            "batches.results",
+            "batches.cancel",
+            "run_batch",
+            "collections.create",
+            "collections.list",
+            "collections.get",
+            "collections.delete",
+            "collections.enroll",
+            "collections.list_items",
+            "collections.delete_item"
+          ]
+        },
+        "args": {
+          "type": "object"
+        },
+        "check": {
+          "type": "boolean",
+          "description": "Suite 1.6: run the SDK's check_request(method, args) instead of the call. It must raise exactly what the call would raise before sending, or return nothing ({\"result\": \"checked\"}); it sends nothing."
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_list": {
+      "type": "object",
+      "required": [
+        "$list"
+      ],
+      "properties": {
+        "$list": {
+          "type": "object",
+          "required": [
+            "count",
+            "item"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "item": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_truth": {
+      "type": "object",
+      "required": [
+        "$truth"
+      ],
+      "properties": {
+        "$truth": {
+          "type": "object",
+          "properties": {
+            "instructions": {},
+            "true": {},
+            "false": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_choice": {
+      "type": "object",
+      "required": [
+        "$choice"
+      ],
+      "properties": {
+        "$choice": {
+          "type": "object",
+          "required": [
+            "options"
+          ],
+          "properties": {
+            "instructions": {},
+            "options": {
+              "type": [
+                "object",
+                "array"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_score": {
+      "type": "object",
+      "required": [
+        "$score"
+      ],
+      "properties": {
+        "$score": {
+          "type": "object",
+          "required": [
+            "levels"
+          ],
+          "properties": {
+            "instructions": {},
+            "levels": {
+              "type": "array"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_image": {
+      "type": "object",
+      "required": [
+        "$image"
+      ],
+      "properties": {
+        "$image": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "description": "Exactly one of path (relative to the suite root), data_base64 with or without media_type (the SDK test decodes it and passes raw bytes), url, or upload_id (Image(id, upload_id), optionally with media_type). pad_to (with path or data_base64): append zero bytes up to that many bytes, so the image keeps its header and has the size the case needs.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "data_base64": {
+              "type": "string"
+            },
+            "media_type": {
+              "enum": [
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/gif"
+              ],
+              "description": "Absent with data_base64: the SDK detects the type from the first bytes. Given: passed to the SDK as the declared type, which must match the bytes (else the API's own error, locally)."
+            },
+            "url": {
+              "type": "string"
+            },
+            "upload_id": {},
+            "pad_to": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "http_response": {
+      "type": "object",
+      "description": "A recorded response. body_text is the exact body, so number spellings such as 0.8200000000000001 and 1.0 survive. Header names are case-insensitive.",
+      "required": [
+        "status",
+        "headers",
+        "body_text"
+      ],
+      "properties": {
+        "status": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 599
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "body_text": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "step": {
+      "type": "object",
+      "description": "One response of a mock scenario. action respond (the default when status is given) sends status, headers and body or body_text; normal lets the mock answer as the API would; close drops the connection without a response. delay_ms waits before acting. In a header value, {mock_url} becomes the mock's base URL.",
+      "properties": {
+        "action": {
+          "enum": [
+            "respond",
+            "normal",
+            "close"
+          ]
+        },
+        "status": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 599
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "body": {},
+        "body_text": {
+          "type": "string"
+        },
+        "delay_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "trickle": {
+          "type": "object",
+          "description": "Send the status and headers at once, then the body in chunks pieces with interval_ms before each piece. Works with respond and normal.",
+          "required": [
+            "chunks",
+            "interval_ms"
+          ],
+          "properties": {
+            "chunks": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "interval_ms": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "advance_clock_seconds": {
+          "type": "number",
+          "description": "Suite 1.5: before the step acts, move the session's clock forward by this many seconds, as if that much time had passed before the request arrived (a PUT to an upload URL presigned earlier then meets an expired URL)."
+        },
+        "after_normal": {
+          "type": "boolean",
+          "description": "Do the work as the API would (store the object, finalize the batch), then answer with this step instead: an answer lost after the effect."
+        },
+        "no_request_id": {
+          "type": "boolean",
+          "description": "Suite 1.11: send no x-request-id (an edge's or a proxy's own page). Without it, a step whose headers have none gets one."
+        }
+      },
+      "additionalProperties": false
+    },
+    "step_list": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/step"
+          }
+        },
+        "after": {
+          "enum": [
+            "normal",
+            "repeat_last"
+          ],
+          "description": "What the mock does once the steps are used up: answer normally (the default) or repeat the last step."
+        }
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "description": "Either steps, used one per request in arrival order, or rules, each matching requests by JSON pointers into the request body and holding its own steps. A request no rule matches uses otherwise, or is answered normally. A rule's match may also hold $method, $path, $path_prefix and $path_suffix, so one scenario can answer the presign, the storage PUT, the decision or one batch call differently. A PUT to the mock's storage uses the scenario of the presign that issued its URL. The settings below apply to the case's mock session from its first request.",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/step"
+          }
+        },
+        "after": {
+          "enum": [
+            "normal",
+            "repeat_last"
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "match",
+              "steps"
+            ],
+            "properties": {
+              "match": {
+                "type": "object",
+                "description": "JSON pointer to the value it must equal; also $method, $path, $path_prefix, $path_suffix."
+              },
+              "steps": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/step"
+                }
+              },
+              "after": {
+                "enum": [
+                  "normal",
+                  "repeat_last"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "otherwise": {
+          "type": "object",
+          "properties": {
+            "steps": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/step"
+              }
+            },
+            "after": {
+              "enum": [
+                "normal",
+                "repeat_last"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "clock_offset_seconds": {
+          "type": "number",
+          "description": "Shift the mock's clock for the session (upload expiry, batch times, session TTL)."
+        },
+        "workspace": {
+          "type": "object",
+          "properties": {
+            "zero_retention": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "truth_as_noul": {
+          "type": "boolean",
+          "description": "Answer truth questions in the legacy form {\"type\": \"noul\", \"noul\": x}."
+        },
+        "batch": {
+          "type": "object",
+          "description": "The batch lifecycle: each retrieve after finalize is one poll.",
+          "properties": {
+            "polls_to_running": {
+              "type": "integer"
+            },
+            "polls_to_end": {
+              "type": "integer"
+            },
+            "end_state": {
+              "enum": [
+                "completed",
+                "failed",
+                "expired",
+                "cancelled"
+              ]
+            },
+            "running_in_progress": {
+              "type": "integer"
+            },
+            "get_retry_after": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "session": {
+          "type": "object",
+          "description": "The session socket's behaviour.",
+          "properties": {
+            "max_per_key": {
+              "type": "integer"
+            },
+            "frame_delay_ms": {
+              "type": "integer"
+            },
+            "hold_until_frames": {
+              "type": "integer"
+            },
+            "ping_interval_ms": {
+              "type": "integer"
+            },
+            "idle_timeout_ms": {
+              "type": "integer"
+            },
+            "frame_errors": {
+              "type": "object"
+            },
+            "close": {
+              "type": "object",
+              "properties": {
+                "after_replies": {
+                  "type": "integer"
+                },
+                "on_connect": {
+                  "type": "integer"
+                },
+                "code": {
+                  "type": "integer"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "boosters": {
+          "type": "object",
+          "description": "Suite 1.11: the boosters of the session's workspace. disabled: names turned off (the 403 booster_not_enabled); status: a booster's outcome, timeout or error (ok when not named).",
+          "properties": {
+            "disabled": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "status": {
+              "type": "object",
+              "additionalProperties": {
+                "enum": [
+                  "ok",
+                  "timeout",
+                  "error"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "workers": {
+          "type": "object",
+          "description": "Suite 1.11: models with no ready worker. A live decide for a cold decisionnode-1.0 (or its alias) is answered by decisionnode-1.0-flash with x-decisionnode-fallback and x-decisionnode-requested-model, unless it says fallback false; then, and for any other cold model, a 529 overloaded_error with Retry-After and retry-after-ms (retry_after_ms, default 50).",
+          "properties": {
+            "cold": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "retry_after_ms": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        },
+        "places": {
+          "type": "object",
+          "description": "The several-places capability of the models the mock serves. max_places 0 turns it off: GET /v1/models leaves places out and a question with max is the 422 not_supported. Absent: on, max_places 16.",
+          "properties": {
+            "max_places": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        },
+        "collections": {
+          "type": "object",
+          "description": "Wanted_persons true lets the workspace use the wanted-persons collection (it is then listed); faces sets how many faces every enrollment finds (0: the 422 no_face); max_collections and max_items lower the workspace's limits (100 and 1,000,000; past them the 409s); region_unavailable true makes a create the 403 collections_region_unavailable. Absent: wanted-persons not enabled, each enrollment finds 1 to 3 faces, the default limits.",
+          "properties": {
+            "wanted_persons": {
+              "type": "boolean"
+            },
+            "faces": {
+              "type": "integer"
+            },
+            "max_collections": {
+              "type": "integer"
+            },
+            "max_items": {
+              "type": "integer"
+            },
+            "region_unavailable": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "safety": {
+      "description": "The parsed x-decisionnode-safety header. null means empty: no header was sent.",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "checked"
+          ],
+          "properties": {
+            "checked": {
+              "type": "boolean"
+            },
+            "harm": {
+              "type": "number"
+            },
+            "self_harm": {
+              "type": "number"
+            },
+            "flagged": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "answer": {
+      "type": "object",
+      "description": "An expected answer. kind is the answer class: truth (TruthAnswer), choice (ChoiceAnswer), score (ScoreAnswer), number (NumberAnswer, probabilities keyed by the value's text as sent) or unknown (UnknownAnswer, whose type and raw fields are checked). Score probabilities and legend are written with string keys here and compared to the SDK's integer-keyed maps. Numbers compare as IEEE-754 doubles, exactly. Suite 1.8: point (PointAnswer: x, y, present, confidence, image, width, height) and box (BoxAnswer: x1, y1, x2, y2, present, confidence, image, width, height). Points (PointsAnswer: count, present, complete, points [{x, y, confidence}], image, width, height) and boxes (BoxesAnswer: count, present, complete, boxes [{x1, y1, x2, y2, confidence}], image, width, height), the answer to a point or box question asked with max, told by its list.",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "truth",
+            "choice",
+            "score",
+            "number",
+            "point",
+            "box",
+            "points",
+            "boxes",
+            "unknown"
+          ]
+        },
+        "truth": {
+          "type": "number"
+        },
+        "choice": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "probabilities": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "legend": {
+          "type": "object"
+        },
+        "type": {
+          "type": "string"
+        },
+        "raw": {
+          "type": "object"
+        },
+        "number": {
+          "type": "number"
+        },
+        "expected": {
+          "type": "number"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "x1": {
+          "type": "number"
+        },
+        "y1": {
+          "type": "number"
+        },
+        "x2": {
+          "type": "number"
+        },
+        "y2": {
+          "type": "number"
+        },
+        "present": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "image": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer"
+        },
+        "complete": {
+          "type": "number"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "x",
+              "y",
+              "confidence"
+            ],
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "confidence": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "boxes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "x1",
+              "y1",
+              "x2",
+              "y2",
+              "confidence"
+            ],
+            "properties": {
+              "x1": {
+                "type": "number"
+              },
+              "y1": {
+                "type": "number"
+              },
+              "x2": {
+                "type": "number"
+              },
+              "y2": {
+                "type": "number"
+              },
+              "confidence": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "string_or_pattern": {
+      "description": "Suite 1.11: a string compared exactly, or {\"$pattern\": regex}: any string the regular expression finds (a search, not a full match). Used where the mock answers with a pinned model id, whose version a case never asserts: {\"$pattern\": \"^decisionnode-moe-\"}.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "required": [
+            "$pattern"
+          ],
+          "properties": {
+            "$pattern": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "decision": {
+      "type": "object",
+      "description": "Expected fields of a Decision. Only the fields present are checked. usage is checked as usage.input_tokens and usage.output_tokens. null for latency_ms or a token count means the language's empty value, never 0. raw is the parsed body. Suite 1.7: usage.video_frames and usage.video_seconds (null when the body has none), and warnings (a list of strings, [] when the body has none). Suite 1.11: usage.booster_tokens and usage.boosters (null when the body has none), and evidence (null when the body has none): by booster name in the request's order, compared whole and in that order, each entry's results as readings. Suite 1.11 adds fallback: null on an ordinary answer, {served_model, requested_model} from x-decisionnode-fallback and x-decisionnode-requested-model on a fallback answer, compared whole. Suite 1.11: model (and fallback's served_model and requested_model) may be {\"$pattern\": regex}.",
+      "properties": {
+        "model": {
+          "$ref": "#/$defs/string_or_pattern"
+        },
+        "request_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "latency_ms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "usage": {
+          "type": "object",
+          "properties": {
+            "input_tokens": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "output_tokens": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "video_frames": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "video_seconds": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "booster_tokens": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "boosters": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "cost": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Suite 1.11: usage.cost, compared whole: {usd, model_usd, boosters_usd, free_tier}, each as sent (usd is never recomputed from the parts); null when the answer has none.",
+              "properties": {
+                "usd": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "model_usd": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "boosters_usd": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "free_tier": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "safety": {
+          "$ref": "#/$defs/safety"
+        },
+        "answers": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/answer"
+          }
+        },
+        "raw": {
+          "type": "object"
+        },
+        "fallback": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "served_model": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/string_or_pattern"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "requested_model": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/string_or_pattern"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "description": "Suite 1.11: one booster's entry of a decision's evidence (Evidence): version, status (kept as received), latency_ms, billed_calls (null when the entry has none) and results, one reading per image read.",
+      "required": [
+        "version",
+        "status",
+        "latency_ms",
+        "billed_calls",
+        "results"
+      ],
+      "properties": {
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "latency_ms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "billed_calls": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reading"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "reading": {
+      "type": "object",
+      "description": "Suite 1.11: an expected reading, compared whole. kind is the reading class: age (AgeReading: image, faces, age_years, low, high, confidence; the last four null when absent), ai_generated (AiGeneratedReading: image, generated, confidence, method, top_generator, c2pa_signer, c2pa; top_generator null on a photograph and on every c2pa reading, c2pa null when absent) face_detection (FaceDetectionReading: image, faces, detections, each {box: {x1, y1, x2, y2}, confidence}), face_recognition (FaceRecognitionReading: image, faces, matches, each {box, score, collection, reference, name, label}, name and label null when absent, replacing wanted_person), ocr (OcrReading: image, text, truncated, all three always sent) or unknown (a generic reading of a booster the SDK does not know, or of one with a field missing or of the wrong type; raw holds its fields). A field the SDK does not know is ignored: the reading stays typed.",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "age",
+            "ai_generated",
+            "face_detection",
+            "face_recognition",
+            "ocr",
+            "unknown"
+          ]
+        },
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "faces": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "age_years": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "low": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "high": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "generated": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "method": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "top_generator": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "c2pa_signer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "c2pa": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "truncated": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "detections": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "required": [
+              "box",
+              "confidence"
+            ],
+            "properties": {
+              "box": {
+                "type": "object",
+                "required": [
+                  "x1",
+                  "y1",
+                  "x2",
+                  "y2"
+                ],
+                "properties": {
+                  "x1": {
+                    "type": "number"
+                  },
+                  "y1": {
+                    "type": "number"
+                  },
+                  "x2": {
+                    "type": "number"
+                  },
+                  "y2": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "confidence": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "matches": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "required": [
+              "box",
+              "score",
+              "collection",
+              "reference"
+            ],
+            "properties": {
+              "box": {
+                "type": "object",
+                "required": [
+                  "x1",
+                  "y1",
+                  "x2",
+                  "y2"
+                ],
+                "properties": {
+                  "x1": {
+                    "type": "number"
+                  },
+                  "y1": {
+                    "type": "number"
+                  },
+                  "x2": {
+                    "type": "number"
+                  },
+                  "y2": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "score": {
+                "type": "number"
+              },
+              "reference": {
+                "type": "string"
+              },
+              "collection": {
+                "type": "string"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "raw": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "description": "An expected error: the class by neutral name and the fields that must match. A field absent here is not checked. null means empty. message is the error's own message, a string, \"\" (never empty) when the server sent no message. retry_after is in seconds (a language with a duration type compares the duration). entries is the server's list, unchanged. With subclass_ok any subclass of the class passes.",
+      "required": [
+        "error"
+      ],
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/error_class"
+        },
+        "subclass_ok": {
+          "type": "boolean"
+        },
+        "fields": {
+          "$ref": "#/$defs/error_fields"
+        }
+      },
+      "additionalProperties": false
+    },
+    "error_class": {
+      "enum": [
+        "DecisionNodeError",
+        "BadRequestError",
+        "ContextLimitError",
+        "AuthenticationError",
+        "InsufficientCreditError",
+        "RefusalError",
+        "NotFoundError",
+        "PermissionDeniedError",
+        "RequestTooLargeError",
+        "ValidationError",
+        "RateLimitError",
+        "OverloadedError",
+        "ServerError",
+        "ConnectionError",
+        "TimeoutError"
+      ]
+    },
+    "error_fields": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "error_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "request_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "safety": {
+          "$ref": "#/$defs/safety"
+        },
+        "entries": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "retry_after": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "boosters": {
+          "type": "object",
+          "description": "Suite 1.11: the x-decisionnode-boosters header parsed, booster name to {status, latency_ms}, compared whole and in header order; {} when the header is absent.",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "status",
+              "latency_ms"
+            ],
+            "properties": {
+              "status": {
+                "type": "string"
+              },
+              "latency_ms": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "range": {
+      "type": "object",
+      "properties": {
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_number": {
+      "type": "object",
+      "required": [
+        "$number"
+      ],
+      "properties": {
+        "$number": {
+          "type": "object",
+          "properties": {
+            "instructions": {},
+            "min": {},
+            "max": {},
+            "step": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_nest": {
+      "type": "object",
+      "required": [
+        "$nest"
+      ],
+      "properties": {
+        "$nest": {
+          "type": "object",
+          "required": [
+            "depth",
+            "value"
+          ],
+          "properties": {
+            "depth": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "value": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_text": {
+      "type": "object",
+      "required": [
+        "$text"
+      ],
+      "properties": {
+        "$text": {
+          "type": "object",
+          "required": [
+            "repeat",
+            "times"
+          ],
+          "properties": {
+            "repeat": {
+              "type": "string"
+            },
+            "times": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "body_check": {
+      "type": "object",
+      "required": [
+        "pointer"
+      ],
+      "properties": {
+        "pointer": {
+          "type": "string"
+        },
+        "equals": {},
+        "type": {
+          "enum": [
+            "string",
+            "number",
+            "integer",
+            "boolean",
+            "null",
+            "array",
+            "object"
+          ]
+        },
+        "pattern": {
+          "type": "string",
+          "description": "A regular expression the string value must match."
+        },
+        "absent": {
+          "const": true,
+          "description": "The pointer must not exist."
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "jsonl_check": {
+      "type": "object",
+      "required": [
+        "line",
+        "pointer"
+      ],
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pointer": {
+          "type": "string"
+        },
+        "equals": {},
+        "type": {},
+        "pattern": {
+          "type": "string"
+        },
+        "absent": {
+          "const": true
+        },
+        "keys": {}
+      },
+      "additionalProperties": false
+    },
+    "request_expectation": {
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "description": "One recorded request. path or path_pattern; the body as body (exact JSON), body_checks, body_base64 or body_sha256 (raw bytes, for a PUT), jsonl / jsonl_count / jsonl_checks (JSON Lines or a JSON array); none of them means no body. parallel: consecutive entries marked parallel may match the recorded requests in any order (the PUTs of one upload).",
+      "properties": {
+        "method": {
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "WS"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "path_pattern": {
+          "type": "string"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "status": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "header_patterns": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "absent_headers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "body": {},
+        "body_checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/body_check"
+          }
+        },
+        "ordered_keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "body_base64": {
+          "type": "string"
+        },
+        "body_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "jsonl": {
+          "type": "array"
+        },
+        "jsonl_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "jsonl_checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/jsonl_check"
+          }
+        },
+        "parallel": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "batch_result": {
+      "type": "object",
+      "required": [
+        "custom_id"
+      ],
+      "description": "One BatchResult: custom_id, status (an integer or expired or cancelled), headers (only the listed ones checked), decision (a 200 line, compared as a decision), error (the error value, never raised), no_decision.",
+      "properties": {
+        "custom_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": [
+            "integer",
+            "string"
+          ]
+        },
+        "headers": {
+          "type": "object"
+        },
+        "decision": {
+          "$ref": "#/$defs/decision"
+        },
+        "error": {
+          "$ref": "#/$defs/error"
+        },
+        "no_decision": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "batch_result_at": {
+      "type": "object",
+      "required": [
+        "index"
+      ],
+      "description": "One BatchResult at a 0-based index, compared as a batch_result.",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "custom_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": [
+            "integer",
+            "string"
+          ]
+        },
+        "headers": {
+          "type": "object"
+        },
+        "decision": {
+          "$ref": "#/$defs/decision"
+        },
+        "error": {
+          "$ref": "#/$defs/error"
+        },
+        "no_decision": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "outcome": {
+      "description": "A call's result: a value of one kind (result: decision, answer, batch, batch_page, batch_results, batch_run, session, upload_ids, supervised, from suite 1.6 checked: a check_request or check_frame that found nothing, and from suite 1.13 collection, collections, item, item_page and deleted, the collections calls' objects as sent), an error, or the language's argument error.",
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "result"
+          ],
+          "properties": {
+            "result": {
+              "enum": [
+                "decision",
+                "answer",
+                "batch",
+                "batch_page",
+                "batch_results",
+                "batch_run",
+                "session",
+                "upload_ids",
+                "supervised",
+                "checked",
+                "collection",
+                "collections",
+                "item",
+                "item_page",
+                "deleted"
+              ]
+            },
+            "decision": {
+              "$ref": "#/$defs/decision"
+            },
+            "answer": {
+              "$ref": "#/$defs/answer"
+            },
+            "batch": {
+              "type": "object"
+            },
+            "batch_page": {
+              "type": "object"
+            },
+            "batch_results": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/batch_result"
+              }
+            },
+            "session": {
+              "type": "object"
+            },
+            "count": {
+              "type": "integer",
+              "description": "upload_ids: how many; batch_results and batch_run (suite 1.6): how many results the iterator yields."
+            },
+            "batch_results_sample": {
+              "type": "array",
+              "description": "Suite 1.6: results checked by their 0-based index in upload order, for a results file too long to list whole.",
+              "items": {
+                "$ref": "#/$defs/batch_result_at"
+              }
+            },
+            "distinct": {
+              "type": "boolean"
+            },
+            "replies": {
+              "$ref": "#/$defs/range"
+            },
+            "closed": {
+              "type": [
+                "object",
+                "null"
+              ]
+            },
+            "collection": {
+              "type": "object"
+            },
+            "item": {
+              "type": "object"
+            },
+            "item_page": {
+              "type": "object"
+            },
+            "deleted": {
+              "type": "object"
+            },
+            "collections": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/error"
+        },
+        {
+          "type": "object",
+          "required": [
+            "argument_error"
+          ],
+          "properties": {
+            "argument_error": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "builder_video": {
+      "type": "object",
+      "required": [
+        "$video"
+      ],
+      "properties": {
+        "$video": {
+          "type": "object",
+          "required": [
+            "id",
+            "frames"
+          ],
+          "description": "Suite 1.7: Video(id, frames, fps, start, end). frames is a list, each item a $frame or a plain wire-form frame; fps, start and end are passed only when present (any JSON value, so a case can give one the local checks refuse).",
+          "properties": {
+            "id": {},
+            "frames": {},
+            "fps": {},
+            "start": {},
+            "end": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_frame": {
+      "type": "object",
+      "required": [
+        "$frame"
+      ],
+      "properties": {
+        "$frame": {
+          "type": "object",
+          "required": [
+            "t"
+          ],
+          "description": "Suite 1.7: VideoFrame(t, data, media_type). Exactly one of path (relative to the suite root: the harness reads the file and passes its bytes), data_base64 (decoded and passed as raw bytes) or data_text (passed as base64 text, unchanged). media_type is passed only when present; absent with bytes, the SDK detects the type from the first bytes.",
+          "properties": {
+            "t": {},
+            "path": {
+              "type": "string"
+            },
+            "data_base64": {
+              "type": "string"
+            },
+            "data_text": {
+              "type": "string"
+            },
+            "media_type": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_point": {
+      "type": "object",
+      "required": [
+        "$point"
+      ],
+      "properties": {
+        "$point": {
+          "type": "object",
+          "description": "Suite 1.8: point(instructions, image, units); image, units and max passed only when present.",
+          "properties": {
+            "instructions": {},
+            "image": {},
+            "units": {},
+            "max": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_box": {
+      "type": "object",
+      "required": [
+        "$box"
+      ],
+      "properties": {
+        "$box": {
+          "type": "object",
+          "description": "Suite 1.8: box(instructions, image, units); image, units and max passed only when present.",
+          "properties": {
+            "instructions": {},
+            "image": {},
+            "units": {},
+            "max": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "builder_booster": {
+      "type": "object",
+      "required": [
+        "$booster"
+      ],
+      "properties": {
+        "$booster": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "description": "Suite 1.11: Booster(name, images, require, options); images, require and options are passed only when present.",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "images": {},
+            "require": {},
+            "options": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

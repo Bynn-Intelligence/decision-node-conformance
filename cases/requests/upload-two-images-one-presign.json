@@ -1,0 +1,154 @@
+{
+  "id": "upload-two-images-one-presign",
+  "description": "Two local images over the threshold together go in one POST /v1/uploads (files in request order), then one PUT each, in parallel and so in any order, then the decision naming both by upload_id in the request's image order.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "front",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        },
+        {
+          "$image": {
+            "id": "back",
+            "path": "fixtures/images/pixel.jpg",
+            "pad_to": 700000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body": {
+          "files": [
+            {
+              "content_type": "image/png",
+              "byte_size": 600000,
+              "checksum": "Yj4NtyxKcKkF+lO1i7hnsQ==",
+              "sha256": "wv0nNpXCdGFIs+MKEBJQBErTjfCC03p7n6a9D4vyOXQ="
+            },
+            {
+              "content_type": "image/jpeg",
+              "byte_size": 700000,
+              "checksum": "tZyzL63RAtu7nvEj4WNvlg==",
+              "sha256": "uYvjizZDAu/i7Zzp+WMd1o9HIbqgbZvOdM0oN4+SegA="
+            }
+          ]
+        }
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "Yj4NtyxKcKkF+lO1i7hnsQ==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "wv0nNpXCdGFIs+MKEBJQBErTjfCC03p7n6a9D4vyOXQ="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "c2fd273695c2746148b3e30a101250044ad38df082d37a7b9fa6bd0f8bf23974",
+        "parallel": true
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/jpeg",
+          "content-md5": "tZyzL63RAtu7nvEj4WNvlg==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "uYvjizZDAu/i7Zzp+WMd1o9HIbqgbZvOdM0oN4+SegA="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "b98be38b364302efe2ed9ce9f9631dd68f4721baa06d9bce74cd28378f927a00",
+        "parallel": true
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        },
+        "body_checks": [
+          {
+            "pointer": "/model",
+            "equals": "decisionnode-moe"
+          },
+          {
+            "pointer": "/state",
+            "equals": "s"
+          },
+          {
+            "pointer": "/images/0/id",
+            "equals": "front"
+          },
+          {
+            "pointer": "/images/0/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/0/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/0/url",
+            "absent": true
+          },
+          {
+            "pointer": "/images/1/id",
+            "equals": "back"
+          },
+          {
+            "pointer": "/images/1/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/1/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/1/url",
+            "absent": true
+          }
+        ]
+      }
+    ]
+  }
+}

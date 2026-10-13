@@ -1,0 +1,37 @@
+{
+  "id": "local-url-private-address",
+  "description": "An image by an https URL whose host is a literal address in a blocked range (169.254.0.0/16, the cloud metadata address): refused before any network work, the API's 400 image_url_refused. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "u",
+            "url": "https://169.254.169.254/latest/meta-data/receipt.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "image_url_refused"
+      }
+    }
+  }
+}

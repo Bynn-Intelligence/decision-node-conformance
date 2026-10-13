@@ -1,0 +1,43 @@
+{
+  "id": "local-score-too-many-levels",
+  "description": "A score of 11 levels (1 to 10). Checked locally: the API's own error class is raised and no request reaches the mock. From suite 1.5 the case also checks the error_type the server would send (null: the API answers this fault with a plain-string 400 detail) and its documented message.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$score": {
+            "instructions": "?",
+            "levels": [
+              "l0",
+              "l1",
+              "l2",
+              "l3",
+              "l4",
+              "l5",
+              "l6",
+              "l7",
+              "l8",
+              "l9",
+              "l10"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": null,
+        "message": "Too many score levels. Must have at most 10 levels."
+      }
+    }
+  }
+}

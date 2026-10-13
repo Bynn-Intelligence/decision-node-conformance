@@ -1,0 +1,52 @@
+{
+  "id": "number-malformed-is-unknown",
+  "description": "A number answer without expected is malformed: decide returns it as UnknownAnswer with its type and raw fields, and the other answers still parse.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "$number": {
+            "instructions": "How many?"
+          }
+        },
+        "t": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"n\": {\"type\": \"number\", \"number\": 3, \"confidence\": 0.5, \"probabilities\": {\"3\": 0.5}}, \"t\": {\"type\": \"truth\", \"truth\": 0.94}}, \"usage\": {\"input_tokens\": 30, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "n": {
+          "kind": "unknown",
+          "type": "number",
+          "raw": {
+            "type": "number",
+            "number": 3,
+            "confidence": 0.5,
+            "probabilities": {
+              "3": 0.5
+            }
+          }
+        },
+        "t": {
+          "kind": "truth",
+          "truth": 0.94
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "id": "decision-cost-plain",
+  "description": "Every answer's usage carries what it cost: usage.cost is {usd, model_usd, boosters_usd, free_tier}, JSON numbers in USD with up to 9 decimals and a boolean, read as sent.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "I was charged twice.",
+      "questions": {
+        "refund": {
+          "$truth": {
+            "instructions": "Is a refund asked for?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"refund\": {\"type\": \"truth\", \"truth\": 0.94}}, \"usage\": {\"input_tokens\": 62, \"output_tokens\": 0, \"cost\": {\"usd\": 0.000002604, \"model_usd\": 0.000002604, \"boosters_usd\": 0, \"free_tier\": false}}}"
+  },
+  "expect": {
+    "decision": {
+      "model": "decisionnode-moe-0.9.0-rc1",
+      "usage": {
+        "cost": {
+          "usd": 2.604e-06,
+          "model_usd": 2.604e-06,
+          "boosters_usd": 0,
+          "free_tier": false
+        },
+        "input_tokens": 62,
+        "output_tokens": 0
+      }
+    }
+  }
+}

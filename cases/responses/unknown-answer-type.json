@@ -1,0 +1,59 @@
+{
+  "id": "unknown-answer-type",
+  "description": "An answer of a type the SDK does not know is returned as a generic answer holding its raw fields, and the other answers still parse. The question is sent as a known type (an unknown question type is refused locally from suite 1.5); the recorded answer is of a type the SDK does not know.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "known": {
+          "$truth": {
+            "instructions": "?"
+          }
+        },
+        "future": {
+          "$choice": {
+            "instructions": "Which first?",
+            "options": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "23",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"known\": {\"type\": \"truth\", \"truth\": 0.62}, \"future\": {\"type\": \"ranking\", \"order\": [\"b\", \"a\"], \"confidence\": 0.5}}, \"usage\": {\"input_tokens\": 18, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "known": {
+          "kind": "truth",
+          "truth": 0.62
+        },
+        "future": {
+          "kind": "unknown",
+          "type": "ranking",
+          "raw": {
+            "type": "ranking",
+            "order": [
+              "b",
+              "a"
+            ],
+            "confidence": 0.5
+          }
+        }
+      }
+    }
+  }
+}

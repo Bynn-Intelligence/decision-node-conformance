@@ -1,0 +1,47 @@
+{
+  "id": "sixteen-images-accepted",
+  "description": "Sixteen images reach the API and get a decision (SDK specification 1.2: up to 16 images a request).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": {
+        "$list": {
+          "count": 16,
+          "item": {
+            "$image": {
+              "id": "i{i}",
+              "path": "fixtures/images/pixel.png"
+            }
+          }
+        }
+      },
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is the door open?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": {
+          "$pattern": "^decisionnode-moe-"
+        },
+        "warnings": [],
+        "usage": {
+          "video_frames": null,
+          "video_seconds": null
+        }
+      }
+    }
+  }
+}

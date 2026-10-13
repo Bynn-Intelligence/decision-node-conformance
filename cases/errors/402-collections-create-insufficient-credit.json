@@ -1,0 +1,32 @@
+{
+  "id": "402-collections-create-insufficient-credit",
+  "description": "Creating a collection in a workspace that cannot pay (as a batch's calls that put work in) is the 402 insufficient_credit: InsufficientCreditError. Listing, reading and deleting stay open.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.create",
+    "args": {
+      "name": "Staff"
+    }
+  },
+  "response": {
+    "status": 402,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"insufficient_credit\", \"message\": \"This workspace's balance cannot pay for this request.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "InsufficientCreditError",
+      "fields": {
+        "status": 402,
+        "error_type": "insufficient_credit",
+        "message": "This workspace's balance cannot pay for this request."
+      }
+    }
+  }
+}

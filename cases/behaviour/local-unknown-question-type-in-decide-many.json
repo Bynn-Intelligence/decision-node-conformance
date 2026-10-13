@@ -1,0 +1,44 @@
+{
+  "id": "local-unknown-question-type-in-decide-many",
+  "description": "decide_many whose second request holds a question of an unknown type: the whole call fails with the API's 400 api_usage_error \"Invalid request.\" before anything is sent. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "a",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        },
+        {
+          "state": "b",
+          "questions": {
+            "q": {
+              "type": "rank",
+              "instructions": "?"
+            }
+          }
+        }
+      ],
+      "concurrency": 2
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error",
+        "message": "Invalid request."
+      }
+    }
+  }
+}

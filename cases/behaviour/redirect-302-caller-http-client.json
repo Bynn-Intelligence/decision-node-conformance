@@ -1,0 +1,62 @@
+{
+  "id": "redirect-302-caller-http-client",
+  "description": "The client is given an HTTP client the caller made, set to follow redirects. The SDK still never follows one: either it wraps or copies the client and the 302 becomes a DecisionNodeError with status 302 after one request, or it refuses such a client with an argument error before any request. Nothing is ever requested at the Location. A harness whose SDK takes no HTTP client runs this case with the default client.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "http_client": "caller_following_redirects"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 302,
+          "headers": {
+            "location": "/v1/redirected-caller-302"
+          },
+          "body": {
+            "detail": {
+              "error_type": "redirect",
+              "message": "Moved."
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "one_of": [
+      {
+        "attempts": 1,
+        "outcome": {
+          "error": "DecisionNodeError",
+          "fields": {
+            "status": 302
+          }
+        }
+      },
+      {
+        "attempts": 0,
+        "outcome": {
+          "argument_error": true
+        }
+      }
+    ],
+    "unrequested_paths": [
+      "/v1/redirected-caller-302"
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "older-id-1-0-flash-accepted",
+  "description": "The older id decisionnode-1.0-flash stays accepted: the SDK sends it unchanged, as model is free text, and the API answers with the pinned id of the decisionnode-flash family, decisionnode-flash-<version>.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "I was charged twice.",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is a refund asked for?"
+          }
+        }
+      },
+      "model": "decisionnode-1.0-flash"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200,
+        "body_checks": [
+          {
+            "pointer": "/model",
+            "equals": "decisionnode-1.0-flash"
+          }
+        ]
+      }
+    ],
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": {
+          "$pattern": "^decisionnode-flash-"
+        }
+      }
+    }
+  }
+}

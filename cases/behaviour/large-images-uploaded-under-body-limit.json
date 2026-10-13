@@ -1,0 +1,59 @@
+{
+  "id": "large-images-uploaded-under-body-limit",
+  "description": "Two local images of 9,900,000 bytes each would make a body of about 26.4 MB as base64, over the 25 MiB limit. Above the inline threshold they are uploaded, not inlined (one presign, two PUTs), and the decide body names them by upload_id, far under the limit.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "front",
+            "path": "fixtures/images/pixel.jpg",
+            "pad_to": 9900000
+          }
+        },
+        {
+          "$image": {
+            "id": "back",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 9900000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 4,
+    "request_counts": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "count": 1
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "count": 2
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "count": 1
+      }
+    ],
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}

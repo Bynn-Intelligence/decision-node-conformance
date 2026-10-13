@@ -1,0 +1,76 @@
+{
+  "id": "session-frame-questions-subset",
+  "description": "send(questions=[...]) asks only those questions; the reply holds only their answers.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "frame": "a",
+        "questions": [
+          "abort"
+        ],
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "session_events": [
+      {
+        "reply": {
+          "seq": 1,
+          "answers": {
+            "abort": {
+              "kind": "truth"
+            }
+          }
+        }
+      },
+      {
+        "ended": true
+      }
+    ]
+  }
+}

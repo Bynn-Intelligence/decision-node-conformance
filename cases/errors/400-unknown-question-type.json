@@ -1,0 +1,60 @@
+{
+  "id": "400-unknown-question-type",
+  "description": "An unknown question type is a 400 api_usage_error. Sent with decide_raw: from suite 1.5 decide() refuses an unknown type locally (behaviour/local-unknown-question-type). The reason lists number among the known types.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "q": {
+            "type": "rank",
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "question 'q': unknown type \"rank\"; the types are truth, noul, choice, score, number, point and box"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Invalid request.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "type": "rank",
+          "instructions": "?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Invalid request.",
+        "reason": "question 'q': unknown type \"rank\"; the types are truth, noul, choice, score, number, point and box"
+      }
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "id": "local-point-box-entries-in-order",
+  "description": "Faults in two questions and two fields of one question: every entry in one list, in question order and, within a question, image before units. Checked locally (SDK specification 1.2): ValidationError with the entries the API answers, and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "dock",
+            "url": "https://files.example.com/dock/0001.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "pick": {
+          "$point": {
+            "instructions": "Point to the yellow package closest to the robot arm.",
+            "image": "crate",
+            "units": "inches"
+          }
+        },
+        "any": {
+          "$truth": {
+            "instructions": "Is anything damaged?"
+          }
+        },
+        "damage": {
+          "$box": {
+            "instructions": "Draw a box around the damaged package."
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "unknown_image",
+            "loc": [
+              "body",
+              "questions",
+              "pick",
+              "point",
+              "image"
+            ],
+            "msg": "Input should be the id of an image of the request",
+            "input": "crate"
+          },
+          {
+            "type": "literal_error",
+            "loc": [
+              "body",
+              "questions",
+              "pick",
+              "point",
+              "units"
+            ],
+            "msg": "Input should be 'pixels' or 'normalized'",
+            "input": "inches",
+            "ctx": {
+              "expected": "'pixels' or 'normalized'"
+            }
+          },
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "questions",
+              "damage",
+              "box",
+              "image"
+            ],
+            "msg": "Field required",
+            "input": {
+              "type": "box",
+              "instructions": "Draw a box around the damaged package."
+            }
+          }
+        ]
+      }
+    }
+  }
+}

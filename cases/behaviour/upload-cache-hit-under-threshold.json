@@ -1,0 +1,115 @@
+{
+  "id": "upload-cache-hit-under-threshold",
+  "description": "Once uploaded, bytes are named by their cached upload_id whatever their size: the first decision uploads a large PNG and the 633-byte JPEG beside it (together over the threshold); the second sends the JPEG alone, under the threshold, and still names it by upload_id instead of inlining it.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": "s",
+          "images": [
+            {
+              "$image": {
+                "id": "big",
+                "path": "fixtures/images/pixel.png",
+                "pad_to": 600000
+              }
+            },
+            {
+              "$image": {
+                "id": "photo",
+                "path": "fixtures/images/pixel.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "result": "decision"
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": "s",
+          "images": [
+            {
+              "$image": {
+                "id": "photo",
+                "path": "fixtures/images/pixel.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "result": "decision"
+      }
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200,
+        "body_checks": [
+          {
+            "pointer": "/images/0/id",
+            "equals": "photo"
+          },
+          {
+            "pointer": "/images/0/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/images/0/data",
+            "absent": true
+          },
+          {
+            "pointer": "/images/0/url",
+            "absent": true
+          }
+        ]
+      }
+    ]
+  }
+}

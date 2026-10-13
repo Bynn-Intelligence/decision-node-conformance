@@ -1,0 +1,41 @@
+{
+  "id": "timeout-retried",
+  "description": "Timeouts are retried: three attempts, then TimeoutError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "timeout": 0.3
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "action": "normal",
+          "delay_ms": 1500
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "outcome": {
+      "error": "TimeoutError"
+    },
+    "elapsed_ms": {
+      "max": 6000
+    }
+  }
+}

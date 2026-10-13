@@ -1,0 +1,62 @@
+{
+  "id": "points-answer-several-normalized",
+  "description": "A point question asked with max and normalized units answers a PointsAnswer: count, present, complete and points, each x, y (fractions with 4 decimals, kept as sent) and its confidence.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "platform",
+            "url": "https://files.example.com/platform/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "people": {
+          "$point": {
+            "instructions": "Each person standing on the platform.",
+            "units": "normalized",
+            "max": 6
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"people\": {\"type\": \"point\", \"count\": 2, \"present\": 0.97, \"complete\": 0.99, \"points\": [{\"x\": 0.3333, \"y\": 0.4741, \"confidence\": 0.88}, {\"x\": 0.6302, \"y\": 0.4907, \"confidence\": 0.85}], \"image\": \"platform\", \"width\": 1920, \"height\": 1080}}, \"usage\": {\"input_tokens\": 410, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "people": {
+          "kind": "points",
+          "count": 2,
+          "present": 0.97,
+          "complete": 0.99,
+          "points": [
+            {
+              "x": 0.3333,
+              "y": 0.4741,
+              "confidence": 0.88
+            },
+            {
+              "x": 0.6302,
+              "y": 0.4907,
+              "confidence": 0.85
+            }
+          ],
+          "image": "platform",
+          "width": 1920,
+          "height": 1080
+        }
+      }
+    }
+  }
+}

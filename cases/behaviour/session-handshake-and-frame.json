@@ -1,0 +1,120 @@
+{
+  "id": "session-handshake-and-frame",
+  "description": "connect() opens the stream_url with the key in the Authorization header of the handshake, never in the URL; send() writes one JSON text message with seq counted from 1; the reply comes back typed; end() sends DELETE.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "frame": {
+          "battery": 0.31,
+          "wind_mps": 11.4
+        },
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/sessions",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}/stream$",
+        "status": 101,
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "query": {}
+      },
+      {
+        "method": "WS",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}/stream$",
+        "body_checks": [
+          {
+            "pointer": "/seq",
+            "equals": 1
+          },
+          {
+            "pointer": "/frame",
+            "equals": {
+              "battery": 0.31,
+              "wind_mps": 11.4
+            }
+          }
+        ]
+      },
+      {
+        "method": "DELETE",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}$",
+        "status": 200
+      }
+    ],
+    "session_events": [
+      {
+        "reply": {
+          "seq": 1,
+          "answers": {
+            "mode": {
+              "kind": "choice"
+            },
+            "abort": {
+              "kind": "truth"
+            }
+          },
+          "usage": {
+            "output_tokens": 0
+          }
+        }
+      },
+      {
+        "ended": true
+      }
+    ]
+  }
+}

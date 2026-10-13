@@ -1,0 +1,39 @@
+{
+  "id": "404-collection-not-found",
+  "description": "A collection that does not exist, or is another workspace's, is the 404 collection_not_found: NotFoundError with that error_type, the same answer in both cases.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.get",
+    "args": {
+      "collection_id": "col_00000000000000000000000000000000"
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"collection_not_found\", \"message\": \"Collection not found: col_00000000000000000000000000000000.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/collections/col_00000000000000000000000000000000",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "NotFoundError",
+      "fields": {
+        "status": 404,
+        "error_type": "collection_not_found",
+        "message": "Collection not found: col_00000000000000000000000000000000."
+      }
+    }
+  }
+}

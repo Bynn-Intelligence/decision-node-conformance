@@ -1,0 +1,84 @@
+{
+  "id": "upload-put-403-after-url-expiry-twice-raises",
+  "description": "The presign after an expired URL is made once: when the new URL's PUT is also answered 403 after its 5 minutes (the scenario moves the mock's clock 301 s before each PUT), the SDK raises the base DecisionNodeError with status 403, error_type upload_failed and reason AccessDenied, and sends no decision.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "clock": "mock"
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "PUT"
+          },
+          "steps": [
+            {
+              "action": "normal",
+              "advance_clock_seconds": 301
+            },
+            {
+              "action": "normal",
+              "advance_clock_seconds": 301
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 4,
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 403
+      },
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 403
+      }
+    ],
+    "outcome": {
+      "error": "DecisionNodeError",
+      "fields": {
+        "status": 403,
+        "error_type": "upload_failed",
+        "reason": "AccessDenied"
+      }
+    }
+  }
+}

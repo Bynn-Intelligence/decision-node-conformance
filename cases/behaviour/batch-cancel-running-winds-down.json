@@ -1,0 +1,183 @@
+{
+  "id": "batch-cancel-running-winds-down",
+  "description": "Cancelling a running batch with a line in progress: the queued lines are cancelled at once and the answer still shows running; the next get shows it ended cancelled, the line in progress answered.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "batch": {
+        "polls_to_running": 1,
+        "polls_to_end": 9,
+        "running_in_progress": 1
+      }
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": [
+            {
+              "custom_id": "t0",
+              "state": "s0",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            },
+            {
+              "custom_id": "t1",
+              "state": "s1",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            },
+            {
+              "custom_id": "t2",
+              "state": "s2",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            },
+            {
+              "custom_id": "t3",
+              "state": "s3",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.finalize",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.get",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "state": "running",
+          "counters": {
+            "completed": 2,
+            "in_progress": 1,
+            "queued": 1
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.cancel",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "state": "running",
+          "counters": {
+            "in_progress": 1,
+            "cancelled": 1
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.get",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "state": "cancelled",
+          "counters": {
+            "completed": 3,
+            "cancelled": 1,
+            "in_progress": 0
+          }
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 5
+  }
+}

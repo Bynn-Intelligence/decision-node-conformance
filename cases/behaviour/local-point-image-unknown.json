@@ -1,0 +1,52 @@
+{
+  "id": "local-point-image-unknown",
+  "description": "A point question naming an image the request does not hold. Checked locally (SDK specification 1.2): ValidationError with the entries the API answers, and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "pick": {
+          "$point": {
+            "instructions": "Point to the yellow package closest to the robot arm.",
+            "image": "dock"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "unknown_image",
+            "loc": [
+              "body",
+              "questions",
+              "pick",
+              "point",
+              "image"
+            ],
+            "msg": "Input should be the id of an image of the request",
+            "input": "dock"
+          }
+        ]
+      }
+    }
+  }
+}

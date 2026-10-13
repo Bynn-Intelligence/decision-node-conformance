@@ -1,0 +1,50 @@
+{
+  "id": "529-upload-storage-timeout",
+  "description": "Image storage did not answer in time: 529 overloaded_error with Retry-After 1: OverloadedError with retry_after 1.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "upload_id": "upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 529,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "retry-after": "1",
+      "x-decisionnode-error": "image storage did not answer in time"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"overloaded_error\", \"message\": \"Temporarily overloaded. Retry with backoff.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "OverloadedError",
+      "fields": {
+        "status": 529,
+        "error_type": "overloaded_error",
+        "retry_after": 1,
+        "reason": "image storage did not answer in time"
+      }
+    }
+  }
+}

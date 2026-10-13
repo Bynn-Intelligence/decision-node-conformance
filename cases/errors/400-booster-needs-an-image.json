@@ -1,0 +1,67 @@
+{
+  "id": "400-booster-needs-an-image",
+  "description": "A booster that reads images, on a request without one, is a BadRequestError with error_type booster_input_mismatch.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "A person at the counter.",
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "age"
+      ]
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "The booster 'age' needs at least one image."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"booster_input_mismatch\", \"message\": \"The booster 'age' needs at least one image.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "A person at the counter.",
+      "questions": {
+        "adult": {
+          "type": "truth",
+          "instructions": "Is the person in the first picture an adult?"
+        }
+      },
+      "boosters": [
+        "age"
+      ]
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "booster_input_mismatch",
+        "message": "The booster 'age' needs at least one image.",
+        "reason": "The booster 'age' needs at least one image.",
+        "boosters": {},
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

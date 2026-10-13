@@ -1,0 +1,38 @@
+{
+  "id": "400-batch-list-bad-limit",
+  "description": "batches.list answered 400 api_usage_error: BadRequestError with status and error_type (batch errors use the classes a status gives). The mock replays the 400 that GET /v1/batches?limit=0 gets (natural_request); the call passes no limit, since from suite 1.5 limit 0 is refused locally (behaviour/local-batch-list-limit-zero).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "batches.list",
+    "args": {}
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Query parameter limit must be an integer from 1 to 100, got 0."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Query parameter limit must be an integer from 1 to 100, got 0.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Query parameter limit must be an integer from 1 to 100, got 0."
+      }
+    }
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/batches?limit=0",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  }
+}

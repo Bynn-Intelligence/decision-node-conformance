@@ -1,0 +1,49 @@
+{
+  "id": "number-builder-step",
+  "description": "number(instructions, min, max, step) with a decimal step: 0.5 is sent as the number 0.5.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "rating": {
+          "$number": {
+            "instructions": "Rating in halves?",
+            "min": 0,
+            "max": 5,
+            "step": 0.5
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "rating": {
+            "type": "number",
+            "instructions": "Rating in halves?",
+            "min": 0,
+            "max": 5,
+            "step": 0.5
+          }
+        }
+      }
+    }
+  }
+}

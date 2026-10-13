@@ -1,0 +1,93 @@
+{
+  "id": "places-in-run-batch",
+  "description": "A batch line with max is answered as the live call: its result line's decision holds a BoxesAnswer.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "run_batch",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "lot-0917",
+          "images": [
+            {
+              "$image": {
+                "id": "lot",
+                "url": "https://files.example.com/lot/0917.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "cars": {
+              "$box": {
+                "instructions": "Every car in the lot.",
+                "max": 8
+              }
+            }
+          }
+        }
+      ],
+      "poll_interval": 10
+    }
+  },
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/batches",
+        "status": 201,
+        "jsonl_count": 0
+      },
+      {
+        "method": "POST",
+        "path_pattern": "/requests$",
+        "status": 200,
+        "jsonl_count": 1
+      },
+      {
+        "method": "POST",
+        "path_pattern": "/finalize$",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/batches/batch_[0-9A-Z]{10}$",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/batches/batch_[0-9A-Z]{10}$",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "/results$",
+        "status": 200
+      }
+    ],
+    "outcome": {
+      "result": "batch_run",
+      "batch": {
+        "state": "completed"
+      },
+      "batch_results": [
+        {
+          "custom_id": "lot-0917",
+          "status": 200,
+          "decision": {
+            "answers": {
+              "cars": {
+                "kind": "boxes",
+                "image": "lot",
+                "width": 1920,
+                "height": 1080,
+                "count": 5
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

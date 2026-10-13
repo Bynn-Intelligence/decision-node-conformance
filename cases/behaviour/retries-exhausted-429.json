@@ -1,0 +1,48 @@
+{
+  "id": "retries-exhausted-429",
+  "description": "A 429 every time gives 3 attempts, then RateLimitError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 429,
+          "headers": {
+            "retry-after-ms": "20"
+          },
+          "body": {
+            "detail": {
+              "error_type": "rate_limit_error",
+              "message": "Rate limit exceeded."
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "outcome": {
+      "error": "RateLimitError",
+      "fields": {
+        "status": 429
+      }
+    }
+  }
+}

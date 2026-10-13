@@ -1,0 +1,36 @@
+{
+  "id": "latency-and-usage-absent",
+  "description": "Neither the latency header nor usage: latency_ms, input_tokens and output_tokens are all empty, never 0.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"q\": {\"type\": \"truth\", \"truth\": 0.5}}, \"usage\": {}}"
+  },
+  "expect": {
+    "decision": {
+      "latency_ms": null,
+      "usage": {
+        "input_tokens": null,
+        "output_tokens": null
+      }
+    }
+  }
+}

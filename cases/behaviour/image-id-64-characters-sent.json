@@ -1,0 +1,34 @@
+{
+  "id": "image-id-64-characters-sent",
+  "description": "An image id of exactly 64 accented characters (128 bytes in UTF-8) is within the limit, which counts characters, not bytes: the request is sent and answered.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+            "url": "https://files.example.com/front.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is this a receipt?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}

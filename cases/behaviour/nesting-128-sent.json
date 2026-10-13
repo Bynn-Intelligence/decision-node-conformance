@@ -1,0 +1,31 @@
+{
+  "id": "nesting-128-sent",
+  "description": "decide() whose state is 127 arrays inside each other: with the body's own object the request nests exactly 128 levels, the most the API takes. It is sent and answered.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "$nest": {
+          "depth": 127,
+          "value": "s"
+        }
+      },
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}

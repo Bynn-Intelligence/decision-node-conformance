@@ -1,0 +1,39 @@
+{
+  "id": "empty-server-message",
+  "description": "A detail object without a message: the error's own message is the empty string \"\", never null.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_empty_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"invalid_request_error\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "message": "",
+        "request_id": "req_err_empty_0001"
+      }
+    }
+  }
+}

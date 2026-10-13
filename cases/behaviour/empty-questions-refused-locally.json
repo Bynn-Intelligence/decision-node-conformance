@@ -1,0 +1,20 @@
+{
+  "id": "empty-questions-refused-locally",
+  "description": "decide() with an empty question map is the language's own argument error, raised before any request is sent. No DecisionNode error class is used for a local argument problem.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {}
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "argument_error": true
+    }
+  }
+}

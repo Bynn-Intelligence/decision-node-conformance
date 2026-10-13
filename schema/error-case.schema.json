@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "error-case.schema.json",
+  "title": "Error case",
+  "description": "A recorded error response and the error the SDK must raise for it, with max_retries 0 so the first response decides. The mock replays it under the scenario error/<id>. natural_request, when present, is a raw request for which the mock itself produces the same status, body and reason, as the hosted API does.",
+  "type": "object",
+  "required": [
+    "id",
+    "description",
+    "client",
+    "call",
+    "response",
+    "expect"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/case_id"
+    },
+    "description": {
+      "type": "string"
+    },
+    "client": {
+      "$ref": "common.schema.json#/$defs/client"
+    },
+    "call": {
+      "$ref": "common.schema.json#/$defs/call"
+    },
+    "response": {
+      "$ref": "common.schema.json#/$defs/http_response"
+    },
+    "natural_request": {
+      "type": "object",
+      "required": [
+        "method",
+        "path",
+        "headers"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "body": {},
+        "body_text": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "expect": {
+      "type": "object",
+      "required": [
+        "error"
+      ],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": [
+            "class",
+            "fields"
+          ],
+          "properties": {
+            "class": {
+              "$ref": "common.schema.json#/$defs/error_class"
+            },
+            "catch_as": {
+              "const": "DecisionNodeError",
+              "description": "The harness catches the error with a catch clause written against this exported name (an alias is enough where the language names its base error otherwise), proving the name is public and is a base of the class."
+            },
+            "fields": {
+              "$ref": "common.schema.json#/$defs/error_fields"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

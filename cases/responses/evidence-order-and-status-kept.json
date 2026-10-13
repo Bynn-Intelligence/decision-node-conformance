@@ -1,0 +1,99 @@
+{
+  "id": "evidence-order-and-status-kept",
+  "description": "evidence keeps the response's order (the request's), never sorted, and a status the SDK does not know is kept as received. Its entries carry no billed_calls (a server that does not send it): billed_calls is empty, never 0.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "ai_generated",
+        "age"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "ai_generated=ok:310,age=partial:640"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"adult\": {\"type\": \"truth\", \"truth\": 0.97}, \"synthetic\": {\"type\": \"truth\", \"truth\": 0.91}}, \"evidence\": {\"ai_generated\": {\"version\": \"ai_generated-v1\", \"status\": \"ok\", \"latency_ms\": 310, \"results\": [{\"image\": \"person\", \"generated\": 0.04, \"confidence\": 0.92, \"method\": \"inference\", \"top_generator\": null, \"c2pa_signer\": null}, {\"image\": \"poster\", \"generated\": 0.88, \"confidence\": 0.8, \"method\": \"inference\", \"top_generator\": {\"name\": \"Generator A\", \"probability\": 0.6}, \"c2pa_signer\": null}]}, \"age\": {\"version\": \"age-v1\", \"status\": \"partial\", \"latency_ms\": 640, \"results\": []}}, \"usage\": {\"input_tokens\": 290, \"output_tokens\": 0, \"booster_tokens\": 48, \"boosters\": 2}}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 290,
+        "output_tokens": 0,
+        "booster_tokens": 48,
+        "boosters": 2
+      },
+      "evidence": {
+        "ai_generated": {
+          "version": "ai_generated-v1",
+          "status": "ok",
+          "latency_ms": 310,
+          "billed_calls": null,
+          "results": [
+            {
+              "kind": "ai_generated",
+              "image": "person",
+              "generated": 0.04,
+              "confidence": 0.92,
+              "method": "inference",
+              "top_generator": null,
+              "c2pa_signer": null,
+              "c2pa": null
+            },
+            {
+              "kind": "ai_generated",
+              "image": "poster",
+              "generated": 0.88,
+              "confidence": 0.8,
+              "method": "inference",
+              "top_generator": {
+                "name": "Generator A",
+                "probability": 0.6
+              },
+              "c2pa_signer": null,
+              "c2pa": null
+            }
+          ]
+        },
+        "age": {
+          "version": "age-v1",
+          "status": "partial",
+          "latency_ms": 640,
+          "billed_calls": null,
+          "results": []
+        }
+      }
+    }
+  }
+}

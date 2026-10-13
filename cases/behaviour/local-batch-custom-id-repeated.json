@@ -1,0 +1,46 @@
+{
+  "id": "local-batch-custom-id-repeated",
+  "description": "batches.create whose second request repeats the first one's custom_id: unique across the batch, so within one call too, the API's 400 api_usage_error with its documented message (the id JSON-encoded). Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "a",
+          "state": "s",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        },
+        {
+          "custom_id": "a",
+          "state": "t",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error",
+        "message": "Line 2: custom_id \"a\" is already in the batch."
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "id": "local-batch-custom-id-missing",
+  "description": "batches.create with a request that has no custom_id: every line needs one, the API's 400 api_usage_error with its documented message (lines numbered from 1 within the call). Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "state": "s",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error",
+        "message": "Line 1 has no custom_id."
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "decide-many-invalid-request-image",
+  "description": "decide_many where the last of three requests holds an image whose bytes are a GIF, not JPEG, PNG or WebP. Every request is checked before any is sent: the whole call raises the API's own error class, BadRequestError (spec 1.0 made it an argument error), and no request is sent, not even the valid ones before it. From suite 1.5 the case also checks the error_type the server would send (api_usage_error, the API's type for an image it refuses).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "a",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item a?"
+              }
+            }
+          }
+        },
+        {
+          "state": "b",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item b?"
+              }
+            }
+          }
+        },
+        {
+          "state": "c",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item c?"
+              }
+            }
+          },
+          "images": [
+            {
+              "$image": {
+                "id": "img",
+                "data_base64": "R0lGODlhAQABAAAAADs="
+              }
+            }
+          ]
+        }
+      ],
+      "concurrency": 1
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error"
+      }
+    }
+  }
+}

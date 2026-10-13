@@ -1,0 +1,39 @@
+{
+  "id": "batch-results-jsonl",
+  "description": "batches.results(batch_id) sends GET /v1/batches/{id}/results without format, so the answer is JSON Lines read line by line.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/x-ndjson"
+          },
+          "body_text": "{\"custom_id\":\"ticket-1\",\"status\":\"cancelled\",\"body\":null,\"headers\":{}}\n"
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "batches.results",
+    "args": {
+      "batch_id": "batch_01J9ZB8Q3T"
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/batches/batch_01J9ZB8Q3T/results",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      },
+      "query": {}
+    }
+  }
+}

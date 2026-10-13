@@ -1,0 +1,64 @@
+{
+  "id": "session-idle-close-4408",
+  "description": "No frame for idle_timeout_seconds (300 ms on the mock): close 4408, SessionClosed with reopen true.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "session": {
+        "idle_timeout_ms": 300
+      }
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "read": {
+        "session": "s",
+        "timeout_ms": 15000
+      }
+    }
+  ],
+  "expect": {
+    "session_events": [
+      {
+        "closed": {
+          "code": 4408,
+          "reopen": true
+        }
+      }
+    ]
+  }
+}

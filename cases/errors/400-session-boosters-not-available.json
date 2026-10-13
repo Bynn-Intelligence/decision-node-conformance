@@ -1,0 +1,69 @@
+{
+  "id": "400-session-boosters-not-available",
+  "description": "Sessions take no boosters: a session open that names boosters is the API's 400 api_usage_error, a BadRequestError. Boosters go on decide calls and batch lines.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "mode": {
+          "$choice": {
+            "instructions": "Which mode?",
+            "options": [
+              "cruise",
+              "land"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "boosters: sessions take no boosters; send them on POST /v1/decide or a batch line"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"boosters are not available on sessions\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/sessions",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "questions": {
+        "mode": {
+          "type": "choice",
+          "instructions": "Which mode?",
+          "criteria": {
+            "cruise": null,
+            "land": null
+          }
+        }
+      },
+      "boosters": [
+        "age"
+      ]
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "boosters are not available on sessions",
+        "reason": "boosters: sessions take no boosters; send them on POST /v1/decide or a batch line",
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

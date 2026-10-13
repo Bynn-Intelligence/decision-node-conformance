@@ -1,0 +1,82 @@
+{
+  "id": "whole-values-and-single-option",
+  "description": "Whole values keep their decimal point on the wire (1.0, 0.0) and are read as numbers. A one-option choice and a one-level score are answered with probability 1.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "yes": {
+          "$truth": {
+            "instructions": "a"
+          }
+        },
+        "no": {
+          "$truth": {
+            "instructions": "b"
+          }
+        },
+        "one": {
+          "$choice": {
+            "instructions": "c",
+            "options": [
+              "only"
+            ]
+          }
+        },
+        "lvl": {
+          "$score": {
+            "instructions": "d",
+            "levels": [
+              "single"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "23",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\":\"decisionnode-moe-0.9.0-rc1\",\"answers\":{\"yes\":{\"type\":\"truth\",\"truth\":1.0},\"no\":{\"type\":\"truth\",\"truth\":0.0},\"one\":{\"type\":\"choice\",\"choice\":\"only\",\"confidence\":1.0,\"probabilities\":{\"only\":1.0}},\"lvl\":{\"type\":\"score\",\"score\":0.0,\"confidence\":1.0,\"legend\":{\"0\":\"single\"},\"probabilities\":{\"0\":1.0}}},\"usage\":{\"input_tokens\":25,\"output_tokens\":0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "yes": {
+          "kind": "truth",
+          "truth": 1.0
+        },
+        "no": {
+          "kind": "truth",
+          "truth": 0.0
+        },
+        "one": {
+          "kind": "choice",
+          "choice": "only",
+          "confidence": 1.0,
+          "probabilities": {
+            "only": 1.0
+          }
+        },
+        "lvl": {
+          "kind": "score",
+          "score": 0.0,
+          "confidence": 1.0,
+          "legend": {
+            "0": "single"
+          },
+          "probabilities": {
+            "0": 1.0
+          }
+        }
+      }
+    }
+  }
+}

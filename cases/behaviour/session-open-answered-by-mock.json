@@ -1,0 +1,66 @@
+{
+  "id": "session-open-answered-by-mock",
+  "description": "open_session against the mock returns a Session with the open response's fields and typed answers.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "state": {
+        "mission": "Survey"
+      },
+      "questions": {
+        "mode": {
+          "$choice": {
+            "instructions": "Which flight mode now?",
+            "options": {
+              "continue": "keep flying",
+              "hold": "hover",
+              "return": "fly home",
+              "land": "land now"
+            }
+          }
+        },
+        "abort": {
+          "$truth": {
+            "instructions": "Should the mission be aborted now?"
+          }
+        }
+      },
+      "window": 3,
+      "ttl_seconds": 120
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "session",
+      "session": {
+        "model": {
+          "$pattern": "^decisionnode-moe-"
+        },
+        "window": 3,
+        "ttl_seconds": 120,
+        "questions": [
+          "mode",
+          "abort"
+        ],
+        "limits": {
+          "max_frame_tokens": 1535,
+          "max_frame_images": 1,
+          "window_tokens": 1536,
+          "idle_timeout_seconds": 120
+        },
+        "answers": {
+          "mode": {
+            "kind": "choice"
+          },
+          "abort": {
+            "kind": "truth"
+          }
+        }
+      }
+    }
+  }
+}

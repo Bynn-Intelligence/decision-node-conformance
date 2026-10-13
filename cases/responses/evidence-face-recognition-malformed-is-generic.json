@@ -1,0 +1,144 @@
+{
+  "id": "evidence-face-recognition-malformed-is-generic",
+  "description": "A face_recognition reading with a match that lacks its collection or reference, a reference or label that is not a string, no matches (always sent) or no faces is a generic reading holding its raw fields; the decision does not fail.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        "face_recognition"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "face_recognition=ok:210"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"someone_at_gate\": {\"type\": \"truth\", \"truth\": 0.91}}, \"evidence\": {\"face_recognition\": {\"version\": \"face_recognition-v1\", \"status\": \"ok\", \"latency_ms\": 210, \"billed_calls\": 6, \"results\": [{\"image\": \"gate\", \"faces\": 1, \"matches\": [{\"box\": {\"x1\": 1, \"y1\": 2, \"x2\": 3, \"y2\": 4}, \"score\": 0.9, \"reference\": \"emp-1\"}]}, {\"image\": \"gate\", \"faces\": 1, \"matches\": [{\"box\": {\"x1\": 1, \"y1\": 2, \"x2\": 3, \"y2\": 4}, \"score\": 0.9, \"collection\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\"}]}, {\"image\": \"gate\", \"faces\": 1, \"matches\": [{\"box\": {\"x1\": 1, \"y1\": 2, \"x2\": 3, \"y2\": 4}, \"score\": 0.9, \"collection\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"reference\": 1042}]}, {\"image\": \"gate\", \"faces\": 1, \"matches\": [{\"box\": {\"x1\": 1, \"y1\": 2, \"x2\": 3, \"y2\": 4}, \"score\": 0.9, \"collection\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"reference\": \"emp-1\", \"label\": 7}]}, {\"image\": \"gate\", \"faces\": 1}, {\"image\": \"gate\", \"matches\": []}]}}, \"usage\": {\"input_tokens\": 310, \"output_tokens\": 0, \"booster_tokens\": 52, \"boosters\": 6}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "face_recognition": {
+          "version": "face_recognition-v1",
+          "status": "ok",
+          "latency_ms": 210,
+          "billed_calls": 6,
+          "results": [
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1,
+                "matches": [
+                  {
+                    "box": {
+                      "x1": 1,
+                      "y1": 2,
+                      "x2": 3,
+                      "y2": 4
+                    },
+                    "score": 0.9,
+                    "reference": "emp-1"
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1,
+                "matches": [
+                  {
+                    "box": {
+                      "x1": 1,
+                      "y1": 2,
+                      "x2": 3,
+                      "y2": 4
+                    },
+                    "score": 0.9,
+                    "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1,
+                "matches": [
+                  {
+                    "box": {
+                      "x1": 1,
+                      "y1": 2,
+                      "x2": 3,
+                      "y2": 4
+                    },
+                    "score": 0.9,
+                    "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+                    "reference": 1042
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1,
+                "matches": [
+                  {
+                    "box": {
+                      "x1": 1,
+                      "y1": 2,
+                      "x2": 3,
+                      "y2": 4
+                    },
+                    "score": 0.9,
+                    "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+                    "reference": "emp-1",
+                    "label": 7
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "faces": 1
+              }
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "gate",
+                "matches": []
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

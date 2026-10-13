@@ -1,0 +1,99 @@
+{
+  "id": "point-and-box-wire-form",
+  "description": "The point and box builders beside a truth question, on one image: image and units are left out when not given and sent when given; a plain wire-form box question is sent as given.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "pick": {
+          "$point": {
+            "instructions": "Point to the yellow package closest to the robot arm."
+          }
+        },
+        "damage": {
+          "$box": {
+            "instructions": "Draw a box around the damaged package.",
+            "image": "belt"
+          }
+        },
+        "pick_norm": {
+          "$point": {
+            "instructions": "Point to the yellow package closest to the robot arm.",
+            "units": "normalized"
+          }
+        },
+        "label": {
+          "type": "box",
+          "instructions": "Draw a box around the shipping label.",
+          "image": "belt",
+          "units": "pixels"
+        },
+        "any_damage": {
+          "$truth": {
+            "instructions": "Is any package on the belt damaged?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "",
+        "images": [
+          {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        ],
+        "questions": {
+          "pick": {
+            "type": "point",
+            "instructions": "Point to the yellow package closest to the robot arm."
+          },
+          "damage": {
+            "type": "box",
+            "instructions": "Draw a box around the damaged package.",
+            "image": "belt"
+          },
+          "pick_norm": {
+            "type": "point",
+            "instructions": "Point to the yellow package closest to the robot arm.",
+            "units": "normalized"
+          },
+          "label": {
+            "type": "box",
+            "instructions": "Draw a box around the shipping label.",
+            "image": "belt",
+            "units": "pixels"
+          },
+          "any_damage": {
+            "type": "truth",
+            "instructions": "Is any package on the belt damaged?"
+          }
+        }
+      }
+    }
+  }
+}

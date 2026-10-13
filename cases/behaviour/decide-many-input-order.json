@@ -1,0 +1,209 @@
+{
+  "id": "decide-many-input-order",
+  "description": "decide_many returns results in input order although they finish in reverse: the first request is the slowest.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "a",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item a?"
+              }
+            }
+          }
+        },
+        {
+          "state": "b",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item b?"
+              }
+            }
+          }
+        },
+        {
+          "state": "c",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item c?"
+              }
+            }
+          }
+        },
+        {
+          "state": "d",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item d?"
+              }
+            }
+          }
+        }
+      ],
+      "concurrency": 4
+    }
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "/state": "a"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {},
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "q": {
+                    "type": "truth",
+                    "truth": 0.1
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5,
+                  "output_tokens": 0
+                }
+              },
+              "delay_ms": 600
+            }
+          ]
+        },
+        {
+          "match": {
+            "/state": "b"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {},
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "q": {
+                    "type": "truth",
+                    "truth": 0.2
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5,
+                  "output_tokens": 0
+                }
+              },
+              "delay_ms": 400
+            }
+          ]
+        },
+        {
+          "match": {
+            "/state": "c"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {},
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "q": {
+                    "type": "truth",
+                    "truth": 0.3
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5,
+                  "output_tokens": 0
+                }
+              },
+              "delay_ms": 200
+            }
+          ]
+        },
+        {
+          "match": {
+            "/state": "d"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {},
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "q": {
+                    "type": "truth",
+                    "truth": 0.4
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5,
+                  "output_tokens": 0
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 4,
+    "results": [
+      {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "q": {
+              "kind": "truth",
+              "truth": 0.1
+            }
+          }
+        }
+      },
+      {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "q": {
+              "kind": "truth",
+              "truth": 0.2
+            }
+          }
+        }
+      },
+      {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "q": {
+              "kind": "truth",
+              "truth": 0.3
+            }
+          }
+        }
+      },
+      {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "q": {
+              "kind": "truth",
+              "truth": 0.4
+            }
+          }
+        }
+      }
+    ]
+  }
+}

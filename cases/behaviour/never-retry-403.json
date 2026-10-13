@@ -1,0 +1,51 @@
+{
+  "id": "never-retry-403",
+  "description": "403 is never retried, even with retry headers present: one attempt, then RefusalError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 403,
+          "headers": {
+            "x-decisionnode-refusal": "harm",
+            "x-decisionnode-safety": "harm=0.964;blocked, self_harm=0.002",
+            "retry-after-ms": "20"
+          },
+          "body": {
+            "detail": {
+              "error_type": "refusal_error",
+              "message": "This request was refused under the usage policy: it asks to choose, rank or target people to be harmed.",
+              "category": "harm"
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "RefusalError",
+      "fields": {
+        "status": 403
+      }
+    }
+  }
+}

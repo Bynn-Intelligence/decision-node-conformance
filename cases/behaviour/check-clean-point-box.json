@@ -1,0 +1,48 @@
+{
+  "id": "check-clean-point-box",
+  "description": "Point and box questions that pass every local rule (one image and no image field; two images, each question naming one) check clean, with no request.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "dock",
+            "url": "https://files.example.com/dock/0001.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "pick": {
+          "$point": {
+            "instructions": "Point to the yellow package closest to the robot arm.",
+            "image": "belt"
+          }
+        },
+        "pallet": {
+          "$box": {
+            "instructions": "Draw a box around the pallet.",
+            "image": "dock",
+            "units": "normalized"
+          }
+        }
+      }
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "result": "checked"
+    }
+  }
+}

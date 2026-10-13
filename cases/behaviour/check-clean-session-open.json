@@ -1,0 +1,31 @@
+{
+  "id": "check-clean-session-open",
+  "description": "A valid open_session request (window 64, ttl_seconds 3600, the bounds themselves) checks clean. check_request runs the checks the call would run and sends nothing.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "state": {
+        "mission": "Survey"
+      },
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      },
+      "window": 64,
+      "ttl_seconds": 3600
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "result": "checked"
+    }
+  }
+}

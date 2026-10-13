@@ -1,0 +1,63 @@
+{
+  "id": "session-connect-ended-session-4404",
+  "description": "connect() to a session already ended by DELETE: the handshake completes and closes at once with 4404 (reopen true). A harness accepts it raised from connect() or as the first event.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "end": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "read": {
+        "session": "s",
+        "timeout_ms": 15000
+      }
+    }
+  ],
+  "expect": {
+    "session_events": [
+      {
+        "ended": true
+      },
+      {
+        "closed": {
+          "code": 4404,
+          "reopen": true
+        }
+      }
+    ]
+  }
+}

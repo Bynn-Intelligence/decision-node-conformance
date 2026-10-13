@@ -1,0 +1,58 @@
+{
+  "id": "decide-boosters-empty-left-out",
+  "description": "An empty boosters list leaves the key out: the body is byte for byte the request without boosters.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": []
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "",
+        "images": [
+          {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        ],
+        "questions": {
+          "adult": {
+            "type": "truth",
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      }
+    }
+  }
+}

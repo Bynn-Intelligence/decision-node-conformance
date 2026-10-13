@@ -1,0 +1,36 @@
+{
+  "id": "local-point-without-instructions",
+  "description": "A point question without instructions: the API's plain-string 400, as for number. Checked locally: no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "pick": {
+          "$point": {}
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": null,
+        "message": "Point question must have instructions: pick"
+      }
+    }
+  }
+}

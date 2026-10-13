@@ -1,0 +1,110 @@
+{
+  "id": "upload-consumed-zero-retention",
+  "description": "A workspace with zero retention: the first decision consumes the upload, so the second decision's cached upload_id gets the mock's own 400 upload_consumed; the SDK uploads again and resends once.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "mock": {
+    "scenario": {
+      "workspace": {
+        "zero_retention": true
+      }
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": "s",
+          "images": [
+            {
+              "$image": {
+                "id": "a",
+                "path": "fixtures/images/pixel.png",
+                "pad_to": 600000
+              }
+            }
+          ],
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "result": "decision"
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": "s",
+          "images": [
+            {
+              "$image": {
+                "id": "a",
+                "path": "fixtures/images/pixel.png",
+                "pad_to": 600000
+              }
+            }
+          ],
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Does the receipt total equal the claim?"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "result": "decision"
+      }
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 400
+      },
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200
+      }
+    ]
+  }
+}

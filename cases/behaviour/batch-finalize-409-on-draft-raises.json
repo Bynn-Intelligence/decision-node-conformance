@@ -1,0 +1,99 @@
+{
+  "id": "batch-finalize-409-on-draft-raises",
+  "description": "A finalize answered 409 while the batch is still a draft (another state problem): after the get, the 409 is raised as the base DecisionNodeError with error_type invalid_batch_state.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path_suffix": "/finalize"
+          },
+          "steps": [
+            {
+              "status": 409,
+              "body": {
+                "detail": {
+                  "error_type": "invalid_batch_state",
+                  "message": "Batch is draft."
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": [
+            {
+              "custom_id": "t1",
+              "state": "I was charged twice.",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.finalize",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "error": "DecisionNodeError",
+        "fields": {
+          "status": 409,
+          "error_type": "invalid_batch_state"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/batches",
+        "status": 201
+      },
+      {
+        "method": "POST",
+        "path_pattern": "^/v1/batches/batch_[0-9A-Z]{10}/finalize$",
+        "status": 409
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/batches/batch_[0-9A-Z]{10}$",
+        "status": 200
+      }
+    ]
+  }
+}

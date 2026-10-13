@@ -1,0 +1,85 @@
+{
+  "id": "batch-finalize-retried-on-529",
+  "description": "batches.finalize answered 529: retried, then queued.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path_suffix": "/finalize"
+          },
+          "steps": [
+            {
+              "status": 529,
+              "body": {
+                "detail": {
+                  "error_type": "overloaded_error",
+                  "message": "Try later."
+                }
+              },
+              "headers": {
+                "retry-after-ms": "50"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": [
+            {
+              "custom_id": "t1",
+              "state": "I was charged twice.",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.finalize",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "state": "queued"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 3
+  }
+}

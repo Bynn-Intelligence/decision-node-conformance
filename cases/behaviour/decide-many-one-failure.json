@@ -1,0 +1,162 @@
+{
+  "id": "decide-many-one-failure",
+  "description": "One request fails with a 422 (not retried); the others succeed. The failure sits at its own position and does not stop the rest.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "a",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item a?"
+              }
+            }
+          }
+        },
+        {
+          "state": "b",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item b?"
+              }
+            }
+          }
+        },
+        {
+          "state": "c",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item c?"
+              }
+            }
+          }
+        }
+      ],
+      "concurrency": 3
+    }
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "/state": "a"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {},
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "q": {
+                    "type": "truth",
+                    "truth": 0.1
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5,
+                  "output_tokens": 0
+                }
+              }
+            }
+          ]
+        },
+        {
+          "match": {
+            "/state": "b"
+          },
+          "steps": [
+            {
+              "status": 422,
+              "headers": {},
+              "body": {
+                "detail": [
+                  {
+                    "type": "missing",
+                    "loc": [
+                      "body",
+                      "questions",
+                      "urgency",
+                      "score",
+                      "criteria"
+                    ],
+                    "msg": "Field required",
+                    "input": {
+                      "type": "score",
+                      "instructions": "How urgent?"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "match": {
+            "/state": "c"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {},
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "q": {
+                    "type": "truth",
+                    "truth": 0.3
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5,
+                  "output_tokens": 0
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "results": [
+      {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "q": {
+              "kind": "truth",
+              "truth": 0.1
+            }
+          }
+        }
+      },
+      {
+        "error": "ValidationError",
+        "fields": {
+          "status": 422
+        }
+      },
+      {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "q": {
+              "kind": "truth",
+              "truth": 0.3
+            }
+          }
+        }
+      }
+    ]
+  }
+}

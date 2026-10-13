@@ -1,0 +1,61 @@
+{
+  "id": "upload-put-412-first-attempt-fails",
+  "description": "A 412 on the first PUT (no earlier attempt) is not success: it raises the base DecisionNodeError with the storage status, error_type upload_failed and the storage's code in reason.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "PUT"
+          },
+          "steps": [
+            {
+              "status": 412,
+              "headers": {
+                "content-type": "application/xml"
+              },
+              "body_text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Error><Code>PreconditionFailed</Code><Message>At least one of the pre-conditions you specified did not hold</Message><RequestId>MOCK0001</RequestId></Error>"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "error": "DecisionNodeError",
+      "fields": {
+        "status": 412,
+        "error_type": "upload_failed",
+        "reason": "PreconditionFailed"
+      }
+    }
+  }
+}

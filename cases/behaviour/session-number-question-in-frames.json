@@ -1,0 +1,63 @@
+{
+  "id": "session-number-question-in-frames",
+  "description": "A session may hold number questions; frame replies carry NumberAnswer values.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "questions": {
+            "cars": {
+              "$number": {
+                "instructions": "How many cars?",
+                "min": 0,
+                "max": 50
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "frame": {
+          "row": "B4"
+        },
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "session_events": [
+      {
+        "reply": {
+          "seq": 1,
+          "answers": {
+            "cars": {
+              "kind": "number"
+            }
+          }
+        }
+      },
+      {
+        "ended": true
+      }
+    ]
+  }
+}

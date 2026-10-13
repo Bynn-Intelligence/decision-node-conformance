@@ -1,0 +1,173 @@
+{
+  "id": "decide-many-retry-inside",
+  "description": "Each request inside decide_many has its own retries: the middle one gets a 529 and succeeds on its second attempt.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "a",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item a?"
+              }
+            }
+          }
+        },
+        {
+          "state": "b",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item b?"
+              }
+            }
+          }
+        },
+        {
+          "state": "c",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "Item c?"
+              }
+            }
+          }
+        }
+      ],
+      "concurrency": 3
+    }
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "/state": "a"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {},
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "q": {
+                    "type": "truth",
+                    "truth": 0.1
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5,
+                  "output_tokens": 0
+                }
+              }
+            }
+          ]
+        },
+        {
+          "match": {
+            "/state": "b"
+          },
+          "steps": [
+            {
+              "status": 529,
+              "headers": {
+                "retry-after-ms": "20"
+              },
+              "body": {
+                "detail": {
+                  "error_type": "overloaded_error",
+                  "message": "The service is overloaded. Try again shortly."
+                }
+              }
+            },
+            {
+              "status": 200,
+              "headers": {},
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "q": {
+                    "type": "truth",
+                    "truth": 0.2
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5,
+                  "output_tokens": 0
+                }
+              }
+            }
+          ]
+        },
+        {
+          "match": {
+            "/state": "c"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {},
+              "body": {
+                "model": "decisionnode-moe-0.9.0-rc1",
+                "answers": {
+                  "q": {
+                    "type": "truth",
+                    "truth": 0.3
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5,
+                  "output_tokens": 0
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 4,
+    "results": [
+      {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "q": {
+              "kind": "truth",
+              "truth": 0.1
+            }
+          }
+        }
+      },
+      {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "q": {
+              "kind": "truth",
+              "truth": 0.2
+            }
+          }
+        }
+      },
+      {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "q": {
+              "kind": "truth",
+              "truth": 0.3
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "id": "evidence-face-detection-reading",
+  "description": "A face_detection reading is a FaceDetectionReading: image, faces (the count) and detections, the faces by confidence, each a box {x1, y1, x2, y2} (the corners, here in pixels of the image as sent) and a confidence, typed as received and kept in the response's order. A picture with no face is faces 0 with an empty detections, a reading, not a failure.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate-2/0917.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "yard",
+            "url": "https://files.example.com/yard/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      },
+      "boosters": [
+        "face_detection"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "face_detection=ok:210"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"someone_at_gate\": {\"type\": \"truth\", \"truth\": 0.91}}, \"evidence\": {\"face_detection\": {\"version\": \"face_detection-v1\", \"status\": \"ok\", \"latency_ms\": 210, \"billed_calls\": 2, \"results\": [{\"image\": \"gate\", \"faces\": 2, \"detections\": [{\"box\": {\"x1\": 412, \"y1\": 188, \"x2\": 486, \"y2\": 274}, \"confidence\": 0.98}, {\"box\": {\"x1\": 120, \"y1\": 210, \"x2\": 171, \"y2\": 268}, \"confidence\": 0.74}]}, {\"image\": \"yard\", \"faces\": 0, \"detections\": []}]}}, \"usage\": {\"input_tokens\": 310, \"output_tokens\": 0, \"booster_tokens\": 52, \"boosters\": 2}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "face_detection": {
+          "version": "face_detection-v1",
+          "status": "ok",
+          "latency_ms": 210,
+          "billed_calls": 2,
+          "results": [
+            {
+              "kind": "face_detection",
+              "image": "gate",
+              "faces": 2,
+              "detections": [
+                {
+                  "box": {
+                    "x1": 412,
+                    "y1": 188,
+                    "x2": 486,
+                    "y2": 274
+                  },
+                  "confidence": 0.98
+                },
+                {
+                  "box": {
+                    "x1": 120,
+                    "y1": 210,
+                    "x2": 171,
+                    "y2": 268
+                  },
+                  "confidence": 0.74
+                }
+              ]
+            },
+            {
+              "kind": "face_detection",
+              "image": "yard",
+              "faces": 0,
+              "detections": []
+            }
+          ]
+        }
+      }
+    }
+  }
+}

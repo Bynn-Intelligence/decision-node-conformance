@@ -1,0 +1,48 @@
+{
+  "id": "boosters-duplicate-left-to-server",
+  "description": "A booster named twice is sent as given; the API refuses it with the 400 api_usage_error. One attempt.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "age",
+        {
+          "$booster": {
+            "name": "age",
+            "require": true
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "reason": "boosters: 'age' is named twice"
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "id": "score-index-keys-and-long-floats",
+  "description": "Score probabilities and legend are keyed \"0\"..\"K-1\" on the wire and read as integer level indexes. A long float is passed through unrounded.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "urgency": {
+          "$score": {
+            "instructions": "How urgent?",
+            "levels": [
+              "routine",
+              "today",
+              "urgent"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_7c1e0a5b2d9f4e8a",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "23",
+      "x-decisionnode-safety": "harm=0.031, self_harm=0.004"
+    },
+    "body_text": "{\"model\":\"decisionnode-moe-0.9.0-rc1\",\"answers\":{\"urgency\":{\"type\":\"score\",\"score\":1.7,\"confidence\":0.45,\"legend\":{\"0\":\"routine\",\"1\":\"today\",\"2\":\"urgent\"},\"probabilities\":{\"0\":0.1,\"1\":0.11000000000000001,\"2\":0.79}}},\"usage\":{\"input_tokens\":33,\"output_tokens\":0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "urgency": {
+          "kind": "score",
+          "score": 1.7,
+          "confidence": 0.45,
+          "legend": {
+            "0": "routine",
+            "1": "today",
+            "2": "urgent"
+          },
+          "probabilities": {
+            "0": 0.1,
+            "1": 0.11000000000000001,
+            "2": 0.79
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "video-frame-bytes-left-to-server",
+  "description": "A frame declared image/png whose bytes are a JPEG: the SDK does not compare a frame's bytes with its media type (the server checks only the frames inside the window), sends it, and raises the server's 400.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "videos": [
+        {
+          "$video": {
+            "id": "cam",
+            "frames": [
+              {
+                "$frame": {
+                  "t": 0,
+                  "path": "fixtures/images/pixel.jpg",
+                  "media_type": "image/png"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is the door open?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Video 'cam': frame 0: the data is not image/png."
+      }
+    }
+  }
+}

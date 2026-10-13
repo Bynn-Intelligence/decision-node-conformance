@@ -1,0 +1,70 @@
+{
+  "id": "places-answered-by-mock",
+  "description": "A box and a point question asked with max reach the API and come back as a BoxesAnswer and a PointsAnswer, beside a box question without max, a BoxAnswer.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "lot",
+            "url": "https://files.example.com/lot/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "cars": {
+          "$box": {
+            "instructions": "Every car in the lot.",
+            "max": 8
+          }
+        },
+        "people": {
+          "$point": {
+            "instructions": "Every person in the picture.",
+            "units": "normalized",
+            "max": 6
+          }
+        },
+        "nearest": {
+          "$box": {
+            "instructions": "The car nearest the gate."
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "answers": {
+          "cars": {
+            "kind": "boxes",
+            "image": "lot",
+            "width": 1920,
+            "height": 1080,
+            "count": 5
+          },
+          "people": {
+            "kind": "points",
+            "image": "lot",
+            "width": 1920,
+            "height": 1080,
+            "count": 2
+          },
+          "nearest": {
+            "kind": "box",
+            "image": "lot",
+            "width": 1920,
+            "height": 1080
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "id": "400-booster-image-not-in-request",
+  "description": "A booster's images entry that names no image of the request is a BadRequestError with error_type booster_input_mismatch.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "age",
+            "images": [
+              "x9"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "Booster 'age': 'x9' is not an image of the request."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"booster_input_mismatch\", \"message\": \"Booster 'age': 'x9' is not an image of the request.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "",
+      "images": [
+        {
+          "id": "person",
+          "url": "https://files.example.com/person.jpg"
+        }
+      ],
+      "questions": {
+        "adult": {
+          "type": "truth",
+          "instructions": "Is the person in the first picture an adult?"
+        }
+      },
+      "boosters": [
+        {
+          "name": "age",
+          "images": [
+            "x9"
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "booster_input_mismatch",
+        "message": "Booster 'age': 'x9' is not an image of the request.",
+        "reason": "Booster 'age': 'x9' is not an image of the request.",
+        "boosters": {},
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

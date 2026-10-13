@@ -1,0 +1,95 @@
+{
+  "id": "evidence-unreadable-picture",
+  "description": "A picture the booster could not decode reads {\"image\": id, \"readable\": false}: a generic reading holding its raw fields, and not billed. The other picture's reading in the same ok entry is typed and billed (billed_calls 1).",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "ai_generated"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "ai_generated=ok:290"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"adult\": {\"type\": \"truth\", \"truth\": 0.71}, \"synthetic\": {\"type\": \"truth\", \"truth\": 0.4}}, \"evidence\": {\"ai_generated\": {\"version\": \"ai_generated-v1\", \"status\": \"ok\", \"latency_ms\": 290, \"billed_calls\": 1, \"results\": [{\"image\": \"person\", \"generated\": 0.03, \"confidence\": 0.94, \"method\": \"inference\", \"top_generator\": null, \"c2pa_signer\": null}, {\"image\": \"poster\", \"readable\": false}]}}, \"usage\": {\"input_tokens\": 260, \"output_tokens\": 0, \"booster_tokens\": 30, \"boosters\": 1}}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 260,
+        "output_tokens": 0,
+        "booster_tokens": 30,
+        "boosters": 1
+      },
+      "evidence": {
+        "ai_generated": {
+          "version": "ai_generated-v1",
+          "status": "ok",
+          "latency_ms": 290,
+          "billed_calls": 1,
+          "results": [
+            {
+              "kind": "ai_generated",
+              "image": "person",
+              "generated": 0.03,
+              "confidence": 0.94,
+              "method": "inference",
+              "top_generator": null,
+              "c2pa_signer": null,
+              "c2pa": null
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "poster",
+                "readable": false
+              }
+            }
+          ]
+        }
+      },
+      "answers": {
+        "adult": {
+          "kind": "truth",
+          "truth": 0.71
+        },
+        "synthetic": {
+          "kind": "truth",
+          "truth": 0.4
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "529-session-no-room",
+  "description": "No worker has room for another session: 529 overloaded_error with Retry-After; OverloadedError with retry_after.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 529,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "retry-after": "7",
+      "retry-after-ms": "6500"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"overloaded_error\", \"message\": \"No worker has room for another session now. Retry after the wait.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "OverloadedError",
+      "fields": {
+        "status": 529,
+        "error_type": "overloaded_error",
+        "retry_after": 6.5
+      }
+    }
+  }
+}

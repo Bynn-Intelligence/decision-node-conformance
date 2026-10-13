@@ -1,0 +1,197 @@
+{
+  "id": "batch-lifecycle-on-the-mock",
+  "description": "create (a line naming an unknown model is refused at upload and counted in failed), finalize (queued), get (running), get (completed, results_url set), results: one BatchResult per line in upload order, the refused line with its live 400.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": [
+            {
+              "custom_id": "t1",
+              "state": "I was charged twice.",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            },
+            {
+              "custom_id": "t2",
+              "state": "The app crashes.",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              },
+              "model": "decisionnode-0.1"
+            },
+            {
+              "custom_id": "t3",
+              "state": "Login fails.",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.finalize",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "state": "queued",
+          "counters": {
+            "requests": 3,
+            "queued": 2,
+            "failed": 1
+          },
+          "results_url": null
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.get",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "state": "running"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.get",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch",
+        "batch": {
+          "state": "completed",
+          "counters": {
+            "requests": 3,
+            "completed": 2,
+            "failed": 1,
+            "queued": 0
+          },
+          "price_factor": 0.5,
+          "error": null
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "batches.results",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "batch_results",
+        "batch_results": [
+          {
+            "custom_id": "t1",
+            "status": 200,
+            "decision": {
+              "model": {
+                "$pattern": "^decisionnode-moe-"
+              },
+              "answers": {
+                "route": {
+                  "kind": "choice"
+                },
+                "refund": {
+                  "kind": "truth"
+                }
+              }
+            }
+          },
+          {
+            "custom_id": "t2",
+            "status": 400,
+            "error": {
+              "error": "BadRequestError",
+              "fields": {
+                "error_type": "api_usage_error",
+                "message": "Unknown model: decisionnode-0.1"
+              }
+            }
+          },
+          {
+            "custom_id": "t3",
+            "status": 200,
+            "decision": {
+              "model": {
+                "$pattern": "^decisionnode-moe-"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 5
+  }
+}

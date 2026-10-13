@@ -1,0 +1,26 @@
+{
+  "id": "batch-create-empty-draft",
+  "description": "batches.create([]) creates an empty draft: an empty body or [].",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": []
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/batches",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      },
+      "jsonl": []
+    }
+  }
+}

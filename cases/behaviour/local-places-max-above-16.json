@@ -1,0 +1,55 @@
+{
+  "id": "local-places-max-above-16",
+  "description": "max 17: over 16. Checked locally: ValidationError with less_than_equal and ctx le 16; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "lot",
+            "url": "https://files.example.com/lot/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "cars": {
+          "$box": {
+            "instructions": "Every car in the lot.",
+            "max": 17
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "less_than_equal",
+            "loc": [
+              "body",
+              "questions",
+              "cars",
+              "box",
+              "max"
+            ],
+            "msg": "Input should be less than or equal to 16",
+            "input": 17,
+            "ctx": {
+              "le": 16
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "id": "session-open-body",
+  "description": "open_session(state, questions, instructions, model, window, ttl_seconds) sends one POST /v1/sessions with those fields; question builders as on decide; the model is always sent, like decide's.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "instructions": "You are the mission supervisor of a survey drone.",
+      "state": {
+        "mission": "Survey the north field"
+      },
+      "questions": {
+        "mode": {
+          "$choice": {
+            "instructions": "Which flight mode now?",
+            "options": {
+              "continue": "keep flying",
+              "hold": "hover",
+              "return": "fly home",
+              "land": "land now"
+            }
+          }
+        },
+        "abort": {
+          "$truth": {
+            "instructions": "Should the mission be aborted now?"
+          }
+        }
+      },
+      "window": 4,
+      "ttl_seconds": 60
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/sessions",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "instructions": "You are the mission supervisor of a survey drone.",
+        "state": {
+          "mission": "Survey the north field"
+        },
+        "questions": {
+          "mode": {
+            "type": "choice",
+            "instructions": "Which flight mode now?",
+            "criteria": {
+              "continue": "keep flying",
+              "hold": "hover",
+              "return": "fly home",
+              "land": "land now"
+            }
+          },
+          "abort": {
+            "type": "truth",
+            "instructions": "Should the mission be aborted now?"
+          }
+        },
+        "window": 4,
+        "ttl_seconds": 60
+      }
+    }
+  }
+}

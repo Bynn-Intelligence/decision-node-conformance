@@ -1,0 +1,38 @@
+{
+  "id": "local-image-upload-id-media-type",
+  "description": "An upload reference with media_type image/gif: with upload_id the media_type is image/jpeg, image/png or image/webp. The API's 400 api_usage_error. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "upload_id": "upl_00000000000000000000000000000000",
+            "media_type": "image/gif"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error"
+      }
+    }
+  }
+}

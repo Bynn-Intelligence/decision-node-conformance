@@ -1,0 +1,44 @@
+{
+  "id": "local-collections-reference-pattern",
+  "description": "A reference with a space: a reference is 1 to 64 of A-Z, a-z, 0-9 and _ . : -. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.enroll",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "image": {
+        "$image": {
+          "id": "badge",
+          "url": "https://files.example.com/badges/emp-1042.jpg"
+        }
+      },
+      "reference": "emp 1042"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "string_pattern_mismatch",
+            "loc": [
+              "body",
+              "reference"
+            ],
+            "msg": "String should match pattern '^[A-Za-z0-9_.:-]{1,64}$'",
+            "input": "emp 1042",
+            "ctx": {
+              "pattern": "^[A-Za-z0-9_.:-]{1,64}$"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

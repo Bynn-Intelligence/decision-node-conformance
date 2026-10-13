@@ -1,0 +1,36 @@
+{
+  "id": "boosters-absent-without-boosters",
+  "description": "A response to a request without boosters has no evidence and no booster usage: evidence, usage.booster_tokens and usage.boosters are empty, never 0 or an empty map.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"q\": {\"type\": \"truth\", \"truth\": 0.5}}, \"usage\": {\"input_tokens\": 12, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 12,
+        "output_tokens": 0,
+        "booster_tokens": null,
+        "boosters": null
+      },
+      "evidence": null
+    }
+  }
+}

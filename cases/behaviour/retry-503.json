@@ -1,0 +1,53 @@
+{
+  "id": "retry-503",
+  "description": "503 is retried. retry-after-ms is honoured on any retried status.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 503,
+          "headers": {
+            "retry-after-ms": "20"
+          },
+          "body": {
+            "detail": {
+              "error_type": "api_error",
+              "message": "Temporary failure."
+            }
+          }
+        },
+        {
+          "action": "normal"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "decision"
+    },
+    "gaps_ms": [
+      {
+        "min": 15,
+        "max": 900
+      }
+    ]
+  }
+}

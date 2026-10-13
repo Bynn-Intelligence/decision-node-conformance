@@ -1,0 +1,49 @@
+{
+  "id": "403-refusal-self-harm",
+  "description": "The self_harm category of a refusal.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-refusal": "self_harm",
+      "x-decisionnode-safety": "harm=0.011, self_harm=0.951;blocked"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"refusal_error\", \"message\": \"This request was refused under the usage policy: it asks for help to harm oneself. If someone is in danger, contact local emergency services or a crisis line.\", \"category\": \"self_harm\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RefusalError",
+      "fields": {
+        "status": 403,
+        "error_type": "refusal_error",
+        "category": "self_harm",
+        "safety": {
+          "checked": true,
+          "harm": 0.011,
+          "self_harm": 0.951,
+          "flagged": [
+            "self_harm"
+          ]
+        }
+      }
+    }
+  }
+}

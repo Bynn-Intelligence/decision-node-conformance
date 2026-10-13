@@ -1,0 +1,48 @@
+{
+  "id": "local-number-too-many-decimals",
+  "description": "A number grid whose min has 7 decimals (at most 6, counted on the shortest decimal form of the number): the API's 422 decimal_max_places entry. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "$number": {
+            "instructions": "How much?",
+            "min": 0.1234567,
+            "max": 1
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "decimal_max_places",
+            "loc": [
+              "body",
+              "questions",
+              "n",
+              "number",
+              "min"
+            ],
+            "msg": "Decimal input should have no more than 6 decimal places",
+            "input": 0.1234567,
+            "ctx": {
+              "decimal_places": 6
+            }
+          }
+        ]
+      }
+    }
+  }
+}

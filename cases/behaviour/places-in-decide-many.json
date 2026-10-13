@@ -1,0 +1,82 @@
+{
+  "id": "places-in-decide-many",
+  "description": "decide_many with max on one request and not on the other: a BoxesAnswer and a BoxAnswer, each at its own position.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "",
+          "images": [
+            {
+              "$image": {
+                "id": "lot",
+                "url": "https://files.example.com/lot/0917.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "cars": {
+              "$box": {
+                "instructions": "Every car in the lot.",
+                "max": 8
+              }
+            }
+          }
+        },
+        {
+          "state": "",
+          "images": [
+            {
+              "$image": {
+                "id": "lot",
+                "url": "https://files.example.com/lot/0917.jpg"
+              }
+            }
+          ],
+          "questions": {
+            "car": {
+              "$box": {
+                "instructions": "The car nearest the gate."
+              }
+            }
+          }
+        }
+      ],
+      "concurrency": 1
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "results": [
+      {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "cars": {
+              "kind": "boxes",
+              "image": "lot",
+              "width": 1920,
+              "height": 1080,
+              "count": 5
+            }
+          }
+        }
+      },
+      {
+        "result": "decision",
+        "decision": {
+          "answers": {
+            "car": {
+              "kind": "box",
+              "image": "lot"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

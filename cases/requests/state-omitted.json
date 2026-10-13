@@ -1,0 +1,42 @@
+{
+  "id": "state-omitted",
+  "description": "decide() without a state sends the empty string as the state.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Is hotdog a sandwich?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "",
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "Is hotdog a sandwich?"
+          }
+        }
+      }
+    }
+  }
+}

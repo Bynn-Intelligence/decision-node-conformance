@@ -1,0 +1,291 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "behaviour-case.schema.json",
+  "title": "Behaviour case",
+  "description": "A call run against the mock under the scenario behaviour/<id> (when mock.scenario is present) in a fresh session, and what must happen: how many requests reached the mock, the waits between them, the total time, the peak concurrency and the outcome. Times are in milliseconds and measured by the mock on arrival (gaps) or by the test around the call (elapsed). Spec 1.1: steps in place of call run several calls and session actions on one client in order (see the README), and the expectations request_sequence, request_counts, session_events and pongs read the mock's record of the session, the storage PUTs and the WebSocket messages included.",
+  "type": "object",
+  "required": [
+    "id",
+    "description",
+    "client",
+    "expect"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/case_id"
+    },
+    "description": {
+      "type": "string"
+    },
+    "client": {
+      "$ref": "common.schema.json#/$defs/client"
+    },
+    "env": {
+      "$ref": "common.schema.json#/$defs/env"
+    },
+    "call": {
+      "$ref": "common.schema.json#/$defs/call"
+    },
+    "mock": {
+      "type": "object",
+      "required": [
+        "scenario"
+      ],
+      "properties": {
+        "scenario": {
+          "$ref": "common.schema.json#/$defs/scenario"
+        }
+      },
+      "additionalProperties": false
+    },
+    "expect": {
+      "type": "object",
+      "description": "attempts (with outcome or results), or one_of: a list of acceptable attempts and outcome pairs, where the rule allows the SDK more than one way to comply.",
+      "anyOf": [
+        {
+          "required": [
+            "attempts"
+          ]
+        },
+        {
+          "required": [
+            "one_of"
+          ]
+        },
+        {
+          "required": [
+            "request_sequence"
+          ]
+        },
+        {
+          "required": [
+            "session_events"
+          ]
+        },
+        {
+          "required": [
+            "request_counts"
+          ]
+        }
+      ],
+      "properties": {
+        "one_of": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "attempts",
+              "outcome"
+            ],
+            "properties": {
+              "attempts": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "outcome": {
+                "$ref": "common.schema.json#/$defs/outcome"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Requests the mock received in the session: API calls, storage PUTs, WebSocket handshakes and messages (pongs excluded)."
+        },
+        "outcome": {
+          "$ref": "common.schema.json#/$defs/outcome"
+        },
+        "results": {
+          "type": "array",
+          "description": "decide_many only: one DecisionResult per request, in input order.",
+          "items": {
+            "$ref": "common.schema.json#/$defs/outcome"
+          }
+        },
+        "gaps_ms": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/range"
+          },
+          "description": "Time between the arrival of request n and n+1."
+        },
+        "elapsed_ms": {
+          "$ref": "common.schema.json#/$defs/range"
+        },
+        "max_in_flight": {
+          "$ref": "common.schema.json#/$defs/range"
+        },
+        "scheduled_waits_ms": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/range"
+          },
+          "description": "The waits the client scheduled between attempts, in order. The test replaces the client's wait with a recorder that notes the duration and returns at once, so a long wait is checked without being waited."
+        },
+        "unrequested_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Paths that no request in any session may have reached, read from GET /_mock/requests?session=*&path=<path>."
+        },
+        "request_sequence": {
+          "type": "array",
+          "description": "Every recorded request in order (pongs excluded): method, path or path_pattern, and optionally status and the checks of a request expectation.",
+          "items": {
+            "$ref": "common.schema.json#/$defs/request_expectation"
+          }
+        },
+        "request_counts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "method"
+            ],
+            "properties": {
+              "method": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "path_pattern": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer"
+              },
+              "min": {
+                "type": "integer"
+              },
+              "max": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "session_events": {
+          "type": "array",
+          "description": "Every event the steps collected, in order: {reply: {...}} (a Reply), {frame_error: {...}} (a FrameError), {closed: {code, reopen}} (SessionClosed), {ended: true} (end() returned). Reply and frame error fields are checked by the keys given.",
+          "items": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 1
+          }
+        },
+        "pongs": {
+          "$ref": "common.schema.json#/$defs/range"
+        },
+        "same_header": {
+          "type": "object",
+          "description": "Suite 1.13: every logged request (those whose path ends with path_suffix and whose method is method, when given; at least min, default 2) carries the header name with one and the same value, matching pattern when given: an Idempotency-Key kept across a call's retries.",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "path_suffix": {
+              "type": "string"
+            },
+            "min": {
+              "type": "integer"
+            },
+            "pattern": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "description": "One of: {call, save_as?, outcome?}; {connect: name}; {send: {session, frame?, image?, questions?, reset?, seq?}, outcome?} (with outcome, from suite 1.5: the frame must be refused locally with that error and nothing sent; with check: true, from suite 1.6: Session.check_frame instead of send); {read: {session, count?, timeout_ms?}} (no count: until the session closes); {end: name}; {close: name}; {mock_clock: {advance_seconds | offset_seconds}}; {sleep_ms: n}.",
+        "properties": {
+          "call": {
+            "$ref": "common.schema.json#/$defs/call"
+          },
+          "save_as": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "common.schema.json#/$defs/outcome"
+          },
+          "connect": {
+            "type": "string"
+          },
+          "send": {
+            "type": "object",
+            "required": [
+              "session"
+            ]
+          },
+          "check": {
+            "type": "boolean",
+            "description": "Suite 1.6, with send: run Session.check_frame with the same arguments instead of send; outcome checked or the error send would raise."
+          },
+          "read": {
+            "type": "object",
+            "required": [
+              "session"
+            ],
+            "properties": {
+              "session": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "timeout_ms": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": false
+          },
+          "end": {
+            "type": "string"
+          },
+          "close": {
+            "type": "string"
+          },
+          "mock_clock": {
+            "type": "object"
+          },
+          "sleep_ms": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "anyOf": [
+    {
+      "required": [
+        "call"
+      ]
+    },
+    {
+      "required": [
+        "steps"
+      ]
+    }
+  ]
+}

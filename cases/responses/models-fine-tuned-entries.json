@@ -1,0 +1,85 @@
+{
+  "id": "models-fine-tuned-entries",
+  "description": "The key's workspace's fine-tuned models beside the catalogue's: the plain name of a model with a deployed version, its pinned version, and a ready version that is trained but not deployed. Each carries fine_tuned, base, adapter_version and status (a catalogue entry none of them: empty) and, like every entry, its other fields in limits.",
+  "call": {
+    "method": "models",
+    "args": {}
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"models\": [{\"name\": \"decisionnode-moe-0.9.0-rc1\", \"description\": \"DecisionNode MoE, the main model.\", \"release_date\": \"2026-10-01\", \"version\": \"decisionnode-moe-0.9.0-rc1\", \"alias\": \"decisionnode-moe\", \"max_input_tokens\": 32768}, {\"name\": \"decisionnode-moe@acme/fraud\", \"description\": \"Claims review, trained on 2,400 decisions\", \"release_date\": \"2026-10-09\", \"version\": \"decisionnode-moe@acme/fraud:3\", \"max_input_tokens\": 32768, \"fine_tuned\": true, \"base\": \"decisionnode-moe\", \"adapter_version\": 3, \"status\": \"deployed\"}, {\"name\": \"decisionnode-moe@acme/fraud:3\", \"description\": \"Claims review, trained on 2,400 decisions\", \"release_date\": \"2026-10-09\", \"version\": \"decisionnode-moe@acme/fraud:3\", \"max_input_tokens\": 32768, \"fine_tuned\": true, \"base\": \"decisionnode-moe\", \"adapter_version\": 3, \"status\": \"deployed\"}, {\"name\": \"decisionnode-flash@acme/triage:1\", \"description\": \"Fine-tuned from DecisionNode Flash\", \"release_date\": \"2026-10-09\", \"version\": \"decisionnode-flash@acme/triage:1\", \"max_input_tokens\": 8192, \"fine_tuned\": true, \"base\": \"decisionnode-flash\", \"adapter_version\": 1, \"status\": \"ready\"}]}"
+  },
+  "expect": {
+    "models": [
+      {
+        "name": "decisionnode-moe-0.9.0-rc1",
+        "description": "DecisionNode MoE, the main model.",
+        "release_date": "2026-10-01",
+        "limits": {
+          "version": "decisionnode-moe-0.9.0-rc1",
+          "alias": "decisionnode-moe",
+          "max_input_tokens": 32768
+        },
+        "fine_tuned": null,
+        "base": null,
+        "adapter_version": null,
+        "status": null
+      },
+      {
+        "name": "decisionnode-moe@acme/fraud",
+        "description": "Claims review, trained on 2,400 decisions",
+        "release_date": "2026-10-09",
+        "limits": {
+          "version": "decisionnode-moe@acme/fraud:3",
+          "max_input_tokens": 32768,
+          "fine_tuned": true,
+          "base": "decisionnode-moe",
+          "adapter_version": 3,
+          "status": "deployed"
+        },
+        "fine_tuned": true,
+        "base": "decisionnode-moe",
+        "adapter_version": 3,
+        "status": "deployed"
+      },
+      {
+        "name": "decisionnode-moe@acme/fraud:3",
+        "description": "Claims review, trained on 2,400 decisions",
+        "release_date": "2026-10-09",
+        "limits": {
+          "version": "decisionnode-moe@acme/fraud:3",
+          "max_input_tokens": 32768,
+          "fine_tuned": true,
+          "base": "decisionnode-moe",
+          "adapter_version": 3,
+          "status": "deployed"
+        },
+        "fine_tuned": true,
+        "base": "decisionnode-moe",
+        "adapter_version": 3,
+        "status": "deployed"
+      },
+      {
+        "name": "decisionnode-flash@acme/triage:1",
+        "description": "Fine-tuned from DecisionNode Flash",
+        "release_date": "2026-10-09",
+        "limits": {
+          "version": "decisionnode-flash@acme/triage:1",
+          "max_input_tokens": 8192,
+          "fine_tuned": true,
+          "base": "decisionnode-flash",
+          "adapter_version": 1,
+          "status": "ready"
+        },
+        "fine_tuned": true,
+        "base": "decisionnode-flash",
+        "adapter_version": 1,
+        "status": "ready"
+      }
+    ]
+  }
+}

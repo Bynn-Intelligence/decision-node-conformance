@@ -1,0 +1,60 @@
+{
+  "id": "local-box-image-missing-two-images",
+  "description": "A box question without image in a request with two images. Checked locally (SDK specification 1.2): ValidationError with the entries the API answers, and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "dock",
+            "url": "https://files.example.com/dock/0001.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "damage": {
+          "$box": {
+            "instructions": "Draw a box around the damaged package."
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "missing",
+            "loc": [
+              "body",
+              "questions",
+              "damage",
+              "box",
+              "image"
+            ],
+            "msg": "Field required",
+            "input": {
+              "type": "box",
+              "instructions": "Draw a box around the damaged package."
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "local-collections-type-not-face",
+  "description": "A collection type other than face, the only type now. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.create",
+    "args": {
+      "name": "Plates",
+      "type": "plate"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "literal_error",
+            "loc": [
+              "body",
+              "type"
+            ],
+            "msg": "Input should be 'face'",
+            "input": "plate",
+            "ctx": {
+              "expected": "'face'"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

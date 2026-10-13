@@ -1,0 +1,42 @@
+{
+  "id": "booster-unknown-not-retried",
+  "description": "An unknown booster name is sent as given and refused by the API: one attempt, a BadRequestError with error_type booster_unknown.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        }
+      },
+      "boosters": [
+        "example_booster"
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "booster_unknown",
+        "message": "Unknown booster: example_booster"
+      }
+    }
+  }
+}

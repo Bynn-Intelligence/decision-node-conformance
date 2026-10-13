@@ -1,0 +1,35 @@
+{
+  "id": "helper-check-answer-missing",
+  "description": "check() promises a typed answer, so when its own answer comes back missing (no answer under the id check) the call raises ServerError (status 200, reason from the x-decisionnode-error header) instead of returning an UnknownAnswer. decide() with the same answer returns an UnknownAnswer; see responses/malformed-known-answers.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "check",
+    "args": {
+      "state": "s",
+      "instructions": "Is it urgent?"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_helper_0001",
+      "x-decisionnode-model": "decisionnode-moe",
+      "x-decisionnode-error": "question 'check': the answer could not be completed"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe\", \"answers\": {}, \"usage\": {\"input_tokens\": 12, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "error": {
+      "class": "ServerError",
+      "fields": {
+        "status": 200,
+        "request_id": "req_helper_0001",
+        "reason": "question 'check': the answer could not be completed"
+      }
+    }
+  }
+}

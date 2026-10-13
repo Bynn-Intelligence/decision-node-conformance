@@ -1,0 +1,52 @@
+{
+  "id": "number-model-check-skipped-without-models",
+  "description": "Without models() the client holds no number limits for a model, so it skips that check: the request is sent and the server's 400 api_usage_error comes back as BadRequestError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 400,
+          "headers": {
+            "content-type": "application/json",
+            "x-decisionnode-error": "question 'n': model decisionnode-flash does not answer number questions"
+          },
+          "body": {
+            "detail": {
+              "error_type": "api_usage_error",
+              "message": "Model decisionnode-flash does not answer number questions."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "$number": {
+            "instructions": "How many?",
+            "min": 0,
+            "max": 9
+          }
+        }
+      },
+      "model": "decisionnode-flash"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error"
+      }
+    }
+  }
+}

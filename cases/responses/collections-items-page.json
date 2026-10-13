@@ -1,0 +1,40 @@
+{
+  "id": "collections-items-page",
+  "description": "A page of items: items (id, reference, label, null when none, created_at; never a template), offset, limit, total and next_offset, null on the last page.",
+  "call": {
+    "method": "collections.list_items",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"items\": [{\"id\": \"itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d\", \"reference\": \"emp-1042\", \"label\": \"Reception\", \"created_at\": \"2026-10-12T09:00:00Z\"}, {\"id\": \"itm_0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e\", \"reference\": \"emp-0977\", \"label\": null, \"created_at\": \"2026-10-11T16:20:00Z\"}], \"offset\": 0, \"limit\": 20, \"total\": 2, \"next_offset\": null}"
+  },
+  "expect": {
+    "item_page": {
+      "items": [
+        {
+          "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+          "reference": "emp-1042",
+          "label": "Reception",
+          "created_at": "2026-10-12T09:00:00Z"
+        },
+        {
+          "id": "itm_0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e",
+          "reference": "emp-0977",
+          "label": null,
+          "created_at": "2026-10-11T16:20:00Z"
+        }
+      ],
+      "offset": 0,
+      "limit": 20,
+      "total": 2,
+      "next_offset": null
+    }
+  }
+}

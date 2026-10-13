@@ -1,0 +1,22 @@
+{
+  "id": "local-batch-list-limit-over-100",
+  "description": "batches.list with limit 101 (1 to 100): the API's 400 api_usage_error. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "batches.list",
+    "args": {
+      "limit": 101
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error"
+      }
+    }
+  }
+}

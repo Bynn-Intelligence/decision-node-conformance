@@ -1,0 +1,83 @@
+{
+  "id": "upload-presign-retried-on-529",
+  "description": "POST /v1/uploads answered 529 with retry-after-ms: retried after that wait like any call, then the PUT and the decision.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$path": "/v1/uploads"
+          },
+          "steps": [
+            {
+              "status": 529,
+              "body": {
+                "detail": {
+                  "error_type": "overloaded_error",
+                  "message": "Overloaded."
+                }
+              },
+              "headers": {
+                "retry-after-ms": "100"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "a",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 4,
+    "outcome": {
+      "result": "decision"
+    },
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 529
+      },
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/decide",
+        "status": 200
+      }
+    ]
+  }
+}

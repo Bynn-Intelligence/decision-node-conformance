@@ -1,0 +1,70 @@
+{
+  "id": "422-session-window-out-of-range",
+  "description": "open_session answered 422 for a window of 65 (1 to 64): ValidationError with the entries. The mock replays the recorded response (natural_request is the request that gets it); the call leaves window out, since from suite 1.5 window 65 is refused locally (behaviour/local-session-window-above-64).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "open_session",
+    "args": {
+      "questions": {
+        "abort": {
+          "$truth": {
+            "instructions": "Abort?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "window: Input should be less than or equal to 64",
+      "x-decisionnode-billable-tokens": "0"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"less_than_equal\", \"loc\": [\"body\", \"window\"], \"msg\": \"Input should be less than or equal to 64\", \"input\": 65, \"ctx\": {\"le\": 64}}]}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/sessions",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "questions": {
+        "abort": {
+          "type": "truth",
+          "instructions": "Abort?"
+        }
+      },
+      "window": 65
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "entries": [
+          {
+            "type": "less_than_equal",
+            "loc": [
+              "body",
+              "window"
+            ],
+            "msg": "Input should be less than or equal to 64",
+            "input": 65,
+            "ctx": {
+              "le": 64
+            }
+          }
+        ]
+      }
+    }
+  }
+}

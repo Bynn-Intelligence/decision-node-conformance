@@ -1,0 +1,40 @@
+{
+  "id": "413-presign-request-too-large-error",
+  "description": "POST /v1/uploads answered 413 request_too_large_error: RequestTooLargeError (from 1.11 every 413 is, whatever the path), raised from upload() before any PUT.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "upload",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "path": "fixtures/images/pixel.png"
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 413,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "The body is over 65536 bytes."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"request_too_large_error\", \"message\": \"The body is over 65536 bytes.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RequestTooLargeError",
+      "fields": {
+        "status": 413,
+        "error_type": "request_too_large_error",
+        "message": "The body is over 65536 bytes."
+      }
+    }
+  }
+}

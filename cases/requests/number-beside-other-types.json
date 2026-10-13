@@ -1,0 +1,90 @@
+{
+  "id": "number-beside-other-types",
+  "description": "One request may mix number with truth, choice and score; each keeps its own wire form.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "n": {
+          "$number": {
+            "instructions": "How many?",
+            "min": 1,
+            "max": 5
+          }
+        },
+        "t": {
+          "$truth": {
+            "instructions": "Late?"
+          }
+        },
+        "c": {
+          "$choice": {
+            "instructions": "Where?",
+            "options": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        "s": {
+          "$score": {
+            "instructions": "How bad?",
+            "levels": [
+              "low",
+              "high"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "n": {
+            "type": "number",
+            "instructions": "How many?",
+            "min": 1,
+            "max": 5
+          },
+          "t": {
+            "type": "truth",
+            "instructions": "Late?"
+          },
+          "c": {
+            "type": "choice",
+            "instructions": "Where?",
+            "criteria": {
+              "a": null,
+              "b": null
+            }
+          },
+          "s": {
+            "type": "score",
+            "instructions": "How bad?",
+            "criteria": [
+              "low",
+              "high"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

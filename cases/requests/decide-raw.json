@@ -1,0 +1,59 @@
+{
+  "id": "decide-raw",
+  "description": "decide_raw(body) sends the body exactly as given: no model filled in, unknown fields kept.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "?"
+          }
+        },
+        "future_field": {
+          "kept": [
+            1,
+            2.5,
+            null
+          ]
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "?"
+          }
+        },
+        "future_field": {
+          "kept": [
+            1,
+            2.5,
+            null
+          ]
+        }
+      }
+    }
+  }
+}

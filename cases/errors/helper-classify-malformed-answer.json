@@ -1,0 +1,39 @@
+{
+  "id": "helper-classify-malformed-answer",
+  "description": "classify() promises a typed answer, so when its own answer comes back malformed (a choice without probabilities) the call raises ServerError (status 200, reason from the x-decisionnode-error header) instead of returning an UnknownAnswer. decide() with the same answer returns an UnknownAnswer; see responses/malformed-known-answers.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "classify",
+    "args": {
+      "state": "s",
+      "instructions": "Where?",
+      "options": [
+        "billing",
+        "bug"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_helper_0001",
+      "x-decisionnode-model": "decisionnode-moe",
+      "x-decisionnode-error": "question 'classify': the answer could not be completed"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe\", \"answers\": {\"classify\": {\"type\": \"choice\", \"choice\": \"billing\", \"confidence\": 0.87}}, \"usage\": {\"input_tokens\": 12, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "error": {
+      "class": "ServerError",
+      "fields": {
+        "status": 200,
+        "request_id": "req_helper_0001",
+        "reason": "question 'classify': the answer could not be completed"
+      }
+    }
+  }
+}

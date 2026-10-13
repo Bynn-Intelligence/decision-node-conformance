@@ -1,0 +1,65 @@
+{
+  "id": "point-and-box-pixels",
+  "description": "PointAnswer and BoxAnswer in pixels: every field read as sent, integers kept as integers.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "belt",
+            "url": "https://files.example.com/line-3/cam-2/0917.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "pick": {
+          "$point": {
+            "instructions": "Point to the yellow package closest to the robot arm."
+          }
+        },
+        "damage": {
+          "$box": {
+            "instructions": "Draw a box around the damaged package."
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"pick\": {\"type\": \"point\", \"x\": 812, \"y\": 455, \"present\": 0.97, \"confidence\": 0.91, \"image\": \"belt\", \"width\": 1920, \"height\": 1080}, \"damage\": {\"type\": \"box\", \"x1\": 300, \"y1\": 120, \"x2\": 520, \"y2\": 410, \"present\": 0.95, \"confidence\": 0.88, \"image\": \"belt\", \"width\": 1920, \"height\": 1080}}, \"usage\": {\"input_tokens\": 1402, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "answers": {
+        "pick": {
+          "x": 812,
+          "y": 455,
+          "present": 0.97,
+          "confidence": 0.91,
+          "image": "belt",
+          "width": 1920,
+          "height": 1080,
+          "kind": "point"
+        },
+        "damage": {
+          "x1": 300,
+          "y1": 120,
+          "x2": 520,
+          "y2": 410,
+          "present": 0.95,
+          "confidence": 0.88,
+          "image": "belt",
+          "width": 1920,
+          "height": 1080,
+          "kind": "box"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "id": "403-permission-denied",
+  "description": "A 403 whose error_type is not refusal_error is a PermissionDeniedError, not a RefusalError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "this key may not use decisionnode-moe"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"permission_error\", \"message\": \"This key does not have access to that model.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "permission_error",
+        "message": "This key does not have access to that model.",
+        "request_id": "req_err_0001",
+        "reason": "this key may not use decisionnode-moe",
+        "category": null
+      }
+    }
+  }
+}

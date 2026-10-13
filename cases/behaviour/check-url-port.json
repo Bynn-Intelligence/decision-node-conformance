@@ -1,0 +1,38 @@
+{
+  "id": "check-url-port",
+  "description": "check_request on a decide request with an image URL on port 8443 raises what decide raises: BadRequestError, image_url_refused. check_request runs the checks the call would run and sends nothing.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "u",
+            "url": "https://files.example.com:8443/receipt.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "image_url_refused"
+      }
+    }
+  }
+}

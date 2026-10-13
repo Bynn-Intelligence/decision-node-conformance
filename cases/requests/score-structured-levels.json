@@ -1,0 +1,85 @@
+{
+  "id": "score-structured-levels",
+  "description": "score levels may be objects, arrays or strings, sent as given, low to high.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "command": "rm -rf build/"
+      },
+      "questions": {
+        "risk": {
+          "$score": {
+            "instructions": {
+              "question": "How risky is the command?",
+              "focus": "`command`"
+            },
+            "levels": [
+              {
+                "what": "no risk",
+                "examples": [
+                  "reading a file"
+                ]
+              },
+              {
+                "what": "some risk"
+              },
+              [
+                "high",
+                "risk"
+              ],
+              "critical"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": {
+          "command": "rm -rf build/"
+        },
+        "questions": {
+          "risk": {
+            "type": "score",
+            "instructions": {
+              "question": "How risky is the command?",
+              "focus": "`command`"
+            },
+            "criteria": [
+              {
+                "what": "no risk",
+                "examples": [
+                  "reading a file"
+                ]
+              },
+              {
+                "what": "some risk"
+              },
+              [
+                "high",
+                "risk"
+              ],
+              "critical"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

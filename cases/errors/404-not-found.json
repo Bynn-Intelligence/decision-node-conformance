@@ -1,0 +1,47 @@
+{
+  "id": "404-not-found",
+  "description": "An unknown path is a NotFoundError. The natural request asks the mock for a path that does not exist.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"not_found_error\", \"message\": \"Not found.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/nothing-here",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "NotFoundError",
+      "fields": {
+        "status": 404,
+        "error_type": "not_found_error",
+        "message": "Not found.",
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "retry-500-backoff",
+  "description": "A 500 without retry headers is retried after an exponential backoff from 0.5 s with jitter, capped at 8 s.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 500,
+          "headers": {},
+          "body": {
+            "detail": {
+              "error_type": "api_error",
+              "message": "Internal server error."
+            }
+          }
+        },
+        {
+          "action": "normal"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "decision"
+    },
+    "gaps_ms": [
+      {
+        "min": 0,
+        "max": 8500
+      }
+    ]
+  }
+}

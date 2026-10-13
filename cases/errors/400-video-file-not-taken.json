@@ -1,0 +1,75 @@
+{
+  "id": "400-video-file-not-taken",
+  "description": "A video file sent raw (decide_raw) is not taken: the API takes videos as frames only. BadRequestError with the server's message.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide_raw",
+    "args": {
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "s",
+        "videos": [
+          {
+            "id": "dock",
+            "media_type": "video/mp4",
+            "data": "AAAAIGZ0eXBpc29t"
+          }
+        ],
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "video 'dock': video files and URLs are not taken: send the video as frames with timestamps"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Video 'dock': video files and URLs are not taken: send the video as frames with timestamps.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "s",
+      "videos": [
+        {
+          "id": "dock",
+          "media_type": "video/mp4",
+          "data": "AAAAIGZ0eXBpc29t"
+        }
+      ],
+      "questions": {
+        "q": {
+          "type": "truth",
+          "instructions": "?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Video 'dock': video files and URLs are not taken: send the video as frames with timestamps.",
+        "reason": "video 'dock': video files and URLs are not taken: send the video as frames with timestamps"
+      }
+    }
+  }
+}

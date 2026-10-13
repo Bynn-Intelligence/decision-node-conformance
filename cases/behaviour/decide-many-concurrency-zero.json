@@ -1,0 +1,41 @@
+{
+  "id": "decide-many-concurrency-zero",
+  "description": "decide_many with a concurrency of 0 is an argument error raised before anything is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide_many",
+    "args": {
+      "requests": [
+        {
+          "state": "a",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "A?"
+              }
+            }
+          }
+        },
+        {
+          "state": "b",
+          "questions": {
+            "q": {
+              "$truth": {
+                "instructions": "B?"
+              }
+            }
+          }
+        }
+      ],
+      "concurrency": 0
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "argument_error": true
+    }
+  }
+}

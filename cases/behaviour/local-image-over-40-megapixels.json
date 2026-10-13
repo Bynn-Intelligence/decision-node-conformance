@@ -1,0 +1,37 @@
+{
+  "id": "local-image-over-40-megapixels",
+  "description": "A PNG whose header says 8000 x 6000 pixels (48 megapixels), over the API's 40-megapixel cap: the dimensions are read from the header. Checked locally: the API's own error class is raised and no request reaches the mock. From suite 1.5 the case also checks the error_type the server would send (api_usage_error, the API's type for an image it refuses).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "images": [
+        {
+          "$image": {
+            "id": "huge",
+            "path": "fixtures/images/huge-dimensions.png"
+          }
+        }
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "api_usage_error"
+      }
+    }
+  }
+}

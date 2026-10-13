@@ -1,0 +1,62 @@
+{
+  "id": "collections-enroll-no-face",
+  "description": "An enrollment whose picture shows no face (the scenario's collections faces 0) is the 422 no_face, a ValidationError, not retried.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "collections": {
+        "faces": 0
+      }
+    }
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Staff"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.enroll",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "image": {
+            "$image": {
+              "id": "badge",
+              "url": "https://files.example.com/badges/emp-1042.jpg"
+            }
+          },
+          "reference": "emp-1042"
+        }
+      },
+      "outcome": {
+        "error": "ValidationError",
+        "fields": {
+          "status": 422,
+          "entries": [
+            {
+              "type": "no_face",
+              "loc": [
+                "body",
+                "image"
+              ],
+              "msg": "No face was found in the image.",
+              "input": "badge"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 2
+  }
+}

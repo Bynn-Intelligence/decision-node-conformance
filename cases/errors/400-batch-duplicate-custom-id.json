@@ -1,0 +1,83 @@
+{
+  "id": "400-batch-duplicate-custom-id",
+  "description": "batches.create answered 400 api_usage_error: BadRequestError with status and error_type (batch errors use the classes a status gives; 409 and 410 have none, so the base class).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "batches.create",
+    "args": {
+      "requests": [
+        {
+          "custom_id": "a",
+          "state": "x",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        },
+        {
+          "custom_id": "b",
+          "state": "y",
+          "questions": {
+            "route": {
+              "$choice": {
+                "instructions": "Where should this go?",
+                "options": [
+                  "billing",
+                  "bug"
+                ]
+              }
+            },
+            "refund": {
+              "$truth": {
+                "instructions": "Is a refund asked for?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Line 2: custom_id \"a\" is already in the batch."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Line 2: custom_id \\\"a\\\" is already in the batch.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Line 2: custom_id \"a\" is already in the batch."
+      }
+    }
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/batches",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/x-ndjson"
+    },
+    "body_text": "{\"custom_id\": \"a\", \"state\": \"x\", \"questions\": {\"q\": {\"type\": \"truth\", \"instructions\": \"?\"}}}\n{\"custom_id\": \"a\", \"state\": \"y\", \"questions\": {\"q\": {\"type\": \"truth\", \"instructions\": \"?\"}}}\n"
+  }
+}

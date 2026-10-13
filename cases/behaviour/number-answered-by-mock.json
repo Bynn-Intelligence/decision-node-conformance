@@ -1,0 +1,46 @@
+{
+  "id": "number-answered-by-mock",
+  "description": "A number question against the mock's own answers parses into a NumberAnswer beside a truth answer.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "Drone frame over row B4.",
+      "questions": {
+        "cars": {
+          "$number": {
+            "instructions": "How many cars?",
+            "min": 0,
+            "max": 50
+          }
+        },
+        "t": {
+          "$truth": {
+            "instructions": "Is it raining?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": {
+          "$pattern": "^decisionnode-moe-"
+        },
+        "answers": {
+          "cars": {
+            "kind": "number"
+          },
+          "t": {
+            "kind": "truth"
+          }
+        }
+      }
+    }
+  }
+}

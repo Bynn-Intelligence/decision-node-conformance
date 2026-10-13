@@ -1,0 +1,69 @@
+{
+  "id": "evidence-ocr-truncated",
+  "description": "An ocr reading cut at the context limit says truncated true; with a prompt, text is the answer to it. Both typed as received.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "claim": {
+          "total": "740.00",
+          "currency": "SEK"
+        }
+      },
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "url": "https://files.example.com/receipt.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "total_matches": {
+          "$truth": {
+            "instructions": "Does the receipt total equal the claim?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "ocr",
+            "options": {
+              "prompt": "Return the invoice total and date as JSON."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "ocr=ok:420"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"total_matches\": {\"type\": \"truth\", \"truth\": 0.93}}, \"evidence\": {\"ocr\": {\"version\": \"ocr-v1\", \"status\": \"ok\", \"latency_ms\": 420, \"billed_calls\": 1, \"results\": [{\"image\": \"receipt\", \"text\": \"{\\\"total\\\": \\\"740.00\\\", \\\"date\\\": \\\"2026-09-28\\\"}\", \"truncated\": true}]}}, \"usage\": {\"input_tokens\": 260, \"output_tokens\": 0, \"booster_tokens\": 40, \"boosters\": 1}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "ocr": {
+          "version": "ocr-v1",
+          "status": "ok",
+          "latency_ms": 420,
+          "billed_calls": 1,
+          "results": [
+            {
+              "kind": "ocr",
+              "image": "receipt",
+              "text": "{\"total\": \"740.00\", \"date\": \"2026-09-28\"}",
+              "truncated": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}

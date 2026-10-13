@@ -1,0 +1,78 @@
+{
+  "id": "booster-failed-required-retried",
+  "description": "A required booster that fails is the 529 booster_unavailable too: 3 attempts, then an OverloadedError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "adult": {
+          "$truth": {
+            "instructions": "Is the person in the first picture an adult?"
+          }
+        },
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the second picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "ai_generated",
+        {
+          "$booster": {
+            "name": "age",
+            "require": true
+          }
+        }
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "boosters": {
+        "status": {
+          "age": "error"
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "outcome": {
+      "error": "OverloadedError",
+      "fields": {
+        "status": 529,
+        "error_type": "booster_unavailable",
+        "message": "The booster 'age' failed.",
+        "boosters": {
+          "ai_generated": {
+            "status": "ok",
+            "latency_ms": 340
+          },
+          "age": {
+            "status": "error",
+            "latency_ms": 5
+          }
+        }
+      }
+    }
+  }
+}

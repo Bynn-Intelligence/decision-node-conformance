@@ -1,0 +1,53 @@
+{
+  "id": "score",
+  "description": "score(state, instructions, levels) sends one score question under the id \"score\".",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "score",
+    "args": {
+      "state": {
+        "ticket": "I was charged twice and nobody has replied for 3 days."
+      },
+      "instructions": "How urgent is this?",
+      "levels": [
+        "routine",
+        "today",
+        "urgent",
+        "critical"
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": {
+          "ticket": "I was charged twice and nobody has replied for 3 days."
+        },
+        "questions": {
+          "score": {
+            "type": "score",
+            "instructions": "How urgent is this?",
+            "criteria": [
+              "routine",
+              "today",
+              "urgent",
+              "critical"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

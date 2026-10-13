@@ -1,0 +1,27 @@
+{
+  "id": "base-url-plain-http-lookalike-refused",
+  "description": "The loopback exception compares the whole host name: http://localhost.example.invalid is not localhost and is an argument error before any request.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "base_url": "http://localhost.example.invalid"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "argument_error": true
+    }
+  }
+}

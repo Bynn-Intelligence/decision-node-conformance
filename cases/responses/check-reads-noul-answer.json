@@ -1,0 +1,28 @@
+{
+  "id": "check-reads-noul-answer",
+  "description": "check() whose answer comes back as noul returns a TruthAnswer: the helper accepts the alias.",
+  "call": {
+    "method": "check",
+    "args": {
+      "state": "s",
+      "instructions": "Escalate?"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1",
+      "x-decisionnode-latency-ms": "12",
+      "x-decisionnode-safety": "harm=0.003, self_harm=0.001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"check\": {\"type\": \"noul\", \"noul\": 0.31}}, \"usage\": {\"input_tokens\": 40, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "answer": {
+      "kind": "truth",
+      "truth": 0.31
+    }
+  }
+}

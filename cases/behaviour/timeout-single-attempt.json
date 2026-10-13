@@ -1,0 +1,42 @@
+{
+  "id": "timeout-single-attempt",
+  "description": "The server takes 2 s; the client's timeout is 0.3 s with no retries: TimeoutError after one attempt, well before the server answers.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "timeout": 0.3,
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "action": "normal",
+          "delay_ms": 2000
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "TimeoutError"
+    },
+    "elapsed_ms": {
+      "max": 1500
+    }
+  }
+}

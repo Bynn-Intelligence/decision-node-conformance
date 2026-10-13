@@ -1,0 +1,41 @@
+{
+  "id": "number-helper",
+  "description": "number(state, instructions, min, max, step) sends one number question with the id number.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "number",
+    "args": {
+      "state": "Drone frame over row B4.",
+      "instructions": "How many cars?",
+      "min": 0,
+      "max": 50
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "Drone frame over row B4.",
+        "questions": {
+          "number": {
+            "type": "number",
+            "instructions": "How many cars?",
+            "min": 0,
+            "max": 50
+          }
+        }
+      }
+    }
+  }
+}

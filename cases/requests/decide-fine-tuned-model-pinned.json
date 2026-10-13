@@ -1,0 +1,44 @@
+{
+  "id": "decide-fine-tuned-model-pinned",
+  "description": "A pinned fine-tuned model name (...:<n>) is sent exactly as given.",
+  "client": {
+    "api_key": "dn_test_ws-acme"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "Claim 4471: two refunds for one order.",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      },
+      "model": "decisionnode-moe@acme/fraud:3"
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_ws-acme"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe@acme/fraud:3",
+        "state": "Claim 4471: two refunds for one order.",
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  }
+}

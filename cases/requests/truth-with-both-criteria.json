@@ -1,0 +1,49 @@
+{
+  "id": "truth-with-both-criteria",
+  "description": "truth(instructions, true, false) sends criteria with both sides. Languages where true and false are reserved words use their own argument names; the wire form is the same.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "Refund me now or I cancel.",
+      "questions": {
+        "refund": {
+          "$truth": {
+            "instructions": "Is the customer asking for a refund?",
+            "true": "an explicit request for money back",
+            "false": "anything else"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "Refund me now or I cancel.",
+        "questions": {
+          "refund": {
+            "type": "truth",
+            "instructions": "Is the customer asking for a refund?",
+            "criteria": {
+              "true": "an explicit request for money back",
+              "false": "anything else"
+            }
+          }
+        }
+      }
+    }
+  }
+}

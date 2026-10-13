@@ -1,0 +1,33 @@
+{
+  "id": "404-item-not-found",
+  "description": "An item id that is not in the collection is the 404 item_not_found: NotFoundError with that error_type.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.delete_item",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d"
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"item_not_found\", \"message\": \"Item not found: itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "NotFoundError",
+      "fields": {
+        "status": 404,
+        "error_type": "item_not_found",
+        "message": "Item not found: itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d."
+      }
+    }
+  }
+}

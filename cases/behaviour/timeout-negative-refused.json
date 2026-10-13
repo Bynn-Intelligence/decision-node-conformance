@@ -1,0 +1,27 @@
+{
+  "id": "timeout-negative-refused",
+  "description": "A negative timeout is an argument error, raised by the constructor or the call before any request.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "timeout": -1
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "argument_error": true
+    }
+  }
+}

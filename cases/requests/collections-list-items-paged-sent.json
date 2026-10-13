@@ -1,0 +1,50 @@
+{
+  "id": "collections-list-items-paged-sent",
+  "description": "collections.list_items sends GET /v1/collections/{id}/items with offset and limit in the query when given. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.list_items",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "offset": 20,
+      "limit": 50
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "items": [],
+            "offset": 20,
+            "limit": 50,
+            "total": 0,
+            "next_offset": null
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80/items",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      },
+      "query": {
+        "offset": "20",
+        "limit": "50"
+      }
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "id": "evidence-ai-generated-c2pa-untrusted",
+  "description": "Content Credentials that validate but are not trusted: the reading adds \"c2pa\": \"untrusted\" and nothing else (no signer, method still inference). A c2pa value the SDK does not know is kept as received. Both readings stay typed.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "person",
+            "url": "https://files.example.com/person.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "poster",
+            "url": "https://files.example.com/poster.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "synthetic": {
+          "$truth": {
+            "instructions": "Is the picture AI-generated?"
+          }
+        }
+      },
+      "boosters": [
+        "ai_generated"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "ai_generated=ok:300"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"synthetic\": {\"type\": \"truth\", \"truth\": 0.08}}, \"evidence\": {\"ai_generated\": {\"version\": \"ai_generated-v1\", \"status\": \"ok\", \"latency_ms\": 300, \"results\": [{\"image\": \"person\", \"generated\": 0.12, \"confidence\": 0.76, \"method\": \"inference\", \"top_generator\": null, \"c2pa_signer\": null, \"c2pa\": \"untrusted\"}, {\"image\": \"poster\", \"generated\": 0.08, \"confidence\": 0.81, \"method\": \"inference\", \"top_generator\": null, \"c2pa_signer\": null, \"c2pa\": \"unverified\"}]}}, \"usage\": {\"input_tokens\": 180, \"output_tokens\": 0, \"booster_tokens\": 42, \"boosters\": 2}}"
+  },
+  "expect": {
+    "decision": {
+      "usage": {
+        "input_tokens": 180,
+        "output_tokens": 0,
+        "booster_tokens": 42,
+        "boosters": 2
+      },
+      "evidence": {
+        "ai_generated": {
+          "version": "ai_generated-v1",
+          "status": "ok",
+          "latency_ms": 300,
+          "billed_calls": null,
+          "results": [
+            {
+              "kind": "ai_generated",
+              "image": "person",
+              "generated": 0.12,
+              "confidence": 0.76,
+              "method": "inference",
+              "top_generator": null,
+              "c2pa_signer": null,
+              "c2pa": "untrusted"
+            },
+            {
+              "kind": "ai_generated",
+              "image": "poster",
+              "generated": 0.08,
+              "confidence": 0.81,
+              "method": "inference",
+              "top_generator": null,
+              "c2pa_signer": null,
+              "c2pa": "unverified"
+            }
+          ]
+        }
+      },
+      "answers": {
+        "synthetic": {
+          "kind": "truth",
+          "truth": 0.08
+        }
+      }
+    }
+  }
+}

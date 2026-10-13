@@ -1,0 +1,269 @@
+{
+  "id": "local-number-model-without-numbers-held",
+  "description": "After models() lists number_max_grid_values 0 for decisionnode-flash (a family id carries its served version's limits; here a version that does not answer number questions), a number question to that model is refused locally with the API's 400 api_usage_error; only GET /v1/models reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "GET",
+            "$path": "/v1/models"
+          },
+          "steps": [
+            {
+              "status": 200,
+              "headers": {
+                "content-type": "application/json"
+              },
+              "body": {
+                "models": [
+                  {
+                    "name": "decisionnode-moe-0.9.0-rc1",
+                    "description": "DecisionNode MoE, the main model.",
+                    "release_date": "2026-10-01",
+                    "max_input_tokens": 32768,
+                    "max_choice_options": 255,
+                    "max_score_levels": 10,
+                    "max_images": 4,
+                    "max_image_bytes": 10485760,
+                    "number_one_question_values": 256,
+                    "number_max_grid_values": 4096,
+                    "number_default_range": [
+                      0,
+                      255
+                    ],
+                    "number_default_step": 1,
+                    "upload_max_bytes": 10485760,
+                    "upload_ttl_seconds": 3600,
+                    "upload_media_types": [
+                      "image/jpeg",
+                      "image/png",
+                      "image/webp"
+                    ],
+                    "sessions": {
+                      "enabled": true,
+                      "max_per_key": 4,
+                      "default_window": 8,
+                      "max_window": 64,
+                      "default_ttl_seconds": 300,
+                      "max_ttl_seconds": 3600,
+                      "idle_timeout_seconds": 120,
+                      "max_frame_tokens": 1535,
+                      "max_frame_images": 1,
+                      "window_tokens": 1536,
+                      "max_prefix_tokens": 34752
+                    },
+                    "batch": {
+                      "requests_per_batch": 10000,
+                      "batch_bytes": 268435456,
+                      "add_bytes": 10485760,
+                      "active_batches_per_key": 10,
+                      "queued_requests_per_key": 100000,
+                      "time_to_completion_hours": 24,
+                      "result_retention_days": 7,
+                      "max_custom_id_chars": 512,
+                      "price_per_million_input_tokens": 0.021,
+                      "price_factor": 0.5
+                    }
+                  },
+                  {
+                    "name": "decisionnode-flash-0.9.0-rc1",
+                    "description": "DecisionNode Flash, the fast and lower-cost model.",
+                    "release_date": "2026-10-01",
+                    "max_input_tokens": 8192,
+                    "max_choice_options": 255,
+                    "max_score_levels": 10,
+                    "max_images": 4,
+                    "max_image_bytes": 10485760,
+                    "number_one_question_values": 0,
+                    "number_max_grid_values": 0,
+                    "number_default_range": [
+                      0,
+                      255
+                    ],
+                    "number_default_step": 1,
+                    "upload_max_bytes": 10485760,
+                    "upload_ttl_seconds": 3600,
+                    "upload_media_types": [
+                      "image/jpeg",
+                      "image/png",
+                      "image/webp"
+                    ],
+                    "sessions": {
+                      "enabled": true,
+                      "max_per_key": 4,
+                      "default_window": 8,
+                      "max_window": 64,
+                      "default_ttl_seconds": 300,
+                      "max_ttl_seconds": 3600,
+                      "idle_timeout_seconds": 120,
+                      "max_frame_tokens": 1535,
+                      "max_frame_images": 1,
+                      "window_tokens": 1536,
+                      "max_prefix_tokens": 34752
+                    },
+                    "batch": {
+                      "requests_per_batch": 10000,
+                      "batch_bytes": 268435456,
+                      "add_bytes": 10485760,
+                      "active_batches_per_key": 10,
+                      "queued_requests_per_key": 100000,
+                      "time_to_completion_hours": 24,
+                      "result_retention_days": 7,
+                      "max_custom_id_chars": 512,
+                      "price_per_million_input_tokens": 0.0105,
+                      "price_factor": 0.5
+                    }
+                  },
+                  {
+                    "name": "decisionnode-moe",
+                    "description": "The latest DecisionNode model. Currently decisionnode-moe.",
+                    "release_date": "2026-10-01",
+                    "max_input_tokens": 32768,
+                    "max_choice_options": 255,
+                    "max_score_levels": 10,
+                    "max_images": 4,
+                    "max_image_bytes": 10485760,
+                    "number_one_question_values": 256,
+                    "number_max_grid_values": 4096,
+                    "number_default_range": [
+                      0,
+                      255
+                    ],
+                    "number_default_step": 1,
+                    "upload_max_bytes": 10485760,
+                    "upload_ttl_seconds": 3600,
+                    "upload_media_types": [
+                      "image/jpeg",
+                      "image/png",
+                      "image/webp"
+                    ],
+                    "sessions": {
+                      "enabled": true,
+                      "max_per_key": 4,
+                      "default_window": 8,
+                      "max_window": 64,
+                      "default_ttl_seconds": 300,
+                      "max_ttl_seconds": 3600,
+                      "idle_timeout_seconds": 120,
+                      "max_frame_tokens": 1535,
+                      "max_frame_images": 1,
+                      "window_tokens": 1536,
+                      "max_prefix_tokens": 34752
+                    },
+                    "batch": {
+                      "requests_per_batch": 10000,
+                      "batch_bytes": 268435456,
+                      "add_bytes": 10485760,
+                      "active_batches_per_key": 10,
+                      "queued_requests_per_key": 100000,
+                      "time_to_completion_hours": 24,
+                      "result_retention_days": 7,
+                      "max_custom_id_chars": 512,
+                      "price_per_million_input_tokens": 0.021,
+                      "price_factor": 0.5
+                    }
+                  },
+                  {
+                    "name": "decisionnode-flash",
+                    "description": "The latest DecisionNode Flash model. Currently decisionnode-flash.",
+                    "release_date": "2026-10-01",
+                    "max_input_tokens": 8192,
+                    "max_choice_options": 255,
+                    "max_score_levels": 10,
+                    "max_images": 4,
+                    "max_image_bytes": 10485760,
+                    "number_one_question_values": 256,
+                    "number_max_grid_values": 0,
+                    "number_default_range": [
+                      0,
+                      255
+                    ],
+                    "number_default_step": 1,
+                    "upload_max_bytes": 10485760,
+                    "upload_ttl_seconds": 3600,
+                    "upload_media_types": [
+                      "image/jpeg",
+                      "image/png",
+                      "image/webp"
+                    ],
+                    "sessions": {
+                      "enabled": true,
+                      "max_per_key": 4,
+                      "default_window": 8,
+                      "max_window": 64,
+                      "default_ttl_seconds": 300,
+                      "max_ttl_seconds": 3600,
+                      "idle_timeout_seconds": 120,
+                      "max_frame_tokens": 1535,
+                      "max_frame_images": 1,
+                      "window_tokens": 1536,
+                      "max_prefix_tokens": 34752
+                    },
+                    "batch": {
+                      "requests_per_batch": 10000,
+                      "batch_bytes": 268435456,
+                      "add_bytes": 10485760,
+                      "active_batches_per_key": 10,
+                      "queued_requests_per_key": 100000,
+                      "time_to_completion_hours": 24,
+                      "result_retention_days": 7,
+                      "max_custom_id_chars": 512,
+                      "price_per_million_input_tokens": 0.0105,
+                      "price_factor": 0.5
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "models",
+        "args": {}
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": "s",
+          "questions": {
+            "n": {
+              "$number": {
+                "instructions": "How many?",
+                "min": 0,
+                "max": 9
+              }
+            }
+          },
+          "model": "decisionnode-flash"
+        }
+      },
+      "outcome": {
+        "error": "BadRequestError",
+        "fields": {
+          "error_type": "api_usage_error"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 1,
+    "request_sequence": [
+      {
+        "method": "GET",
+        "path": "/v1/models",
+        "status": 200
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "local-body-over-25-mib",
+  "description": "decide() whose state is 26,214,336 characters: with the rest of the body (at least 96 bytes in any JSON encoding) the encoded body is over 26,214,400 bytes (25 MiB), the API's body limit. Checked locally on the encoded body: RequestTooLargeError with the API's error_type and message, no status, no request id, and nothing reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "$text": {
+          "repeat": "a",
+          "times": 26214336
+        }
+      },
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "RequestTooLargeError",
+      "fields": {
+        "status": null,
+        "error_type": "request_too_large_error",
+        "message": "The request body is over 26,214,400 bytes (25 MiB). Send large images as uploads (POST /v1/uploads) and name them by upload_id.",
+        "request_id": null
+      }
+    }
+  }
+}

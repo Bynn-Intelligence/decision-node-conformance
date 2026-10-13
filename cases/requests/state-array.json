@@ -1,0 +1,49 @@
+{
+  "id": "state-array",
+  "description": "A state may be a JSON array.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": [
+        "line one",
+        "line two"
+      ],
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "Are both lines present?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": [
+          "line one",
+          "line two"
+        ],
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "Are both lines present?"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "429-presign-rate-limit-error",
+  "description": "POST /v1/uploads answered 429 rate_limit_error: RateLimitError, raised from upload() before any PUT.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "upload",
+    "args": {
+      "images": [
+        {
+          "$image": {
+            "id": "receipt",
+            "path": "fixtures/images/pixel.png"
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Rate limit exceeded.",
+      "retry-after": "2"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"rate_limit_error\", \"message\": \"Rate limit exceeded.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RateLimitError",
+      "fields": {
+        "status": 429,
+        "error_type": "rate_limit_error",
+        "message": "Rate limit exceeded.",
+        "retry_after": 2
+      }
+    }
+  }
+}

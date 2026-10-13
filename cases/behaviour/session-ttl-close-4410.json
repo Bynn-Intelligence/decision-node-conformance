@@ -1,0 +1,44 @@
+{
+  "id": "session-ttl-close-4410",
+  "description": "A session opened with ttl_seconds 1 closes with 4410 when expires_at is reached: SessionClosed with reopen true.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "questions": {
+            "abort": {
+              "$truth": {
+                "instructions": "Abort?"
+              }
+            }
+          },
+          "ttl_seconds": 1
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "read": {
+        "session": "s",
+        "timeout_ms": 15000
+      }
+    }
+  ],
+  "expect": {
+    "session_events": [
+      {
+        "closed": {
+          "code": 4410,
+          "reopen": true
+        }
+      }
+    ]
+  }
+}

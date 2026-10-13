@@ -1,0 +1,32 @@
+{
+  "id": "base-url-http-loopback-accepted",
+  "description": "Plain http is accepted for 127.0.0.1: the client built with http://127.0.0.1:<mock port> reaches the mock and gets a decision.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "base_url": "http://127.0.0.1:{mock_port}"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": {
+          "$pattern": "^decisionnode-moe-"
+        }
+      }
+    }
+  }
+}

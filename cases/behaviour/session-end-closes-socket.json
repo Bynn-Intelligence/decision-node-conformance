@@ -1,0 +1,63 @@
+{
+  "id": "session-end-closes-socket",
+  "description": "end() while connected: the server closes the socket with 1000, which replies() reports as SessionClosed(1000) with reopen false.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "end": "s"
+    },
+    {
+      "read": {
+        "session": "s",
+        "timeout_ms": 15000
+      }
+    }
+  ],
+  "expect": {
+    "session_events": [
+      {
+        "ended": true
+      },
+      {
+        "closed": {
+          "code": 1000,
+          "reopen": false
+        }
+      }
+    ]
+  }
+}

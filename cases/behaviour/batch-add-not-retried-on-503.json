@@ -1,0 +1,104 @@
+{
+  "id": "batch-add-not-retried-on-503",
+  "description": "batches.add answered 503: not retried. ServerError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 2
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path_suffix": "/requests"
+          },
+          "steps": [
+            {
+              "status": 503,
+              "body": {
+                "detail": {
+                  "error_type": "api_error",
+                  "message": "Unavailable."
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "batches.create",
+        "args": {
+          "requests": [
+            {
+              "custom_id": "t1",
+              "state": "I was charged twice.",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "save_as": "b"
+    },
+    {
+      "call": {
+        "method": "batches.add",
+        "args": {
+          "batch_id": {
+            "$ref": "b.id"
+          },
+          "requests": [
+            {
+              "custom_id": "t2",
+              "state": "x",
+              "questions": {
+                "route": {
+                  "$choice": {
+                    "instructions": "Where should this go?",
+                    "options": [
+                      "billing",
+                      "bug"
+                    ]
+                  }
+                },
+                "refund": {
+                  "$truth": {
+                    "instructions": "Is a refund asked for?"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "outcome": {
+        "error": "ServerError",
+        "fields": {
+          "status": 503
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 2
+  }
+}

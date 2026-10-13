@@ -1,0 +1,63 @@
+{
+  "id": "supervise-stops-on-4402",
+  "description": "supervise stops on a code that is not a reopen code: the session closes with 4402 after one reply, nothing is reopened, and the supervisor returns that SessionClosed.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "session": {
+        "close": {
+          "after_replies": 1,
+          "code": 4402
+        }
+      }
+    }
+  },
+  "call": {
+    "method": "supervise",
+    "args": {
+      "body": {
+        "state": {
+          "mission": "Survey"
+        },
+        "questions": {
+          "abort": {
+            "$truth": {
+              "instructions": "Abort?"
+            }
+          }
+        }
+      },
+      "feed": [
+        {
+          "frame": "a"
+        },
+        {
+          "frame": "b"
+        }
+      ],
+      "feed_interval_ms": 300
+    }
+  },
+  "expect": {
+    "request_counts": [
+      {
+        "method": "POST",
+        "path": "/v1/sessions",
+        "count": 1
+      }
+    ],
+    "outcome": {
+      "result": "supervised",
+      "replies": {
+        "min": 1,
+        "max": 1
+      },
+      "closed": {
+        "code": 4402,
+        "reopen": false
+      }
+    }
+  }
+}

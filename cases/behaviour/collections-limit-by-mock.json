@@ -1,0 +1,49 @@
+{
+  "id": "collections-limit-by-mock",
+  "description": "With the workspace's limit at one collection (the scenario's collections max_collections), a second create is the mock's 409 collections_limit_reached, not retried.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "collections": {
+        "max_collections": 1
+      }
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "First"
+        }
+      },
+      "outcome": {
+        "result": "collection",
+        "collection": {
+          "name": "First"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Second"
+        }
+      },
+      "outcome": {
+        "error": "DecisionNodeError",
+        "fields": {
+          "status": 409,
+          "error_type": "collections_limit_reached",
+          "message": "This workspace has reached its limit of 1 collections."
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 2
+  }
+}

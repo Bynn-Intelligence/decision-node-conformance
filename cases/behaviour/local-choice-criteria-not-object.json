@@ -1,0 +1,49 @@
+{
+  "id": "local-choice-criteria-not-object",
+  "description": "A choice whose criteria is a list, not an object of options: the API's 422 dict_type entry. Checked locally: the API's own error class is raised and no request reaches the mock.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "route": {
+          "type": "choice",
+          "instructions": "Where?",
+          "criteria": [
+            "billing",
+            "bug"
+          ]
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "error_type": null,
+        "entries": [
+          {
+            "type": "dict_type",
+            "loc": [
+              "body",
+              "questions",
+              "route",
+              "choice",
+              "criteria"
+            ],
+            "msg": "Input should be a valid dictionary",
+            "input": [
+              "billing",
+              "bug"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

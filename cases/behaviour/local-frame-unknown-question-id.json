@@ -1,0 +1,115 @@
+{
+  "id": "local-frame-unknown-question-id",
+  "description": "A frame asking a question id the session does not hold (speed): checked against the session's own question ids from the open response. The frame is refused locally by send() with the API's class and the error_type the server's frame error would carry; nothing goes on the socket, the refused frame takes no seq, and the next frame is sent as seq 1 and answered.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "frame": "a",
+        "questions": [
+          "speed"
+        ],
+        "session": "s"
+      },
+      "outcome": {
+        "error": "BadRequestError",
+        "fields": {
+          "error_type": "api_usage_error",
+          "message": "questions: unknown question id 'speed'"
+        }
+      }
+    },
+    {
+      "send": {
+        "frame": "b",
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/sessions",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}/stream$",
+        "status": 101
+      },
+      {
+        "method": "WS",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}/stream$",
+        "body_checks": [
+          {
+            "pointer": "/seq",
+            "equals": 1
+          },
+          {
+            "pointer": "/frame",
+            "equals": "b"
+          }
+        ]
+      },
+      {
+        "method": "DELETE",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}$",
+        "status": 200
+      }
+    ],
+    "session_events": [
+      {
+        "reply": {
+          "seq": 1
+        }
+      },
+      {
+        "ended": true
+      }
+    ]
+  }
+}

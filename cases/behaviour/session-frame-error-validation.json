@@ -1,0 +1,91 @@
+{
+  "id": "session-frame-error-validation",
+  "description": "A frame the server refuses for a rule only it can judge (6,400 characters of text, over the session's max_frame_tokens of 1,535 by the server's own count) is a frame error value, never an exception: api_usage_error; the socket stays open and the next frame is answered. From suite 1.5 the unknown question id this case used is refused locally (behaviour/local-frame-unknown-question-id).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "frame": {
+          "$text": {
+            "repeat": "x",
+            "times": 6400
+          }
+        },
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "send": {
+        "frame": "b",
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "session_events": [
+      {
+        "frame_error": {
+          "seq": 1,
+          "error_type": "api_usage_error"
+        }
+      },
+      {
+        "reply": {
+          "seq": 2
+        }
+      },
+      {
+        "ended": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "id": "model-from-client-fine-tuned",
+  "description": "A fine-tuned model name given to the client is the model of every call that names none, sent as given.",
+  "client": {
+    "api_key": "dn_test_ws-acme",
+    "model": "decisionnode-moe@acme/fraud"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "s",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_ws-acme"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe@acme/fraud",
+        "state": "s",
+        "questions": {
+          "q": {
+            "type": "truth",
+            "instructions": "?"
+          }
+        }
+      }
+    }
+  }
+}

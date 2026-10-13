@@ -1,0 +1,38 @@
+{
+  "id": "decision-model-fine-tuned-pinned",
+  "description": "A decision of a fine-tuned model named without a version: Decision.model is the pinned name the server answered with.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "Claim 4471: two refunds for one order.",
+      "questions": {
+        "q": {
+          "$truth": {
+            "instructions": "?"
+          }
+        }
+      },
+      "model": "decisionnode-moe@acme/fraud"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-model": "decisionnode-moe@acme/fraud:3"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe@acme/fraud:3\", \"answers\": {\"q\": {\"type\": \"truth\", \"truth\": 0.88}}, \"usage\": {\"input_tokens\": 21, \"output_tokens\": 0}}"
+  },
+  "expect": {
+    "decision": {
+      "model": "decisionnode-moe@acme/fraud:3",
+      "answers": {
+        "q": {
+          "kind": "truth",
+          "truth": 0.88
+        }
+      }
+    }
+  }
+}

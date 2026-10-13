@@ -1,0 +1,120 @@
+{
+  "id": "session-image-frame-uploaded-first",
+  "description": "A frame's image of 600,000 bytes (over the inline threshold) is uploaded first, then sent as {\"upload_id\": ...} with no data and no id.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "open_session",
+        "args": {
+          "state": {
+            "mission": "Survey the north field"
+          },
+          "questions": {
+            "mode": {
+              "$choice": {
+                "instructions": "Which flight mode now?",
+                "options": {
+                  "continue": "keep flying",
+                  "hold": "hover",
+                  "return": "fly home",
+                  "land": "land now"
+                }
+              }
+            },
+            "abort": {
+              "$truth": {
+                "instructions": "Should the mission be aborted now?"
+              }
+            }
+          }
+        }
+      },
+      "save_as": "s"
+    },
+    {
+      "connect": "s"
+    },
+    {
+      "send": {
+        "frame": "note",
+        "image": {
+          "$image": {
+            "id": "frame",
+            "path": "fixtures/images/pixel.png",
+            "pad_to": 600000
+          }
+        },
+        "session": "s"
+      }
+    },
+    {
+      "read": {
+        "session": "s",
+        "count": 1
+      }
+    },
+    {
+      "end": "s"
+    }
+  ],
+  "expect": {
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/sessions",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}/stream$",
+        "status": 101
+      },
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "WS",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}/stream$",
+        "body_checks": [
+          {
+            "pointer": "/image/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/image/data",
+            "absent": true
+          },
+          {
+            "pointer": "/image/id",
+            "absent": true
+          }
+        ]
+      },
+      {
+        "method": "DELETE",
+        "path_pattern": "^/v1/sessions/ses_[0-9a-f]{24}$",
+        "status": 200
+      }
+    ],
+    "session_events": [
+      {
+        "reply": {
+          "seq": 1
+        }
+      },
+      {
+        "ended": true
+      }
+    ]
+  }
+}
