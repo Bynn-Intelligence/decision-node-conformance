@@ -1,6 +1,6 @@
 {
   "id": "evidence-face-recognition-reading",
-  "description": "A face_recognition reading (replacing wanted_person) is a FaceRecognitionReading: image, faces (the faces searched) and matches, by score, each a box {x1, y1, x2, y2}, a score, the collection searched, the item's reference and its label when it has one, typed as received. A picture whose faces match nothing is matches empty, a reading, not a failure; a match without name or label reads them as empty.",
+  "description": "A face_recognition reading is a FaceRecognitionReading: image, faces (the faces searched) and matches, by score, each a box {x1, y1, x2, y2}, a score, the collection searched, the item's reference and its label when it has one, typed as received. A picture whose faces match nothing is matches empty, a reading, not a failure; a match without name or label reads them as empty.",
   "call": {
     "method": "decide",
     "args": {

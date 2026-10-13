@@ -1,15 +1,8 @@
 {
   "id": "collections-list-public",
-  "description": "collections.list against the mock: the workspace's own collections, newest first, then celebrities; wanted-persons only once the workspace may use it (the scenario's collections setting).",
+  "description": "collections.list against the mock: the workspace's own collections, newest first, then celebrities, the one public collection offered.",
   "client": {
     "api_key": "dn_test_conformance"
-  },
-  "mock": {
-    "scenario": {
-      "collections": {
-        "wanted_persons": true
-      }
-    }
   },
   "steps": [
     {
@@ -46,10 +39,6 @@
           },
           {
             "id": "celebrities",
-            "public": true
-          },
-          {
-            "id": "wanted-persons",
             "public": true
           }
         ]

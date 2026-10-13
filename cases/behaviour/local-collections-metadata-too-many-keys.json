@@ -1,0 +1,64 @@
+{
+  "id": "local-collections-metadata-too-many-keys",
+  "description": "Metadata of 21 keys: at most 20, one entry at [\"body\", \"metadata\"] before any key is read, its input null. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.enroll",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "image": {
+        "$image": {
+          "id": "badge",
+          "url": "https://files.example.com/badges/emp-1042.jpg"
+        }
+      },
+      "reference": "emp-1042",
+      "metadata": {
+        "k00": 0,
+        "k01": 1,
+        "k02": 2,
+        "k03": 3,
+        "k04": 4,
+        "k05": 5,
+        "k06": 6,
+        "k07": 7,
+        "k08": 8,
+        "k09": 9,
+        "k10": 10,
+        "k11": 11,
+        "k12": 12,
+        "k13": 13,
+        "k14": 14,
+        "k15": 15,
+        "k16": 16,
+        "k17": 17,
+        "k18": 18,
+        "k19": 19,
+        "k20": 20
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "metadata"
+            ],
+            "msg": "Metadata holds at most 20 keys.",
+            "input": null
+          }
+        ]
+      }
+    }
+  }
+}

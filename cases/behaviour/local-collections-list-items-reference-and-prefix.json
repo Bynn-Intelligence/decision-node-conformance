@@ -1,0 +1,26 @@
+{
+  "id": "local-collections-list-items-reference-and-prefix",
+  "description": "collections.list_items with both reference and reference_prefix: one or the other. Checked locally: BadRequestError, api_usage_error, with the API's message; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.list_items",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "reference": "emp-1042",
+      "reference_prefix": "emp-"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "Send query parameter reference or reference_prefix, not both."
+      }
+    }
+  }
+}

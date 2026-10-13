@@ -1,0 +1,43 @@
+{
+  "id": "key-scope-search-allowed-by-mock",
+  "description": "Against the mock, a decide key with leave to search collections asks face_recognition and gets its reading.",
+  "client": {
+    "api_key": "dn_test_scope-decide_may-search"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone at the gate?"
+          }
+        }
+      },
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate.jpg"
+          }
+        }
+      ],
+      "boosters": [
+        {
+          "$booster": {
+            "name": "face_recognition",
+            "options": {
+              "collection": "celebrities"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}

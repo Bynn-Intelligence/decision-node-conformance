@@ -221,6 +221,8 @@ def norm_error(e) -> dict:
         "entries": getattr(e, "entries", None),
         "retry_after": getattr(e, "retry_after", None),
         "boosters": getattr(e, "boosters", None),
+        # Suite 1.15: detail.details when it is an object, else empty.
+        "details": getattr(e, "details", None),
     }
 
 
@@ -354,7 +356,7 @@ def invoke(client, call: dict, ctx=None):
     if method.startswith("batches."):
         return getattr(client.batches, method.split(".", 1)[1])(**a)
     if method.startswith("collections."):
-        # Create, list, get, delete, enroll, list_items, delete_item.
+        # Create, list, get, delete, enroll, list_items, delete_item, from 1.15 update_item.
         return getattr(client.collections, method.split(".", 1)[1])(**a)
     if method == "supervise":
         replies = []

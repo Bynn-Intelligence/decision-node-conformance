@@ -1,0 +1,48 @@
+{
+  "id": "local-collections-metadata-value-list",
+  "description": "A metadata value that is a list: a value is a text, a number or true or false, the entry at the key, its input null. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.enroll",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "image": {
+        "$image": {
+          "id": "badge",
+          "url": "https://files.example.com/badges/emp-1042.jpg"
+        }
+      },
+      "reference": "emp-1042",
+      "metadata": {
+        "tags": [
+          "a",
+          "b"
+        ]
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "metadata",
+              "tags"
+            ],
+            "msg": "A metadata value is a text, a number or true or false.",
+            "input": null
+          }
+        ]
+      }
+    }
+  }
+}

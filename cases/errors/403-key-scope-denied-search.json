@@ -1,0 +1,88 @@
+{
+  "id": "403-key-scope-denied-search",
+  "description": "A decide key without leave to search collections asking face_recognition is the 403 key_scope_denied, before any booster runs: PermissionDeniedError.",
+  "client": {
+    "api_key": "dn_test_scope-decide",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone at the gate?"
+          }
+        }
+      },
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/gate.jpg"
+          }
+        }
+      ],
+      "boosters": [
+        {
+          "$booster": {
+            "name": "face_recognition",
+            "options": {
+              "collection": "celebrities"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"key_scope_denied\", \"message\": \"This key may not search collections.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_scope-decide",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "",
+      "questions": {
+        "someone_at_gate": {
+          "type": "truth",
+          "instructions": "Is someone at the gate?"
+        }
+      },
+      "images": [
+        {
+          "id": "gate",
+          "url": "https://files.example.com/gate.jpg"
+        }
+      ],
+      "boosters": [
+        {
+          "name": "face_recognition",
+          "options": {
+            "collection": "celebrities"
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "key_scope_denied",
+        "message": "This key may not search collections."
+      }
+    }
+  }
+}

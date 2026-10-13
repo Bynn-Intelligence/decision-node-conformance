@@ -1,0 +1,39 @@
+{
+  "id": "local-collections-metadata-text-too-long",
+  "description": "A metadata text of 501 characters: at most 500, the entry at the key, its input the first 64 characters and \"...\". Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.update_item",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+      "metadata": {
+        "note": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "metadata",
+              "note"
+            ],
+            "msg": "A metadata text is at most 500 characters.",
+            "input": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn..."
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "collections-update-item-label-cleared-sent",
+  "description": "collections.update_item with the label given as null sends \"label\": null, which clears it, and nothing else. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.update_item",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+      "label": null
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+            "reference": "emp-1042",
+            "label": null,
+            "metadata": {
+              "department": "Reception",
+              "badge_level": 2,
+              "visitor": false
+            },
+            "created_at": "2026-10-12T09:00:00Z"
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "PATCH",
+      "path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80/items/itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$",
+        "idempotency-key": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+      },
+      "body": {
+        "label": null
+      }
+    }
+  }
+}

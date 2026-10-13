@@ -1,0 +1,44 @@
+{
+  "id": "collections-items-page-filtered",
+  "description": "A page of items found by a prefix: total counts the matches up to 10,000, past which total_capped is true; the page echoes reference and reference_prefix (null when not given). Kept as sent.",
+  "call": {
+    "method": "collections.list_items",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "reference_prefix": "emp-",
+      "limit": 1
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"items\": [{\"id\": \"itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d\", \"reference\": \"emp-1042\", \"label\": \"Anna, reception\", \"metadata\": {\"department\": \"Reception\", \"badge_level\": 2, \"visitor\": false}, \"created_at\": \"2026-10-12T09:00:00Z\"}], \"offset\": 0, \"limit\": 1, \"total\": 10000, \"total_capped\": true, \"next_offset\": 1, \"reference\": null, \"reference_prefix\": \"emp-\"}"
+  },
+  "expect": {
+    "item_page": {
+      "items": [
+        {
+          "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+          "reference": "emp-1042",
+          "label": "Anna, reception",
+          "metadata": {
+            "department": "Reception",
+            "badge_level": 2,
+            "visitor": false
+          },
+          "created_at": "2026-10-12T09:00:00Z"
+        }
+      ],
+      "offset": 0,
+      "limit": 1,
+      "total": 10000,
+      "total_capped": true,
+      "next_offset": 1,
+      "reference": null,
+      "reference_prefix": "emp-"
+    }
+  }
+}

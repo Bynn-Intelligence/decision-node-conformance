@@ -1821,15 +1821,87 @@ class TestCollections(Spec11):
                                             ({"collection": "wanted-persons"}, 403, "collection_not_enabled"), ({"collection": "col_nope"}, 404, "collection_not_found")):
             st, _, out = decide(options)
             self.assertEqual((st, out["detail"]["error_type"]), (status, error_type), options)
-        scenario = {"name": "t-wanted-on", "collections": {"wanted_persons": True}}
-        self.assertEqual(self.call("POST", "/_mock/scenarios", scenario, {"Content-Type": "application/json"})[0], 200)
-        st, _, out = decide({"collection": "wanted-persons"}, "c4", "t-wanted-on")
-        matches = out["evidence"]["face_recognition"]["results"][0]["matches"]
-        self.assertTrue(matches and all("name" not in m and "label" not in m for m in matches))
+        # wanted-persons is not offered: absent from the list, a read of it unknown.
+        st, _, out = self.call("GET", "/v1/collections", headers=self.h("c3"))
+        self.assertNotIn("wanted-persons", [c["id"] for c in out["collections"]])
+        for path in ("/v1/collections/wanted-persons", "/v1/collections/wanted-persons/items"):
+            st, _, out = self.call("GET", path, headers=self.h("c3"))
+            self.assertEqual((st, out["detail"]["error_type"]), (404, "collection_not_found"), path)
         # Every other booster still takes no option.
         st, _, out = self.call("POST", "/v1/decide", {"images": [gate], "questions": q, "boosters": [{"name": "age", "options": {"collection": "x"}}]}, self.h("c3"))
         self.assertEqual((st, out["detail"]["error_type"]), (400, "api_usage_error"))
 
+
+    def test_items_found_edited_and_described(self):
+        """Suite 1.15: an item's metadata, its edit, and items found by reference."""
+        h = self.h("c8")
+        col = self.call("POST", "/v1/collections", {"type": "face", "name": "Staff"}, h)[2]
+        items = "/v1/collections/%s/items" % col["id"]
+        st, _, first = self.call("POST", items, {"image": self.BADGE, "reference": "emp-1042", "metadata": {"department": "Reception", "level": 2}}, h)
+        self.assertEqual((st, first["metadata"]), (201, {"department": "Reception", "level": 2}))
+        self.call("POST", items, {"image": self.BADGE, "reference": "emp-1043"}, h)
+        self.call("POST", items, {"image": self.BADGE, "reference": "vis-0001"}, h)
+        st, _, page = self.call("GET", items + "?reference_prefix=emp-", headers=h)
+        self.assertEqual(([i["reference"] for i in page["items"]], page["total"], page["total_capped"], page["reference"], page["reference_prefix"]),
+                         (["emp-1042", "emp-1043"], 2, False, None, "emp-"))
+        st, _, page = self.call("GET", items, headers=h)
+        self.assertEqual(([i["reference"] for i in page["items"]], page["items"][2]["metadata"], page["items"][0]["metadata"]),
+                         (["vis-0001", "emp-1043", "emp-1042"], {"department": "Reception", "level": 2}, {}))
+        for query, message in (("?reference=a&reference_prefix=b", "Send query parameter reference or reference_prefix, not both."),
+                               ("?reference=emp%201042", "Query parameter reference must be 1 to 64 characters of A-Z, a-z, 0-9, _, ., : and -, got emp 1042.")):
+            st, _, out = self.call("GET", items + query, headers=h)
+            self.assertEqual((st, out["detail"]["message"]), (400, message), query)
+        # An edit: the fields sent, label null clearing it, metadata replaced whole.
+        st, _, edited = self.call("PATCH", "%s/%s" % (items, first["id"]), {"reference": "emp-2042", "label": "Anna", "metadata": {}}, h)
+        self.assertEqual((st, edited["reference"], edited["label"], edited["metadata"]), (200, "emp-2042", "Anna", {}))
+        st, _, edited = self.call("PATCH", "%s/%s" % (items, first["id"]), {"label": None}, h)
+        self.assertEqual((edited["reference"], edited["label"]), ("emp-2042", None))
+        st, _, out = self.call("PATCH", "%s/%s" % (items, first["id"]), {}, h)
+        self.assertEqual((st, out["detail"]), (422, [{"type": "missing", "loc": ["body"], "msg": "Send reference, label, metadata or any of them", "input": None}]))
+        st, _, out = self.call("PATCH", "%s/itm_nope" % items, {"label": "x"}, h)
+        self.assertEqual((st, out["detail"]["error_type"]), (404, "item_not_found"))
+        st, _, out = self.call("PATCH", "/v1/collections/celebrities/items/itm_x", {"label": "x"}, h)
+        self.assertEqual((st, out["detail"]["error_type"]), (403, "collection_read_only"))
+        # Metadata as the API checks it.
+        for metadata, loc, msg in (([1], ["body", "metadata"], "Metadata is an object of keys and values."),
+                                   ({"k%d" % n: n for n in range(21)}, ["body", "metadata"], "Metadata holds at most 20 keys."),
+                                   ({"Dept": 1}, ["body", "metadata"], 'A metadata key is 1 to 40 characters of a-z, 0-9 and _: "Dept".'),
+                                   ({"note": "x" * 501}, ["body", "metadata", "note"], "A metadata text is at most 500 characters."),
+                                   ({"note": "a\u200bb"}, ["body", "metadata", "note"], "A metadata text holds no control or invisible characters."),
+                                   ({"n": 1e15}, ["body", "metadata", "n"], "A metadata number is under 10^15 in size, and 0 or at least 10^-6."),
+                                   ({"n": None}, ["body", "metadata", "n"], "A metadata value is a text, a number or true or false."),
+                                   ({"k%d" % n: "x" * 250 for n in range(20)}, ["body", "metadata"], "Metadata is at most 4096 bytes as JSON.")):
+            st, _, out = self.call("POST", items, {"image": self.BADGE, "reference": "emp-9", "metadata": metadata}, h)
+            self.assertEqual((st, [(e["loc"], e["msg"]) for e in out["detail"]]), (422, [(loc, msg)]), msg)
+
+    def test_enrollment_unavailable(self):
+        """Suite 1.15: an enrollment's 529 says why in detail.details.reason."""
+        for name, reason, retry in (("t-unpriced", "unpriced", None), ("t-no-face-model", "face_model_unavailable", "1")):
+            scenario = {"name": name, "collections": {"enrollment": reason}}
+            self.assertEqual(self.call("POST", "/_mock/scenarios", scenario, {"Content-Type": "application/json"})[0], 200)
+            h = self.h("c9-" + name, name)
+            col = self.call("POST", "/v1/collections", {"type": "face", "name": "Staff"}, h)[2]
+            st, hd, out = self.call("POST", "/v1/collections/%s/items" % col["id"], {"image": self.BADGE, "reference": "emp-1"}, h)
+            self.assertEqual((st, out["detail"]["error_type"], out["detail"]["details"], hd.get("retry-after")),
+                             (529, "overloaded_error", {"reason": "enrollment_unpriced" if reason == "unpriced" else reason}, retry))
+
+    def test_decide_key(self):
+        """Suite 1.15: a decide key decides and lists the models, nothing else."""
+        def h(key):
+            return {"Authorization": "Bearer " + key, "Content-Type": "application/json", "x-mock-session": "c10"}
+        decide_key, searching = "dn_test_scope-decide", "dn_test_scope-decide_may-search"
+        self.assertEqual(self.call("GET", "/v1/models", headers=h(decide_key))[0], 200)
+        for method, path, body in (("GET", "/v1/collections", None), ("POST", "/v1/batches", {}), ("POST", "/v1/uploads", {}), ("POST", "/v1/sessions", {})):
+            st, hd, out = self.call(method, path, body, h(decide_key))
+            self.assertEqual((st, out["detail"]), (403, {"error_type": "key_scope_denied", "message": "This key may only make decisions."}), path)
+        q = {"ok": {"type": "truth", "instructions": "Is it fine?"}}
+        st, _, out = self.call("POST", "/v1/decide", {"images": [self.BADGE], "questions": q}, h(decide_key))
+        self.assertEqual(st, 200)
+        search = [{"name": "face_recognition", "options": {"collection": "celebrities"}}]
+        st, _, out = self.call("POST", "/v1/decide", {"images": [self.BADGE], "questions": q, "boosters": search}, h(decide_key))
+        self.assertEqual((st, out["detail"]), (403, {"error_type": "key_scope_denied", "message": "This key may not search collections."}))
+        st, _, out = self.call("POST", "/v1/decide", {"images": [self.BADGE], "questions": q, "boosters": search}, h(searching))
+        self.assertEqual(st, 200)
 
     def test_idempotency_key(self):
         def post(path, body, key, session="c6", scenario=None):

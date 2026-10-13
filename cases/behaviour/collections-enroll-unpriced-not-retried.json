@@ -1,0 +1,84 @@
+{
+  "id": "collections-enroll-unpriced-not-retried",
+  "description": "An enrollment's 529 with detail.details.reason enrollment_unpriced is never retried: no price is set, which a retry cannot cure. One attempt, OverloadedError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 529,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "detail": {
+              "error_type": "overloaded_error",
+              "message": "Face enrollment is not available on this deployment yet.",
+              "details": {
+                "reason": "enrollment_unpriced"
+              }
+            }
+          }
+        },
+        {
+          "status": 201,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+            "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+            "reference": "emp-1042",
+            "label": "Reception",
+            "metadata": {
+              "department": "Reception",
+              "badge_level": 2,
+              "visitor": false
+            },
+            "faces_found": 1,
+            "box": {
+              "x1": 412,
+              "y1": 220,
+              "x2": 580,
+              "y2": 470
+            },
+            "created_at": "2026-10-12T09:00:00Z",
+            "usage": {
+              "enrollments": 1,
+              "cost": {
+                "usd": 0.001
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "collections.enroll",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "image": {
+        "$image": {
+          "id": "badge",
+          "url": "https://files.example.com/badges/emp-1042.jpg"
+        }
+      },
+      "reference": "emp-1042"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "OverloadedError",
+      "fields": {
+        "status": 529,
+        "details": {
+          "reason": "enrollment_unpriced"
+        }
+      }
+    }
+  }
+}

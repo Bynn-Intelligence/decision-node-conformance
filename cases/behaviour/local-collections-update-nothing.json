@@ -1,0 +1,34 @@
+{
+  "id": "local-collections-update-nothing",
+  "description": "collections.update_item with no field given: the API's 422 at [\"body\"], its input null. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.update_item",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "missing",
+            "loc": [
+              "body"
+            ],
+            "msg": "Send reference, label, metadata or any of them",
+            "input": null
+          }
+        ]
+      }
+    }
+  }
+}

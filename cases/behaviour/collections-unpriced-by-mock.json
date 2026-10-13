@@ -1,0 +1,56 @@
+{
+  "id": "collections-unpriced-by-mock",
+  "description": "The mock's collections setting enrollment unpriced: an enrollment that passes its checks is the 529 enrollment_unpriced, raised at once as OverloadedError with its details, not retried.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "collections": {
+        "enrollment": "unpriced"
+      }
+    }
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Staff"
+        }
+      },
+      "save_as": "staff"
+    },
+    {
+      "call": {
+        "method": "collections.enroll",
+        "args": {
+          "collection_id": {
+            "$ref": "staff.id"
+          },
+          "image": {
+            "$image": {
+              "id": "badge",
+              "url": "https://files.example.com/badges/emp-1042.jpg"
+            }
+          },
+          "reference": "emp-1042"
+        }
+      },
+      "outcome": {
+        "error": "OverloadedError",
+        "fields": {
+          "status": 529,
+          "error_type": "overloaded_error",
+          "message": "Face enrollment is not available on this deployment yet.",
+          "details": {
+            "reason": "enrollment_unpriced"
+          }
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 2
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "local-collections-list-items-prefix-empty",
+  "description": "collections.list_items with an empty reference_prefix: 1 to 64 characters. Checked locally: BadRequestError, api_usage_error, with the API's message; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.list_items",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "reference_prefix": ""
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "Query parameter reference_prefix must be 1 to 64 characters of A-Z, a-z, 0-9, _, ., : and -, got ."
+      }
+    }
+  }
+}

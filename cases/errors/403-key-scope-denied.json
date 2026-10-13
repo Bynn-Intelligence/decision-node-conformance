@@ -1,0 +1,37 @@
+{
+  "id": "403-key-scope-denied",
+  "description": "A decide key (one made for a device: decisions and the models list only) on any other route is the 403 key_scope_denied, before anything runs or is billed: PermissionDeniedError with that error_type, never retried.",
+  "client": {
+    "api_key": "dn_test_scope-decide",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.list",
+    "args": {}
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"key_scope_denied\", \"message\": \"This key may only make decisions.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/collections",
+    "headers": {
+      "authorization": "Bearer dn_test_scope-decide"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "key_scope_denied",
+        "message": "This key may only make decisions."
+      }
+    }
+  }
+}

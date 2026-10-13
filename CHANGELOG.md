@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.15 (for SDK specification 1.3)
+
+Items found by reference, edited and described, the enrollment's 529 reasons, decide keys, and `wanted-persons` no longer offered. `SPEC_VERSION` stays `"1.3"`.
+
+- Calls: `collections.update_item(collection_id, item_id, reference, label, metadata)`, `PATCH /v1/collections/{id}/items/{item_id}` with only the fields given (`label` given as null clears it, `metadata` replaces the whole object), carrying an `Idempotency-Key` and retried as `create` and `enroll`; `collections.enroll` takes `metadata`; `collections.list_items` takes `reference` and `reference_prefix`. Each result stays the API's object as sent: an item now carries `metadata`, an items page `total_capped`, `reference` and `reference_prefix`.
+- Local checks: `update_item` with no field, a reference and a label as `enroll` checks them; `metadata` not an object, over 20 keys, a key not 1 to 40 of `a-z`, `0-9` and `_`, a text over 500 characters, a value that is not a text, a number or a boolean, each the API's `value_error` entry; `list_items` with both `reference` and `reference_prefix`, or either not 1 to 64 of `[A-Za-z0-9_.:-]`, the `400` `api_usage_error` with the API's message.
+- Errors: a new field `details`, `detail.details` when it is an object. An enrollment's `529` with `detail.details.reason` `enrollment_unpriced` (no `Retry-After`) is never retried; `face_model_unavailable` is retried as every `529`. The `403` `key_scope_denied` of a decide key, on a route other than a decision's and the models list or on its `face_recognition`, is a `PermissionDeniedError`.
+- `wanted-persons` is not offered: absent from `collections.list()`, a read of it or of its items the `404` `collection_not_found`, a `face_recognition` naming it the `403` `collection_not_enabled`. The scenario setting `wanted_persons` is gone.
+- Mock: item metadata checked as the API checks it, `PATCH` on an item, the items list's `reference` and `reference_prefix` (a filtered page in reference order, its count capped at 10,000), the setting `enrollment` (`unpriced` or `face_model_unavailable`), decide keys (a key holding `scope-decide`, with `may-search` to search collections), and a recorded request's method `PATCH`.
+
+Cases: 729 in all (requests 128, responses 107, errors 102, behaviour 390, constants 2): 32 new, `collections-get-wanted-persons-not-enabled` replaced by `collections-get-wanted-persons-not-found`, `face-recognition-wanted-persons-by-mock` removed, and the public collections' cases without `wanted-persons`.
+
 ## 1.14 (for SDK specification 1.3)
 
 Collections' `422`s as the API answers them. `SPEC_VERSION` stays `"1.3"`.

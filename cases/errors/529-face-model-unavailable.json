@@ -1,0 +1,45 @@
+{
+  "id": "529-face-model-unavailable",
+  "description": "An enrollment no server can read a face for is the 529 overloaded_error with detail.details.reason face_model_unavailable and Retry-After 1: OverloadedError with its details and retry_after.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.enroll",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "image": {
+        "$image": {
+          "id": "badge",
+          "url": "https://files.example.com/badges/emp-1042.jpg"
+        }
+      },
+      "reference": "emp-1042"
+    }
+  },
+  "response": {
+    "status": 529,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "retry-after": "1",
+      "retry-after-ms": "1000"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"overloaded_error\", \"message\": \"The face model is not available right now. Retry later.\", \"details\": {\"reason\": \"face_model_unavailable\"}}}"
+  },
+  "expect": {
+    "error": {
+      "class": "OverloadedError",
+      "fields": {
+        "status": 529,
+        "error_type": "overloaded_error",
+        "message": "The face model is not available right now. Retry later.",
+        "details": {
+          "reason": "face_model_unavailable"
+        },
+        "retry_after": 1
+      }
+    }
+  }
+}

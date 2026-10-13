@@ -1,0 +1,50 @@
+{
+  "id": "key-scope-decide-by-mock",
+  "description": "Against the mock, a decide key: a decision and the models list pass; a collections call is the 403 key_scope_denied, PermissionDeniedError, not retried.",
+  "client": {
+    "api_key": "dn_test_scope-decide"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "models",
+        "args": {}
+      }
+    },
+    {
+      "call": {
+        "method": "check",
+        "args": {
+          "instructions": "Is the gate open?",
+          "images": [
+            {
+              "$image": {
+                "id": "gate",
+                "url": "https://files.example.com/gate.jpg"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Staff"
+        }
+      },
+      "outcome": {
+        "error": "PermissionDeniedError",
+        "fields": {
+          "status": 403,
+          "error_type": "key_scope_denied",
+          "message": "This key may only make decisions."
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 3
+  }
+}

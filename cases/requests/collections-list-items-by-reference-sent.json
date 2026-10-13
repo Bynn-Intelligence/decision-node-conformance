@@ -1,0 +1,63 @@
+{
+  "id": "collections-list-items-by-reference-sent",
+  "description": "collections.list_items with reference sends it in the query: the items of that reference. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.list_items",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "reference": "emp-1042"
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "items": [
+              {
+                "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+                "reference": "emp-1042",
+                "label": "Anna, reception",
+                "metadata": {
+                  "department": "Reception",
+                  "badge_level": 2,
+                  "visitor": false
+                },
+                "created_at": "2026-10-12T09:00:00Z"
+              }
+            ],
+            "offset": 0,
+            "limit": 20,
+            "total": 1,
+            "total_capped": false,
+            "next_offset": null,
+            "reference": "emp-1042",
+            "reference_prefix": null
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80/items",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      },
+      "query": {
+        "reference": "emp-1042"
+      }
+    }
+  }
+}

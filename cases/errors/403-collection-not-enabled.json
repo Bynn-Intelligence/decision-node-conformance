@@ -1,6 +1,6 @@
 {
   "id": "403-collection-not-enabled",
-  "description": "face_recognition on wanted-persons while it is not enabled for the workspace is refused before any model runs: the 403 collection_not_enabled, PermissionDeniedError with that error_type.",
+  "description": "face_recognition naming wanted-persons, which is not offered, is refused before any model runs: the 403 collection_not_enabled, PermissionDeniedError with that error_type.",
   "client": {
     "api_key": "dn_test_conformance",
     "max_retries": 0

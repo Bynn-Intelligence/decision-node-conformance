@@ -1,0 +1,24 @@
+{
+  "id": "collections-list-items-wanted-persons-not-found",
+  "description": "wanted-persons is not offered: listing its items is the 404 collection_not_found, a NotFoundError, not retried.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.list_items",
+    "args": {
+      "collection_id": "wanted-persons"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "NotFoundError",
+      "fields": {
+        "status": 404,
+        "error_type": "collection_not_found",
+        "message": "Collection not found: wanted-persons."
+      }
+    }
+  }
+}

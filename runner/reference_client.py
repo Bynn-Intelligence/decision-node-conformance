@@ -28,6 +28,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import unicodedata
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import quote, urlsplit
@@ -51,7 +52,7 @@ _UNSET = object()
 
 
 class DecisionNodeError(Exception):
-    def __init__(self, message=None, status=None, error_type=None, request_id=None, reason=None, body=None, headers=None, boosters=None):
+    def __init__(self, message=None, status=None, error_type=None, request_id=None, reason=None, body=None, headers=None, boosters=None, details=None):
         # The error's own message is the server's message, unchanged (empty when the
         # server sent none), or the client's description when there was no response.
         super().__init__(message or "")
@@ -65,6 +66,9 @@ class DecisionNodeError(Exception):
         # Spec 1.3: x-decisionnode-boosters parsed, booster name to {status, latency_ms}
         # in header order; empty when the header is absent.
         self.boosters = boosters if boosters is not None else {}
+        # Suite 1.15: detail.details when it is an object (an enrollment's 529 says why in
+        # its reason), else empty.
+        self.details = details
 
 
 class BadRequestError(DecisionNodeError):
@@ -591,6 +595,9 @@ class DecisionNode:
                 retryable = False
             if policy == "idempotent" and resp.status == 409 and _error_type(resp) == "idempotency_in_progress":
                 retryable = True
+            if resp.status == 529 and _detail_reason(resp) == "enrollment_unpriced":
+                # Suite 1.15: no price for an enrollment, which a retry never cures.
+                retryable = False
             if retryable and attempt < self.max_retries:
                 wait = retry_wait(resp.headers)
                 self._sleep(wait if wait is not None else backoff(attempt))
@@ -755,6 +762,16 @@ def _error_type(resp) -> str | None:
     return detail.get("error_type") if isinstance(detail, dict) else None
 
 
+def _detail_reason(resp) -> str | None:
+    """detail.details.reason of an error response, when it has one."""
+    try:
+        detail = json.loads(resp.text).get("detail")
+    except (ValueError, AttributeError):
+        return None
+    details = detail.get("details") if isinstance(detail, dict) else None
+    return details.get("reason") if isinstance(details, dict) else None
+
+
 TimeoutError_builtin = __builtins__["TimeoutError"] if isinstance(__builtins__, dict) else __builtins__.TimeoutError
 
 
@@ -908,10 +925,12 @@ def make_error(resp: _Response) -> DecisionNodeError:
         message = edge_message(status, headers.get("x-request-id"))
     entries = None
     category = None
+    details = None
     if isinstance(detail, dict):
         error_type = detail.get("error_type")
         message = detail.get("message")
         category = detail.get("category")
+        details = detail.get("details") if isinstance(detail.get("details"), dict) else None
     elif isinstance(detail, str):
         message = detail
     elif isinstance(detail, list):
@@ -925,6 +944,7 @@ def make_error(resp: _Response) -> DecisionNodeError:
         body=body,
         headers=headers,
         boosters=parse_boosters(headers.get("x-decisionnode-boosters")),
+        details=details,
     )
     if status == 400:
         if error_type == "max_tokens_exceeded":
@@ -2350,6 +2370,49 @@ def _string_entries(loc, value, most, pattern=None) -> list:
     return []
 
 
+METADATA_KEYS, METADATA_KEY_CHARS, METADATA_TEXT_CHARS = 20, 40, 500
+METADATA_KEY_PATTERN = r"[a-z0-9_]{1,40}"
+
+
+def _metadata_entries(metadata) -> list:
+    """Suite 1.15: an item's metadata's 422 entries, the limits a client may hold: an
+    object of at most 20 keys (that alone, before any key is read), each key 1 to 40 of
+    a-z, 0-9 and _, each value a text of at most 500 characters, a number or a boolean.
+    A text's control or invisible characters, a number's range and the 4 KB are the
+    server's."""
+    loc = ["body", "metadata"]
+    if not isinstance(metadata, dict):
+        return [_entry("value_error", loc, "Metadata is an object of keys and values.", _echoed(metadata))]
+    if len(metadata) > METADATA_KEYS:
+        return [_entry("value_error", loc, "Metadata holds at most %d keys." % METADATA_KEYS, None)]
+    out = []
+    for key, value in metadata.items():
+        if not isinstance(key, str) or not re.fullmatch(METADATA_KEY_PATTERN, key):
+            key = str(key)
+            shown = "".join("?" if unicodedata.category(c) == "Cc" else c for c in key[:METADATA_KEY_CHARS]) + ("..." if len(key) > METADATA_KEY_CHARS else "")
+            out.append(_entry("value_error", loc, 'A metadata key is 1 to %d characters of a-z, 0-9 and _: "%s".' % (METADATA_KEY_CHARS, shown), None))
+        elif isinstance(value, str):
+            if len(value) > METADATA_TEXT_CHARS:
+                out.append(_entry("value_error", loc + [key], "A metadata text is at most %d characters." % METADATA_TEXT_CHARS, _echoed(value)))
+        elif not isinstance(value, (bool, int, float)):
+            out.append(_entry("value_error", loc + [key], "A metadata value is a text, a number or true or false.", _echoed(value)))
+    return out
+
+
+def _reference_query(name, value):
+    """Suite 1.15: a reference or reference_prefix of the items list, checked as the API
+    checks it."""
+    if not isinstance(value, str) or not re.fullmatch(ITEM_REFERENCE_PATTERN, value):
+        raise local_error(BadRequestError, "Query parameter %s must be 1 to 64 characters of A-Z, a-z, 0-9, _, ., : and -, got %s." % (name, _printable(str(value), 64)))
+
+
+def _printable(value, most):
+    """A caller's value as an API message echoes it: its first most characters, any but
+    printable ASCII as \\u{hex}, then "..." when it was longer."""
+    out = "".join(c if 0x20 <= ord(c) <= 0x7E else "\\u{%x}" % ord(c) for c in value[:most])
+    return out + ("..." if len(value) > most else "")
+
+
 class Collections:
     """A workspace's collections of faces, and the public ones it may
     use. Every result is the API's object as sent. create and enroll send an
@@ -2387,9 +2450,9 @@ class Collections:
     def delete(self, collection_id):
         return self._call("DELETE", "/v1/collections/%s" % self._id(collection_id))
 
-    def enroll(self, collection_id, image, reference, label=None):
+    def enroll(self, collection_id, image, reference, label=None, metadata=None):
         """One face from one image: sent as a decision's image is (a URL as given, local
-        bytes inline or uploaded)."""
+        bytes inline or uploaded); from 1.15 the item's metadata when given."""
         entries = []
         if image is None:
             entries.append(_entry("missing", ["body", "image"], "Field required", None))
@@ -2397,6 +2460,8 @@ class Collections:
         if label is not None:
             # Its pattern (no control or invisible character) is the server's to judge.
             entries.extend(_string_entries(["body", "label"], label, ITEM_LABEL_MAX))
+        if metadata is not None:
+            entries.extend(_metadata_entries(metadata))
         if entries:
             raise local_422(entries)
         # Only a URL's rules are a decision's (the 400 image_url_refused); every other fault
@@ -2407,19 +2472,50 @@ class Collections:
         body = {"image": wires[0], "reference": reference}
         if label is not None:
             body["label"] = label
+        if metadata is not None:
+            body["metadata"] = metadata
         return self._call("POST", "/v1/collections/%s/items" % self._id(collection_id), body, "idempotent", str(uuid.uuid4()))
 
-    def list_items(self, collection_id, offset=None, limit=None):
+    def update_item(self, collection_id, item_id, reference=_UNSET, label=_UNSET, metadata=_UNSET):
+        """Suite 1.15: PATCH an item, sending only the fields given; a label given as null
+        clears it and metadata replaces the item's whole object. It carries an
+        Idempotency-Key, as create and enroll, and retries as they do."""
+        entries, body = [], {}
+        if reference is not _UNSET:
+            entries.extend(_string_entries(["body", "reference"], reference, ITEM_REFERENCE_MAX, ITEM_REFERENCE_PATTERN))
+            body["reference"] = reference
+        if label is not _UNSET:
+            if label is not None:
+                entries.extend(_string_entries(["body", "label"], label, ITEM_LABEL_MAX))
+            body["label"] = label
+        if metadata is not _UNSET:
+            entries.extend(_metadata_entries(metadata))
+            body["metadata"] = metadata
+        if not body:
+            entries.append(_entry("missing", ["body"], "Send reference, label, metadata or any of them", None))
+        if entries:
+            raise local_422(entries)
+        path = "/v1/collections/%s/items/%s" % (self._id(collection_id), self._id(item_id))
+        return self._call("PATCH", path, body, "idempotent", str(uuid.uuid4()))
+
+    def list_items(self, collection_id, offset=None, limit=None, reference=None, reference_prefix=None):
         # offset an integer of 0 or more, limit 1 to 100, as batches.list.
         if offset is not None and (not _is_int(offset) or offset < 0):
             raise local_error(BadRequestError, "Query parameter offset must be an integer of 0 or more, got %s." % (offset,))
         if limit is not None and (not _is_int(limit) or not 1 <= limit <= LIST_LIMIT_MAX):
             raise local_error(BadRequestError, "Query parameter limit must be an integer from 1 to %d, got %s." % (LIST_LIMIT_MAX, limit))
+        # From 1.15 the items of a reference (exact) or of a prefix, never both.
+        if reference is not None and reference_prefix is not None:
+            raise local_error(BadRequestError, "Send query parameter reference or reference_prefix, not both.")
         q = []
         if offset is not None:
             q.append("offset=%d" % offset)
         if limit is not None:
             q.append("limit=%d" % limit)
+        for name, value in (("reference", reference), ("reference_prefix", reference_prefix)):
+            if value is not None:
+                _reference_query(name, value)
+                q.append("%s=%s" % (name, quote(value, safe="")))
         return self._call("GET", "/v1/collections/%s/items" % self._id(collection_id) + ("?" + "&".join(q) if q else ""))
 
     def delete_item(self, collection_id, item_id):

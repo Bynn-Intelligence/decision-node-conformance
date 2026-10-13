@@ -73,6 +73,7 @@ import sys
 import threading
 import time
 import traceback
+import unicodedata
 import uuid
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -220,7 +221,6 @@ BOOSTERS = {
 BOOSTER_OPTIONS = {"face_recognition": ("collection", "threshold")}  # every other booster takes none
 FACE_THRESHOLD = 0.5
 CELEBRITIES = (("celeb-00412", "A Public Figure"), ("celeb-00977", "Another Public Figure"))
-WANTED = ("wanted:2024-12345", "missing:2024-67890")
 MAX_BOOSTERS = 4
 BOOSTER_KEYS = ("name", "images", "require", "options")
 BOOSTER_BUDGET_MS = 800  # a booster that did not answer in time reports its budget
@@ -261,12 +261,13 @@ COLLECTION_NAME_MAX = 80
 ITEM_REFERENCE_MAX, ITEM_LABEL_MAX = 64, 128
 ITEM_REFERENCE_PATTERN = r"^[A-Za-z0-9_.:-]{1,64}$"
 ENROLLMENT_USD = 0.001
-PUBLIC_COLLECTION_ITEMS = {"celebrities": 1200, "wanted-persons": 5400}
+PUBLIC_COLLECTION_ITEMS = {"celebrities": 1200}
 IDEMPOTENCY_WINDOW_S = 24 * 3600  # with the three messages below
 IDEMPOTENCY_MALFORMED = "Idempotency-Key must be sent once, as 1 to 255 printable ASCII characters."
 IDEMPOTENCY_IN_PROGRESS = "A request with this Idempotency-Key is still running. Try again shortly."
 IDEMPOTENCY_REUSED = "This Idempotency-Key was already used with a different request."
 COLLECTIONS_MAX, ITEMS_MAX = 100, 1_000_000  # per workspace; a scenario may lower them
+ITEMS_COUNTED = 10_000  # a filtered items page counts its matches up to this, then says total_capped
 
 # number questions
 NUMBER_ONE_QUESTION_VALUES = 256
@@ -492,6 +493,74 @@ def echoed(value):
 def centry(kind: str, loc: list, msg: str, value, ctx=None) -> dict:
     """A collections 422 entry, its input echoed within bounds."""
     return entry(kind, loc, msg, echoed(value), ctx)
+
+
+METADATA_KEYS, METADATA_KEY_CHARS, METADATA_TEXT_CHARS, METADATA_BYTES = 20, 40, 500, 4096
+METADATA_KEY = re.compile(r"[a-z0-9_]{1,40}")
+
+
+def forbidden_char(c: str) -> bool:
+    """A control or invisible character, which no name, label or metadata text holds."""
+    o = ord(c)
+    return (
+        o <= 0x1F or 0x7F <= o <= 0x9F or o == 0xAD or 0x600 <= o <= 0x605 or o in (0x61C, 0x6DD, 0x70F, 0x8E2, 0x180E, 0xFEFF)
+        or 0x890 <= o <= 0x891 or 0x200B <= o <= 0x200F or 0x2028 <= o <= 0x202E or 0x2060 <= o <= 0x206F
+    )
+
+
+def metadata_entries(metadata) -> list:
+    """An item's metadata's 422 entries, as the API lists them: a flat object of at most
+    20 keys of a-z, 0-9 and _ (1 to 40), each a text (at most 500 characters, no control
+    or invisible one), a number (under 10^15 in size, and 0 or at least 10^-6) or a
+    boolean, at most 4 KB as compact JSON."""
+    loc = ["body", "metadata"]
+    if not isinstance(metadata, dict):
+        return [centry("value_error", loc, "Metadata is an object of keys and values.", metadata)]
+    if len(metadata) > METADATA_KEYS:
+        return [centry("value_error", loc, "Metadata holds at most %d keys." % METADATA_KEYS, metadata)]
+    out = []
+    for key, value in metadata.items():
+        if not METADATA_KEY.fullmatch(key):
+            shown = "".join("?" if unicodedata.category(c) == "Cc" else c for c in key[:METADATA_KEY_CHARS]) + ("..." if len(key) > METADATA_KEY_CHARS else "")
+            out.append(centry("value_error", loc, 'A metadata key is 1 to %d characters of a-z, 0-9 and _: "%s".' % (METADATA_KEY_CHARS, shown), metadata))
+            continue
+        at = loc + [key]
+        if isinstance(value, str):
+            if len(value) > METADATA_TEXT_CHARS:
+                out.append(centry("value_error", at, "A metadata text is at most %d characters." % METADATA_TEXT_CHARS, value))
+            elif any(forbidden_char(c) for c in value):
+                out.append(centry("value_error", at, "A metadata text holds no control or invisible characters.", value))
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            size = abs(float(value))
+            if not (math.isfinite(size) and size < 1e15 and (size == 0 or size >= 1e-6)):
+                out.append(centry("value_error", at, "A metadata number is under 10^15 in size, and 0 or at least 10^-6.", value))
+        elif not isinstance(value, bool):
+            out.append(centry("value_error", at, "A metadata value is a text, a number or true or false.", value))
+    if not out and len(json.dumps(metadata, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) > METADATA_BYTES:
+        out.append(centry("value_error", loc, "Metadata is at most %d bytes as JSON." % METADATA_BYTES, metadata))
+    return out
+
+
+def reference_entries(loc: list, reference) -> list:
+    """A reference's entries: a string of 1 to 64 of A-Za-z0-9_.:-, its length first."""
+    if not isinstance(reference, str):
+        return [centry("string_type", loc, "Input should be a valid string", reference)]
+    e = string_length(loc, reference, ITEM_REFERENCE_MAX)
+    if e:
+        return [e]
+    if not re.fullmatch(ITEM_REFERENCE_PATTERN, reference):
+        return [centry("string_pattern_mismatch", loc, "String should match pattern '%s'" % ITEM_REFERENCE_PATTERN, reference, {"pattern": ITEM_REFERENCE_PATTERN})]
+    return []
+
+
+def label_entries(loc: list, label) -> list:
+    """A label's entries: none or null, else a string of 1 to 128 characters."""
+    if label is None:
+        return []
+    if not isinstance(label, str):
+        return [centry("string_type", loc, "Input should be a valid string", label)]
+    e = string_length(loc, label, ITEM_LABEL_MAX)
+    return [e] if e else []
 
 
 def string_length(loc: list, value: str, most: int):
@@ -1674,8 +1743,8 @@ def face_recognition_reading(b: dict, iid: str, stream) -> dict:
         elif col["kind"] == "celebrities":
             ref, who = CELEBRITIES[int(pick * len(CELEBRITIES)) % len(CELEBRITIES)]
             match = {"box": box, "score": score, "collection": col["id"], "reference": ref, "name": who}
-        else:  # wanted-persons: a reference only, never a name
-            match = {"box": box, "score": score, "collection": col["id"], "reference": WANTED[int(pick * len(WANTED)) % len(WANTED)]}
+        else:
+            continue
         matches.append(match)
     matches.sort(key=lambda m: m["score"], reverse=True)
     return {"image": iid, "faces": faces, "matches": matches}
@@ -1795,6 +1864,28 @@ def validate_presign(body) -> list:
             raise usage_error("%s.sha256: must be the file's SHA-256 in base64, 44 characters." % where)
         out.append({"content_type": ctype, "byte_size": size, "checksum": checksum, "sha256": sha})
     return out
+
+
+KEY_SCOPE_DENIED = "This key may only make decisions."
+KEY_SEARCH_DENIED = "This key may not search collections."
+DECIDE_KEY_ROUTES = ("decide", "models")
+
+
+def printable(value: str, most: int) -> str:
+    """A caller's value as a message echoes it: its first most characters, any but
+    printable ASCII written as \\u{hex}, then "..." when it was longer."""
+    out = "".join(c if 0x20 <= ord(c) <= 0x7E else "\\u{%x}" % ord(c) for c in value[:most])
+    return out + ("..." if len(value) > most else "")
+
+
+def key_scope(key: str | None) -> str:
+    """A key holding scope-decide is a decide key; every other key is a full one."""
+    return "decide" if "scope-decide" in (key or "") else "full"
+
+
+def may_search_collections(key: str | None) -> bool:
+    """A full key always may; a decide key only when it holds may-search."""
+    return key_scope(key) == "full" or "may-search" in (key or "")
 
 
 def workspace_of(key: str | None) -> str:
@@ -2164,7 +2255,7 @@ API_ROUTES = [
     (re.compile(r"^/v1/collections$"), {"POST": "collection_create", "GET": "collection_list"}),
     (re.compile(r"^/v1/collections/([^/]+)$"), {"GET": "collection_get", "DELETE": "collection_delete"}),
     (re.compile(r"^/v1/collections/([^/]+)/items$"), {"POST": "item_enroll", "GET": "item_list"}),
-    (re.compile(r"^/v1/collections/([^/]+)/items/([^/]+)$"), {"DELETE": "item_delete"}),
+    (re.compile(r"^/v1/collections/([^/]+)/items/([^/]+)$"), {"PATCH": "item_update", "DELETE": "item_delete"}),
 ]
 
 
@@ -2288,6 +2379,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         self.dispatch("DELETE")
+
+    def do_PATCH(self):
+        self.dispatch("PATCH")
 
     def do_PATCH(self):
         self.dispatch("PATCH")
@@ -2525,6 +2619,11 @@ class Handler(BaseHTTPRequestHandler):
         if auth is not None:
             self.send(401, {"detail": {"error_type": "authentication_error", "message": "Cannot authenticate with the server. Please check your API key and try again."}}, self.error_headers(rid, auth))
             return
+        if key_scope(self.key()) == "decide" and name not in DECIDE_KEY_ROUTES:
+            # A decide key makes decisions and lists the models, nothing else: refused
+            # before anything is read or counted.
+            self.refuse(rid, typed_error(403, "key_scope_denied", KEY_SCOPE_DENIED))
+            return
         query = parse_qs(parts.query, keep_blank_values=True) if parts is not None else {}
         getattr(self, "api_" + name)(rid, started, body_bytes, query, *args)
 
@@ -2562,7 +2661,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         consumed: list = []
         try:
-            req = validate(body_bytes, profile, self.resolver(consumed), workspace_of(self.key()), self.booster_conf(), self.max_places(), self.booster_collection)
+            req = validate(body_bytes, profile, self.resolver(consumed), workspace_of(self.key()), self.booster_conf(), self.max_places(), self.search_collection)
         except Refused as exc:
             detail = exc.body.get("detail") if isinstance(exc.body, dict) else None
             if not (isinstance(detail, dict) and str(detail.get("error_type", "")).startswith("upload_")):
@@ -3372,15 +3471,13 @@ class Handler(BaseHTTPRequestHandler):
     # ----------------------------------------------------------------- collections
 
     def collection_conf(self) -> dict:
-        """The scenario's collections setting: wanted_persons (true: the workspace may use
-        the wanted-persons collection) and faces (how many faces every enrollment finds)."""
+        """The scenario's collections setting: faces (how many faces every enrollment
+        finds), enrollment (unpriced or face_model_unavailable: every enrollment's 529),
+        max_collections, max_items and region_unavailable."""
         return self.server.state.flag(self.sid)["collections"]
 
     def public_collections(self) -> list:
-        out = [{"id": "celebrities", "type": "face", "name": "celebrities", "public": True, "items": PUBLIC_COLLECTION_ITEMS["celebrities"], "created_at": "2026-10-12T00:00:00Z"}]
-        if self.collection_conf().get("wanted_persons"):
-            out.append({"id": "wanted-persons", "type": "face", "name": "wanted-persons", "public": True, "items": PUBLIC_COLLECTION_ITEMS["wanted-persons"], "created_at": "2026-10-12T00:00:00Z"})
-        return out
+        return [{"id": "celebrities", "type": "face", "name": "celebrities", "public": True, "items": PUBLIC_COLLECTION_ITEMS["celebrities"], "created_at": "2026-10-12T00:00:00Z"}]
 
     def own_collections(self) -> list:
         ws = workspace_of(self.key())
@@ -3390,12 +3487,14 @@ class Handler(BaseHTTPRequestHandler):
     def collection_object(self, c) -> dict:
         return {"id": c["id"], "type": c["type"], "name": c["name"], "public": False, "items": len(c["items"]), "created_at": c["created_at"], "deletion": None}
 
-    def find_collection(self, cid):
+    def find_collection(self, cid, search: bool = False):
         """(own collection, public object): a foreign or unknown id is collection_not_found,
-        the same answer in both cases; wanted-persons where it is not enabled is its 403,
-        since its name is public."""
-        if cid == "wanted-persons" and not self.collection_conf().get("wanted_persons"):
-            raise typed_error(403, "collection_not_enabled", "wanted-persons is not enabled for this workspace. Contact hello@bynn.com.")
+        the same answer in both cases. wanted-persons is not offered: a route naming it
+        answers as an unknown id, a search of it (search) the 403 collection_not_enabled."""
+        if cid == "wanted-persons":
+            if search:
+                raise typed_error(403, "collection_not_enabled", "wanted-persons is not enabled for this workspace. Contact hello@bynn.com.")
+            raise typed_error(404, "collection_not_found", "Collection not found: %s." % cid)
         for c in self.own_collections():
             if c["id"] == cid:
                 return c, None
@@ -3404,12 +3503,20 @@ class Handler(BaseHTTPRequestHandler):
                 return None, pub
         raise typed_error(404, "collection_not_found", "Collection not found: %s." % cid)
 
+    def search_collection(self, cid: str) -> dict:
+        """booster_collection for this request's key: a decide key without leave to search
+        collections is refused once face_recognition's options are checked, before any
+        collection is looked up or any booster runs."""
+        if not may_search_collections(self.key()):
+            raise typed_error(403, "key_scope_denied", KEY_SEARCH_DENIED)
+        return self.booster_collection(cid)
+
     def booster_collection(self, cid: str) -> dict:
-        """The collection face_recognition searches: {id, kind, items}; wanted-persons named
-        where it is not enabled is its own 403, any other unknown or foreign id the 404."""
-        own, pub = self.find_collection(cid)
+        """The collection face_recognition searches: {id, kind, items}; wanted-persons is
+        its 403 collection_not_enabled, any other unknown or foreign id the 404."""
+        own, pub = self.find_collection(cid, search=True)
         if pub:
-            return {"id": pub["id"], "kind": "celebrities" if pub["id"] == "celebrities" else "wanted", "items": []}
+            return {"id": pub["id"], "kind": "celebrities", "items": []}
         items = sorted(own["items"].values(), key=lambda i: i["seq"])
         return {"id": own["id"], "kind": "own", "items": [{"reference": i["reference"], "label": i["label"]} for i in items]}
 
@@ -3557,17 +3664,12 @@ class Handler(BaseHTTPRequestHandler):
                 entries.append(string_length(["body", "image", "id"], image["id"], MAX_IMAGE_ID_CHARS))
             if reference is None:
                 entries.append(centry("missing", ["body", "reference"], "Field required", body))
-            elif not isinstance(reference, str):
-                entries.append(centry("string_type", ["body", "reference"], "Input should be a valid string", reference))
-            elif string_length(["body", "reference"], reference, ITEM_REFERENCE_MAX):
-                entries.append(string_length(["body", "reference"], reference, ITEM_REFERENCE_MAX))
-            elif not re.fullmatch(ITEM_REFERENCE_PATTERN, reference):
-                entries.append(centry("string_pattern_mismatch", ["body", "reference"], "String should match pattern '%s'" % ITEM_REFERENCE_PATTERN, reference, {"pattern": ITEM_REFERENCE_PATTERN}))
-            if label is not None:
-                if not isinstance(label, str):
-                    entries.append(centry("string_type", ["body", "label"], "Input should be a valid string", label))
-                elif string_length(["body", "label"], label, ITEM_LABEL_MAX):
-                    entries.append(string_length(["body", "label"], label, ITEM_LABEL_MAX))
+            else:
+                entries.extend(reference_entries(["body", "reference"], reference))
+            entries.extend(label_entries(["body", "label"], label))
+            metadata = body.get("metadata", {})
+            if "metadata" in body:
+                entries.extend(metadata_entries(metadata))
             if entries:
                 raise refuse_422(entries)
         except Refused as exc:
@@ -3587,6 +3689,9 @@ class Handler(BaseHTTPRequestHandler):
             most = int(conf.get("max_items", ITEMS_MAX))
             if sum(len(c["items"]) for c in self.own_collections()) >= most:
                 raise typed_error(409, "items_limit_reached", "This workspace has reached its limit of %d items in its collections." % most)
+            if conf.get("enrollment") == "unpriced":
+                # No price for an enrollment: before anything is read, and no Retry-After.
+                raise Refused(529, {"detail": {"error_type": "overloaded_error", "message": "Face enrollment is not available on this deployment yet.", "details": {"reason": "enrollment_unpriced"}}}, "Face enrollment is not available on this deployment yet.")
             if isinstance(image, dict) and isinstance(image.get("data"), str):
                 # A picture that cannot be read is the 422 image_unreadable, never billed.
                 try:
@@ -3597,6 +3702,9 @@ class Handler(BaseHTTPRequestHandler):
                 if why:
                     raise refuse_422([centry("image_unreadable", ["body", "image"], "The image could not be read: %s." % why, image.get("id"))])
             img = validate_images([image], self.resolver(consumed))[0]
+            if conf.get("enrollment") == "face_model_unavailable":
+                # No server serves the face model: found by its call, once the picture is read.
+                raise Refused(529, {"detail": {"error_type": "overloaded_error", "message": "The face model is not available right now. Retry later.", "details": {"reason": "face_model_unavailable"}}}, "The face model is not available right now. Retry later.", {"Retry-After": "1", "retry-after-ms": "1000"})
             stream = Stream(img["digest"] + "\n" + reference)
             found = int(conf["faces"]) if "faces" in conf else 1 + int(stream.next() * 3)
             if found == 0:
@@ -3610,28 +3718,82 @@ class Handler(BaseHTTPRequestHandler):
         self.consume(consumed)
         own["enrolled"] += 1
         iid = "itm_" + hashlib.sha256(("%s\n%s\n%d" % (own["id"], reference, own["enrolled"])).encode("utf-8")).hexdigest()[:32]
-        item = {"id": iid, "reference": reference, "label": label, "created_at": iso(math.floor(self.now())), "seq": next(CREATION_ORDER)}
+        item = {"id": iid, "reference": reference, "label": label, "metadata": metadata, "created_at": iso(math.floor(self.now())), "seq": next(CREATION_ORDER)}
         with self.server.state.lock:
             own["items"][iid] = item
-        out = {"id": iid, "collection": own["id"], "reference": reference, "label": label, "faces_found": found, "box": box, "created_at": item["created_at"],
+        out = {"id": iid, "collection": own["id"], "reference": reference, "label": label, "metadata": metadata, "faces_found": found, "box": box, "created_at": item["created_at"],
                "usage": {"enrollments": 1, "cost": {"usd": ENROLLMENT_USD}}}
         self.idem_send(idem, rid, 201, out)
 
+    def item_object(self, i) -> dict:
+        return {"id": i["id"], "reference": i["reference"], "label": i["label"], "metadata": i.get("metadata", {}), "created_at": i["created_at"]}
+
     def api_item_list(self, rid, started, body_bytes, query, cid):
+        try:
+            offset = self.query_int(query, "offset", 0, 0, None, "an integer of 0 or more")
+            limit = self.query_int(query, "limit", 20, 1, 100, "an integer from 1 to 100")
+            reference = (query.get("reference") or [None])[0]
+            prefix = (query.get("reference_prefix") or [None])[0]
+            if reference is not None and prefix is not None:
+                raise usage_error("Send query parameter reference or reference_prefix, not both.")
+            for name, raw in (("reference", reference), ("reference_prefix", prefix)):
+                if raw is not None and not re.fullmatch(ITEM_REFERENCE_PATTERN, raw):
+                    raise usage_error("Query parameter %s must be 1 to 64 characters of A-Z, a-z, 0-9, _, ., : and -, got %s." % (name, printable(raw, 64)))
+            own, pub = self.find_collection(cid)
+            if pub:
+                raise typed_error(403, "collection_read_only", "%s is a public collection and cannot be changed or listed." % cid)
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        if reference is None and prefix is None:
+            items = sorted(own["items"].values(), key=lambda i: i["seq"], reverse=True)
+        else:
+            # Found by reference: in reference order (its bytes), then the id.
+            keep = (lambda r: r == reference) if reference is not None else (lambda r: r.startswith(prefix))
+            items = sorted((i for i in own["items"].values() if keep(i["reference"])), key=lambda i: (i["reference"].encode("utf-8"), i["id"]))
+        total, capped = min(len(items), ITEMS_COUNTED), len(items) > ITEMS_COUNTED
+        page = items[offset : offset + limit]
+        nxt = offset + len(page) if offset + len(page) < len(items) else None
+        self.send(200, {"items": [self.item_object(i) for i in page], "offset": offset, "limit": limit, "total": total, "total_capped": capped, "next_offset": nxt,
+                        "reference": reference, "reference_prefix": prefix}, {"x-request-id": rid})
+
+    def api_item_update(self, rid, started, body_bytes, query, cid, item_id):
+        # The body is checked before its key is taken, as an enrollment's.
+        try:
+            body = parse_body(body_bytes)
+            if not isinstance(body, dict):
+                raise refuse_422([centry("model_attributes_type", ["body"], "Input should be a valid dictionary or object to extract fields from", body)])
+            entries = []
+            if "reference" in body:
+                entries.extend(reference_entries(["body", "reference"], body["reference"]))
+            entries.extend(label_entries(["body", "label"], body.get("label")))
+            if "metadata" in body:
+                entries.extend(metadata_entries(body["metadata"]))
+            if not any(k in body for k in ("reference", "label", "metadata")):
+                entries.append(centry("missing", ["body"], "Send reference, label, metadata or any of them", body))
+            if entries:
+                raise refuse_422(entries)
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        idem = self.idem_begin(rid, body_bytes)
+        if idem is False:
+            return
         try:
             own, pub = self.find_collection(cid)
             if pub:
                 raise typed_error(403, "collection_read_only", "%s is a public collection and cannot be changed or listed." % cid)
-            offset = self.query_int(query, "offset", 0, 0, None, "an integer of 0 or more")
-            limit = self.query_int(query, "limit", 20, 1, 100, "an integer from 1 to 100")
+            item = own["items"].get(item_id)
+            if item is None:
+                raise typed_error(404, "item_not_found", "Item not found: %s." % item_id)
         except Refused as exc:
-            self.refuse(rid, exc)
+            self.idem_refuse(idem, rid, exc)
             return
-        items = sorted(own["items"].values(), key=lambda i: i["seq"], reverse=True)
-        page = items[offset : offset + limit]
-        nxt = offset + len(page) if offset + len(page) < len(items) else None
-        out = [{"id": i["id"], "reference": i["reference"], "label": i["label"], "created_at": i["created_at"]} for i in page]
-        self.send(200, {"items": out, "offset": offset, "limit": limit, "total": len(items), "next_offset": nxt}, {"x-request-id": rid})
+        with self.server.state.lock:
+            for k in ("reference", "label", "metadata"):
+                if k in body:
+                    item[k] = body[k]
+        self.idem_send(idem, rid, 200, self.item_object(item))
 
     def api_item_delete(self, rid, started, body_bytes, query, cid, item_id):
         try:

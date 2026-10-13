@@ -1,0 +1,161 @@
+{
+  "id": "collections-items-found-and-edited-by-mock",
+  "description": "Against the mock: two items enrolled with metadata and one without, found by a reference prefix, one edited (its label cleared, its metadata replaced), then found by its new reference.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Staff"
+        }
+      },
+      "save_as": "staff"
+    },
+    {
+      "call": {
+        "method": "collections.enroll",
+        "args": {
+          "collection_id": {
+            "$ref": "staff.id"
+          },
+          "image": {
+            "$image": {
+              "id": "badge",
+              "url": "https://files.example.com/badges/emp-1042.jpg"
+            }
+          },
+          "reference": "emp-1043",
+          "label": "Ben",
+          "metadata": {
+            "department": "Workshop"
+          }
+        }
+      },
+      "save_as": "ben"
+    },
+    {
+      "call": {
+        "method": "collections.enroll",
+        "args": {
+          "collection_id": {
+            "$ref": "staff.id"
+          },
+          "image": {
+            "$image": {
+              "id": "badge",
+              "url": "https://files.example.com/badges/emp-1042.jpg"
+            }
+          },
+          "reference": "emp-1042",
+          "metadata": {
+            "department": "Reception",
+            "badge_level": 2,
+            "visitor": false
+          }
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "reference": "emp-1042",
+          "label": null,
+          "metadata": {
+            "department": "Reception",
+            "badge_level": 2,
+            "visitor": false
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.enroll",
+        "args": {
+          "collection_id": {
+            "$ref": "staff.id"
+          },
+          "image": {
+            "$image": {
+              "id": "badge",
+              "url": "https://files.example.com/badges/emp-1042.jpg"
+            }
+          },
+          "reference": "vis-0001"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list_items",
+        "args": {
+          "collection_id": {
+            "$ref": "staff.id"
+          },
+          "reference_prefix": "emp-"
+        }
+      },
+      "outcome": {
+        "result": "item_page",
+        "item_page": {
+          "total": 2,
+          "total_capped": false,
+          "reference": null,
+          "reference_prefix": "emp-"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.update_item",
+        "args": {
+          "collection_id": {
+            "$ref": "staff.id"
+          },
+          "item_id": {
+            "$ref": "ben.id"
+          },
+          "reference": "emp-2043",
+          "label": null,
+          "metadata": {
+            "department": "Office"
+          }
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "reference": "emp-2043",
+          "label": null,
+          "metadata": {
+            "department": "Office"
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list_items",
+        "args": {
+          "collection_id": {
+            "$ref": "staff.id"
+          },
+          "reference": "emp-2043"
+        }
+      },
+      "outcome": {
+        "result": "item_page",
+        "item_page": {
+          "total": 1,
+          "reference": "emp-2043",
+          "reference_prefix": null
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 7
+  }
+}
