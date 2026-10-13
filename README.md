@@ -1,5 +1,7 @@
 # DecisionNode SDK conformance suite
 
+[DecisionNode](https://decisionnode.com) is a decision engine: send it text, JSON or images with a question, and it answers with calibrated probabilities.
+
 Language-neutral test cases and a mock API server. Every DecisionNode SDK runs this suite in CI. An SDK release needs every case to pass.
 
 Suite version: 1.13, for SDK specification version 1.3 (the `SPEC_VERSION` every SDK exports). What changed in each version is in [CHANGELOG.md](CHANGELOG.md).
