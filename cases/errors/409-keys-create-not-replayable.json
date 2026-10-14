@@ -1,0 +1,34 @@
+{
+  "id": "409-keys-create-not-replayable",
+  "description": "A repeat of a create whose key is revoked since is the 409 key_not_replayable: its secret is never shown again. The base error, raised, not retried.",
+  "client": {
+    "api_key": "dn_test_scope-keys",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.create",
+    "args": {
+      "name": "Drone 7",
+      "idempotency_key": "provision drone-7"
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "The key this Idempotency-Key made is revoked or its secret can no longer be shown: revoke it if it is not, then create a new key with a new Idempotency-Key."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"key_not_replayable\", \"message\": \"The key this Idempotency-Key made is revoked or its secret can no longer be shown: revoke it if it is not, then create a new key with a new Idempotency-Key.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "key_not_replayable",
+        "message": "The key this Idempotency-Key made is revoked or its secret can no longer be shown: revoke it if it is not, then create a new key with a new Idempotency-Key."
+      }
+    }
+  }
+}

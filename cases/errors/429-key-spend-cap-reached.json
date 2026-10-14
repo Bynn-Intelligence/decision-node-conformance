@@ -1,0 +1,51 @@
+{
+  "id": "429-key-spend-cap-reached",
+  "description": "A key past its daily spend cap: the 429 key_spend_cap_reached, its details the cap, what was spent and when it resets (00:00 UTC), and a Retry-After to then. RateLimitError with its details.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "model": "decisionnode-flash",
+      "questions": {
+        "ok": {
+          "$truth": {
+            "instructions": "Is it fine?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This key's daily spend cap of USD 2.00 is reached. It resets at 00:00 UTC.",
+      "retry-after": "25200",
+      "retry-after-ms": "25200000"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"key_spend_cap_reached\", \"message\": \"This key's daily spend cap of USD 2.00 is reached. It resets at 00:00 UTC.\", \"details\": {\"resets_at\": \"2026-10-15T00:00:00Z\", \"cap\": {\"usd\": 2}, \"spent\": {\"usd\": 2.000123}}}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RateLimitError",
+      "fields": {
+        "status": 429,
+        "error_type": "key_spend_cap_reached",
+        "message": "This key's daily spend cap of USD 2.00 is reached. It resets at 00:00 UTC.",
+        "details": {
+          "resets_at": "2026-10-15T00:00:00Z",
+          "cap": {
+            "usd": 2
+          },
+          "spent": {
+            "usd": 2.000123
+          }
+        }
+      }
+    }
+  }
+}

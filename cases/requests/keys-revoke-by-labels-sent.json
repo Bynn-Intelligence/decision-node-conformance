@@ -1,0 +1,59 @@
+{
+  "id": "keys-revoke-by-labels-sent",
+  "description": "keys.revoke_by_labels sends POST /v1/keys/revoke with labels, and device_ids and dry_run when given. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.revoke_by_labels",
+    "args": {
+      "labels": {
+        "customer": "globex"
+      },
+      "device_ids": [
+        "drone-3",
+        "drone-4"
+      ],
+      "dry_run": true
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "would_revoke": 1,
+            "more": false
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/keys/revoke",
+      "headers": {
+        "authorization": "Bearer dn_test_scope-keys"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "labels": {
+          "customer": "globex"
+        },
+        "device_ids": [
+          "drone-3",
+          "drone-4"
+        ],
+        "dry_run": true
+      }
+    }
+  }
+}

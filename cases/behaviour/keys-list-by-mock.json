@@ -1,0 +1,85 @@
+{
+  "id": "keys-list-by-mock",
+  "description": "keys.list against the mock: the active decide keys by default; status all and revoked; two labels, both matched.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "keys.list",
+        "args": {}
+      },
+      "outcome": {
+        "result": "key_page",
+        "key_page": {
+          "next_cursor": null
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "keys.all",
+        "args": {
+          "status": "all"
+        }
+      },
+      "outcome": {
+        "result": "api_keys",
+        "api_keys": [
+          {
+            "id": "key_00000000000000000000000000000d01",
+            "status": "active"
+          },
+          {
+            "id": "key_00000000000000000000000000000d02",
+            "status": "revoked"
+          },
+          {
+            "id": "key_00000000000000000000000000000d03",
+            "status": "expired"
+          }
+        ]
+      }
+    },
+    {
+      "call": {
+        "method": "keys.all",
+        "args": {
+          "status": "revoked"
+        }
+      },
+      "outcome": {
+        "result": "api_keys",
+        "api_keys": [
+          {
+            "id": "key_00000000000000000000000000000d02"
+          }
+        ]
+      }
+    },
+    {
+      "call": {
+        "method": "keys.all",
+        "args": {
+          "status": "all",
+          "labels": {
+            "customer": "acme",
+            "plan": "basic"
+          }
+        }
+      },
+      "outcome": {
+        "result": "api_keys",
+        "api_keys": [
+          {
+            "id": "key_00000000000000000000000000000d02"
+          }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 4
+  }
+}

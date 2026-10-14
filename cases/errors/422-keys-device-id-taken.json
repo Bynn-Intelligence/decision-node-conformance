@@ -1,0 +1,54 @@
+{
+  "id": "422-keys-device-id-taken",
+  "description": "A device_id an active key of the workspace has is the 422 device_id_taken. ValidationError with the entry.",
+  "client": {
+    "api_key": "dn_test_scope-keys",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.create",
+    "args": {
+      "name": "Drone 1 replacement",
+      "device_id": "drone-1"
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"device_id_taken\", \"loc\": [\"body\", \"device_id\"], \"msg\": \"An active key of this workspace has this device_id: revoke it first\", \"input\": \"drone-1\"}]}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/keys",
+    "headers": {
+      "authorization": "Bearer dn_test_scope-keys",
+      "content-type": "application/json"
+    },
+    "body": {
+      "name": "Drone 1 replacement",
+      "device_id": "drone-1"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "entries": [
+          {
+            "type": "device_id_taken",
+            "loc": [
+              "body",
+              "device_id"
+            ],
+            "msg": "An active key of this workspace has this device_id: revoke it first",
+            "input": "drone-1"
+          }
+        ]
+      }
+    }
+  }
+}

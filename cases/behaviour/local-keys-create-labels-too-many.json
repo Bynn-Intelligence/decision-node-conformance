@@ -1,0 +1,53 @@
+{
+  "id": "local-keys-create-labels-too-many",
+  "description": "17 labels: a key has at most 16. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.create",
+    "args": {
+      "name": "Drone 9",
+      "labels": {
+        "l00": "v",
+        "l01": "v",
+        "l02": "v",
+        "l03": "v",
+        "l04": "v",
+        "l05": "v",
+        "l06": "v",
+        "l07": "v",
+        "l08": "v",
+        "l09": "v",
+        "l10": "v",
+        "l11": "v",
+        "l12": "v",
+        "l13": "v",
+        "l14": "v",
+        "l15": "v",
+        "l16": "v"
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "labels"
+            ],
+            "msg": "A key has at most 16 labels.",
+            "input": null
+          }
+        ]
+      }
+    }
+  }
+}

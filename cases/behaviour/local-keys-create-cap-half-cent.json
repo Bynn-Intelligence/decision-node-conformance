@@ -1,0 +1,37 @@
+{
+  "id": "local-keys-create-cap-half-cent",
+  "description": "A daily spend cap of half a cent: from 0.01 to 1000, in cents. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.create",
+    "args": {
+      "name": "Drone 9",
+      "daily_spend_cap": {
+        "usd": 0.005
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "daily_spend_cap"
+            ],
+            "msg": "daily_spend_cap.usd is from 0.01 to 1000, in cents, or null.",
+            "input": null
+          }
+        ]
+      }
+    }
+  }
+}

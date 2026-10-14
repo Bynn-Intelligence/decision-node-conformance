@@ -1,0 +1,38 @@
+{
+  "id": "403-keys-full-key",
+  "description": "A full key on /v1/keys is the 403 key_scope_denied: keys are managed with a keys key, made in the console. PermissionDeniedError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.list",
+    "args": {}
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Keys are managed with a keys key, made in the console."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"key_scope_denied\", \"message\": \"Keys are managed with a keys key, made in the console.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/keys",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "key_scope_denied",
+        "message": "Keys are managed with a keys key, made in the console."
+      }
+    }
+  }
+}

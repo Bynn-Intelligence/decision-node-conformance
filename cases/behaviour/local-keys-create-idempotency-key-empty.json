@@ -1,0 +1,25 @@
+{
+  "id": "local-keys-create-idempotency-key-empty",
+  "description": "An empty idempotency_key: 1 to 255 printable ASCII characters. Checked locally: BadRequestError, api_usage_error, the API's message; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.create",
+    "args": {
+      "name": "Drone 9",
+      "idempotency_key": ""
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "Idempotency-Key must be sent once, as 1 to 255 printable ASCII characters."
+      }
+    }
+  }
+}

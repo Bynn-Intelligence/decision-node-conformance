@@ -1,0 +1,24 @@
+{
+  "id": "local-keys-update-nothing",
+  "description": "keys.update with no field given. Checked locally: BadRequestError, api_usage_error, the API's message; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.update",
+    "args": {
+      "key_id": "key_00000000000000000000000000000d01"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "Nothing to change."
+      }
+    }
+  }
+}

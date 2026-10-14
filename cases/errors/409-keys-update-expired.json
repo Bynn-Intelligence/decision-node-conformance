@@ -1,0 +1,49 @@
+{
+  "id": "409-keys-update-expired",
+  "description": "Changing an expired key beyond its name is the 409 key_expired: an expired key is replaced, never brought back.",
+  "client": {
+    "api_key": "dn_test_scope-keys",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.update",
+    "args": {
+      "key_id": "key_00000000000000000000000000000d03",
+      "labels": {
+        "customer": "globex"
+      }
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This key has expired: make a new one. An expired key is never brought back."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"key_expired\", \"message\": \"This key has expired: make a new one. An expired key is never brought back.\"}}"
+  },
+  "natural_request": {
+    "method": "PATCH",
+    "path": "/v1/keys/key_00000000000000000000000000000d03",
+    "headers": {
+      "authorization": "Bearer dn_test_scope-keys",
+      "content-type": "application/json"
+    },
+    "body": {
+      "labels": {
+        "customer": "globex"
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "key_expired",
+        "message": "This key has expired: make a new one. An expired key is never brought back."
+      }
+    }
+  }
+}

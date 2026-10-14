@@ -1,0 +1,59 @@
+{
+  "id": "422-keys-limit-over-workspace",
+  "description": "A key's own limit above the workspace's is the 422 at [\"body\", \"limits\", <field>]: the ceiling is the workspace's, so it is the server's to check. ValidationError.",
+  "client": {
+    "api_key": "dn_test_scope-keys",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.create",
+    "args": {
+      "name": "Drone 9",
+      "limits": {
+        "requests_per_second": 1000
+      }
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"value_error\", \"loc\": [\"body\", \"limits\", \"requests_per_second\"], \"msg\": \"A key's requests a second is a whole number from 1 to the workspace's 50, or null.\", \"input\": null}]}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/keys",
+    "headers": {
+      "authorization": "Bearer dn_test_scope-keys",
+      "content-type": "application/json"
+    },
+    "body": {
+      "name": "Drone 9",
+      "limits": {
+        "requests_per_second": 1000
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "entries": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "limits",
+              "requests_per_second"
+            ],
+            "msg": "A key's requests a second is a whole number from 1 to the workspace's 50, or null.",
+            "input": null
+          }
+        ]
+      }
+    }
+  }
+}

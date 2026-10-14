@@ -1,0 +1,45 @@
+{
+  "id": "404-keys-update-unknown",
+  "description": "Updating a key the keys key does not manage (unknown, another workspace's, or not a decide key) is the 404 not_found_error \"Not found.\". NotFoundError.",
+  "client": {
+    "api_key": "dn_test_scope-keys",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.update",
+    "args": {
+      "key_id": "key_00000000000000000000000000000000",
+      "name": "Gate"
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Not found."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"not_found_error\", \"message\": \"Not found.\"}}"
+  },
+  "natural_request": {
+    "method": "PATCH",
+    "path": "/v1/keys/key_00000000000000000000000000000000",
+    "headers": {
+      "authorization": "Bearer dn_test_scope-keys",
+      "content-type": "application/json"
+    },
+    "body": {
+      "name": "Gate"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "NotFoundError",
+      "fields": {
+        "status": 404,
+        "error_type": "not_found_error",
+        "message": "Not found."
+      }
+    }
+  }
+}

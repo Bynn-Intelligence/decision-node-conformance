@@ -1,0 +1,31 @@
+{
+  "id": "keys-all-pages-by-mock",
+  "description": "keys.all follows next_cursor until it is null: one key a page here, three pages.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.all",
+    "args": {
+      "status": "all",
+      "limit": 1
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "outcome": {
+      "result": "api_keys",
+      "api_keys": [
+        {
+          "id": "key_00000000000000000000000000000d01"
+        },
+        {
+          "id": "key_00000000000000000000000000000d02"
+        },
+        {
+          "id": "key_00000000000000000000000000000d03"
+        }
+      ]
+    }
+  }
+}

@@ -479,6 +479,7 @@ class DecisionNode:
         self.batches = Batches(self)
         self.collections = Collections(self)
         self.usage = Usage(self)
+        self.keys = Keys(self)
 
     # ---- transport
 
@@ -598,6 +599,9 @@ class DecisionNode:
                 retryable = True
             if resp.status == 529 and _detail_reason(resp) == "enrollment_unpriced":
                 # Suite 1.15: no price for an enrollment, which a retry never cures.
+                retryable = False
+            if resp.status == 429 and _error_type(resp) == "key_spend_cap_reached":
+                # Suite 1.20: the key's daily spend cap, reset at 00:00 UTC: a stop, not a wait.
                 retryable = False
             if retryable and attempt < self.max_retries:
                 wait = retry_wait(resp.headers)
@@ -2618,6 +2622,188 @@ class Usage:
             cursor = page.get("next_cursor")
             if not cursor:
                 return items
+
+
+KEYS_PAGE_MAX = 200
+KEYS_MAX_LABELS = 16
+KEYS_MAX_REVOKE_DEVICES = 1000
+IDEMPOTENCY_KEY_RULE = "Idempotency-Key must be sent once, as 1 to 255 printable ASCII characters."
+
+
+def _key_entry(kind, loc, msg, value):
+    return _entry(kind, ["body"] + list(loc), msg, _echoed(value))
+
+
+def _key_name_entries(name) -> list:
+    """A key's name, the bounds a client may hold: trimmed, 1 to 48 characters. Its
+    character set (letters, digits, spaces, dots, dashes, underscores, as the server's
+    Unicode tables read letters and digits) is the server's."""
+    if not isinstance(name, str) or not name.strip():
+        return [_key_entry("value_error", ["name"], "Give the key a name.", name)]
+    if len(name.strip()) > 48:
+        return [_key_entry("value_error", ["name"], "Key names are at most 48 characters.", name)]
+    return []
+
+
+def _key_device_ok(value) -> bool:
+    return isinstance(value, str) and 1 <= len(value) <= 128 and all(0x20 <= ord(c) <= 0x7E for c in value) and not value.startswith(" ")
+
+
+def _key_labels_entries(labels) -> list:
+    if not isinstance(labels, dict):
+        return [_key_entry("value_error", ["labels"], "labels is an object of names to values.", labels)]
+    if len(labels) > KEYS_MAX_LABELS:
+        return [_key_entry("value_error", ["labels"], "A key has at most 16 labels.", labels)]
+    for name, value in labels.items():
+        if not isinstance(name, str) or not re.fullmatch(USAGE_LABEL_NAME, name):
+            return [_key_entry("value_error", ["labels"], "A label's name is 1 to 32 of a-z, 0-9, _ . and -.", labels)]
+        if not isinstance(value, str) or not 1 <= len(value) <= 64 or any(unicodedata.category(c) == "Cc" for c in value):
+            return [_key_entry("value_error", ["labels", name], "A label's value is 1 to 64 characters of text.", labels)]
+    return []
+
+
+def _key_cap_entries(cap) -> list:
+    usd = cap.get("usd") if isinstance(cap, dict) else None
+    ok = isinstance(usd, (int, float)) and not isinstance(usd, bool) and math.isfinite(usd)
+    cents = round(usd * 100) if ok else 0
+    if not ok or abs(usd * 100 - cents) >= 1e-6 or cents < 1 or usd > 1000:
+        return [_key_entry("value_error", ["daily_spend_cap"], "daily_spend_cap.usd is from 0.01 to 1000, in cents, or null.", cap)]
+    return []
+
+
+def _key_fields(body, entries, device_id, labels, limits, daily_spend_cap, expires_at, may_search_collections, clears):
+    """The fields beyond the name, in the order the body sends them; on an update a
+    field given as null (clears) is sent as null and checked no further."""
+    if device_id is not _UNSET:
+        if not _key_device_ok(device_id):
+            entries.append(_key_entry("value_error", ["device_id"], "device_id is 1 to 128 printable ASCII characters, not starting with a space.", device_id))
+        body["device_id"] = device_id
+    if labels is not _UNSET:
+        if not (clears and labels is None):
+            entries.extend(_key_labels_entries(labels))
+        body["labels"] = labels
+    if limits is not _UNSET:
+        if not (clears and limits is None) and not isinstance(limits, dict):
+            entries.append(_key_entry("value_error", ["limits"], "limits is an object, or null.", limits))
+        body["limits"] = limits
+    if daily_spend_cap is not _UNSET:
+        if not (clears and daily_spend_cap is None):
+            entries.extend(_key_cap_entries(daily_spend_cap))
+        body["daily_spend_cap"] = daily_spend_cap
+    if expires_at is not _UNSET:
+        body["expires_at"] = expires_at
+    if may_search_collections is not _UNSET:
+        body["may_search_collections"] = may_search_collections
+
+
+class Keys:
+    """Suite 1.20: a keys key's decide keys, /v1/keys. create(name, ...) is POST /v1/keys,
+    with an Idempotency-Key (the one given, else a new UUID per call, the same on every
+    attempt), so a retry or a repeat answers the same key and secret; it retries as any
+    call. list and all page the keys (all follows next_cursor), update is PATCH with only
+    the fields given (null clears labels, limits, the cap and the expiry), revoke is
+    DELETE, revoke_by_labels POST /v1/keys/revoke. Each returns the API's object as sent.
+    The fixed rules are checked locally first, the first one refused as the API would; a
+    limit's ceiling (the workspace's), the expiry's window (from now) and a name's
+    characters are the server's."""
+
+    def __init__(self, client):
+        self.c = client
+
+    def _call(self, method, path, body=None, policy="default", key=None):
+        extra = {"Idempotency-Key": key} if key else None
+        parsed, _, _ = self.c._exchange(method, path, body, policy=policy, extra_headers=extra)
+        return parsed
+
+    def create(self, name, device_id=_UNSET, labels=_UNSET, limits=_UNSET, daily_spend_cap=_UNSET, expires_at=_UNSET,
+               may_search_collections=_UNSET, idempotency_key=None):
+        entries = _key_name_entries(name)
+        body = {"name": name}
+        if not entries:
+            _key_fields(body, entries, device_id, labels, limits, daily_spend_cap, expires_at, may_search_collections, clears=False)
+        if entries:
+            raise local_422(entries[:1])
+        if idempotency_key is not None and (not isinstance(idempotency_key, str) or not 1 <= len(idempotency_key) <= 255
+                                            or not all(0x20 <= ord(c) <= 0x7E for c in idempotency_key)):
+            raise local_error(BadRequestError, IDEMPOTENCY_KEY_RULE)
+        return self._call("POST", "/v1/keys", body, "idempotent", idempotency_key or str(uuid.uuid4()))
+
+    def _list_query(self, labels, device_id, status, limit, cursor) -> list:
+        q = []
+        for name, value in sorted((labels or {}).items()):
+            if not isinstance(name, str) or not re.fullmatch(USAGE_LABEL_NAME, name) or not isinstance(value, str) \
+                    or not 1 <= len(value) <= 64 or any(unicodedata.category(c) == "Cc" for c in value):
+                raise local_error(BadRequestError, "A label filter is name:value, as labels are written.")
+            q.append(("label", "%s:%s" % (name, value)))
+        if device_id is not None:
+            if not _key_device_ok(device_id):
+                raise local_error(BadRequestError, "device_id is 1 to 128 printable ASCII characters, not starting with a space.")
+            q.append(("device_id", device_id))
+        if status is not None:
+            if status not in USAGE_STATUSES:
+                raise local_error(BadRequestError, "status is active, expired, revoked or all.")
+            q.append(("status", status))
+        if limit is not None:
+            if not _is_int(limit) or not 1 <= limit <= KEYS_PAGE_MAX:
+                raise local_error(BadRequestError, "limit is a whole number from 1 to 200.")
+            q.append(("limit", limit))
+        if cursor is not None:
+            q.append(("cursor", cursor))
+        return q
+
+    def list(self, labels=None, device_id=None, status=None, limit=None, cursor=None):
+        q = self._list_query(labels, device_id, status, limit, cursor)
+        query = "&".join("%s=%s" % (quote(k, safe=""), quote(str(v), safe="")) for k, v in q)
+        return self._call("GET", "/v1/keys" + ("?" + query if query else ""))
+
+    def all(self, labels=None, device_id=None, status=None, limit=None):
+        items, cursor = [], None
+        while True:
+            page = self.list(labels, device_id, status, limit, cursor)
+            items.extend(page.get("items") or [])
+            cursor = page.get("next_cursor")
+            if not cursor:
+                return items
+
+    def update(self, key_id, name=_UNSET, labels=_UNSET, limits=_UNSET, daily_spend_cap=_UNSET, expires_at=_UNSET,
+               may_search_collections=_UNSET):
+        body, entries = {}, []
+        if name is not _UNSET:
+            entries = _key_name_entries(name)
+            body["name"] = name
+        if not entries:
+            _key_fields(body, entries, _UNSET, labels, limits, daily_spend_cap, expires_at, may_search_collections, clears=True)
+        if entries:
+            raise local_422(entries[:1])
+        if not body:
+            raise local_error(BadRequestError, "Nothing to change.")
+        return self._call("PATCH", "/v1/keys/%s" % quote(str(key_id), safe=""), body)
+
+    def revoke(self, key_id):
+        return self._call("DELETE", "/v1/keys/%s" % quote(str(key_id), safe=""))
+
+    def revoke_by_labels(self, labels, device_ids=None, dry_run=None):
+        """Revokes the active decide keys that carry every label given (and, with
+        device_ids, one of those devices), at most 10,000 a call (more says whether any are
+        left); a dry run counts them (would_revoke). Retried as any call."""
+        entries = _key_labels_entries(labels)
+        if not entries and not labels:
+            entries = [_key_entry("value_error", ["labels"], "A bulk revoke names at least one label: every key it revokes has them all.", labels)]
+        body = {"labels": labels}
+        if not entries and device_ids is not None:
+            if not isinstance(device_ids, (list, tuple)) or len(device_ids) > KEYS_MAX_REVOKE_DEVICES:
+                entries = [_key_entry("value_error", ["device_ids"], "device_ids is a list of at most 1,000 device ids.", device_ids)]
+            else:
+                for d in device_ids:
+                    if not _key_device_ok(d):
+                        entries = [_key_entry("value_error", ["device_id"], "device_id is 1 to 128 printable ASCII characters, not starting with a space.", d)]
+                        break
+            body["device_ids"] = list(device_ids) if isinstance(device_ids, (list, tuple)) else device_ids
+        if entries:
+            raise local_422(entries[:1])
+        if dry_run is not None:
+            body["dry_run"] = dry_run
+        return self._call("POST", "/v1/keys/revoke", body)
 
 
 class Batches:

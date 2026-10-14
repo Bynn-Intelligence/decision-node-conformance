@@ -1,0 +1,60 @@
+{
+  "id": "keys-create-repeated-by-mock",
+  "description": "The same create with the same idempotency_key, twice: one key, its secret shown again the second time; the list holds it once.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "keys.create",
+        "args": {
+          "name": "Gate 2",
+          "labels": {
+            "batch": "provision-2"
+          },
+          "idempotency_key": "provision gate-2"
+        }
+      },
+      "outcome": {
+        "result": "created_key"
+      }
+    },
+    {
+      "call": {
+        "method": "keys.create",
+        "args": {
+          "name": "Gate 2",
+          "labels": {
+            "batch": "provision-2"
+          },
+          "idempotency_key": "provision gate-2"
+        }
+      },
+      "outcome": {
+        "result": "created_key"
+      }
+    },
+    {
+      "call": {
+        "method": "keys.all",
+        "args": {
+          "labels": {
+            "batch": "provision-2"
+          }
+        }
+      },
+      "outcome": {
+        "result": "api_keys",
+        "api_keys": [
+          {
+            "name": "Gate 2"
+          }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 3
+  }
+}

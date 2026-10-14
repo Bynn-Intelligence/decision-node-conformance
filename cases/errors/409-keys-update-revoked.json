@@ -1,0 +1,45 @@
+{
+  "id": "409-keys-update-revoked",
+  "description": "Changing a revoked key is the 409 already_revoked.",
+  "client": {
+    "api_key": "dn_test_scope-keys",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.update",
+    "args": {
+      "key_id": "key_00000000000000000000000000000d02",
+      "name": "Drone 2b"
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This key is revoked already."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"already_revoked\", \"message\": \"This key is revoked already.\"}}"
+  },
+  "natural_request": {
+    "method": "PATCH",
+    "path": "/v1/keys/key_00000000000000000000000000000d02",
+    "headers": {
+      "authorization": "Bearer dn_test_scope-keys",
+      "content-type": "application/json"
+    },
+    "body": {
+      "name": "Drone 2b"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "already_revoked",
+        "message": "This key is revoked already."
+      }
+    }
+  }
+}

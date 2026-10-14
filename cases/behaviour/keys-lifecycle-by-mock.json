@@ -1,0 +1,121 @@
+{
+  "id": "keys-lifecycle-by-mock",
+  "description": "Against the mock, a keys key: create a decide key, find it by its label, change its labels and cap, revoke it, then list it as revoked.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "steps": [
+    {
+      "save_as": "made",
+      "call": {
+        "method": "keys.create",
+        "args": {
+          "name": "Gate 1",
+          "device_id": "gate-1",
+          "labels": {
+            "site": "berlin"
+          }
+        }
+      },
+      "outcome": {
+        "result": "created_key",
+        "created_key": {
+          "key": {
+            "name": "Gate 1",
+            "status": "active",
+            "scope": "decide",
+            "device_id": "gate-1",
+            "labels": {
+              "site": "berlin"
+            },
+            "limits": null,
+            "daily_spend_cap": null,
+            "revoked_at": null
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "keys.list",
+        "args": {
+          "labels": {
+            "site": "berlin"
+          }
+        }
+      },
+      "outcome": {
+        "result": "key_page",
+        "key_page": {
+          "next_cursor": null
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "keys.update",
+        "args": {
+          "key_id": {
+            "$ref": "made.key.id"
+          },
+          "labels": {
+            "site": "munich"
+          },
+          "daily_spend_cap": {
+            "usd": 3
+          }
+        }
+      },
+      "outcome": {
+        "result": "api_key",
+        "api_key": {
+          "labels": {
+            "site": "munich"
+          },
+          "daily_spend_cap": {
+            "usd": 3
+          },
+          "spent_today": {
+            "usd": 0
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "keys.revoke",
+        "args": {
+          "key_id": {
+            "$ref": "made.key.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "key_revoked",
+        "key_revoked": {
+          "revoked": true
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "keys.list",
+        "args": {
+          "labels": {
+            "site": "munich"
+          },
+          "status": "revoked"
+        }
+      },
+      "outcome": {
+        "result": "key_page",
+        "key_page": {
+          "next_cursor": null
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 5
+  }
+}

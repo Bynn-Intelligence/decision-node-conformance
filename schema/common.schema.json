@@ -81,7 +81,7 @@
     },
     "call": {
       "type": "object",
-      "description": "One SDK call by neutral method name and neutral argument names. Inside args, an object with the single key $truth, $choice, $score or $image stands for a builder call; every other value is passed as plain data. Spec 1.1 adds $number (instructions, min, max, step) and $text ({repeat, times}: the string repeated, for large bodies), and inside behaviour steps {\"$ref\": \"name.path\"} for a value saved by an earlier step. Suite 1.5 adds $nest ({depth, value}: value inside depth arrays, for the nesting limit without a deep case file). Suite 1.6 adds $list ({count, item}: count copies of item, {i} in its strings replaced by the 0-based index) and check: true (the same request handed to the SDK's check_request instead of being sent; methods decide, open_session, batches.create, batches.add). Suite 1.7 adds $video ({id, frames, fps?, start?, end?}: Video(id, frames, fps, start, end)) with each frame a $frame ({t, path | data_base64 | data_text, media_type?}: VideoFrame(t, data, media_type)), for SDK specification 1.2. Suite 1.8 adds $point and $box ({instructions, image?, units?}: point(instructions, image, units) and box(instructions, image, units)). Suite 1.11 adds $booster ({name, images?, require?, options?}: Booster(name, images, require, options), each argument passed only when present) for SDK specification 1.3; a booster given as a plain name string, or as a plain wire-form object, is passed as is. Suite 1.13 adds the collections calls: collections.create(name, type), collections.list(), collections.get(collection_id), collections.delete(collection_id), collections.enroll(collection_id, image, reference, label?), collections.list_items(collection_id, offset?, limit?) and collections.delete_item(collection_id, item_id). Suite 1.15 adds collections.update_item(collection_id, item_id, reference?, label?, metadata?) (label given as null clears it), collections.enroll's metadata? and collections.list_items' reference? and reference_prefix?. Suite 1.18 adds usage.key(key_id, start?, end?, granularity?, group_by?), usage.list(start, end, granularity?, group_by?, labels?, device_id?, key_ids?, scope?, status?, include_empty?, limit?, cursor?) and usage.all(the same but cursor).",
+      "description": "One SDK call by neutral method name and neutral argument names. Inside args, an object with the single key $truth, $choice, $score or $image stands for a builder call; every other value is passed as plain data. Spec 1.1 adds $number (instructions, min, max, step) and $text ({repeat, times}: the string repeated, for large bodies), and inside behaviour steps {\"$ref\": \"name.path\"} for a value saved by an earlier step. Suite 1.5 adds $nest ({depth, value}: value inside depth arrays, for the nesting limit without a deep case file). Suite 1.6 adds $list ({count, item}: count copies of item, {i} in its strings replaced by the 0-based index) and check: true (the same request handed to the SDK's check_request instead of being sent; methods decide, open_session, batches.create, batches.add). Suite 1.7 adds $video ({id, frames, fps?, start?, end?}: Video(id, frames, fps, start, end)) with each frame a $frame ({t, path | data_base64 | data_text, media_type?}: VideoFrame(t, data, media_type)), for SDK specification 1.2. Suite 1.8 adds $point and $box ({instructions, image?, units?}: point(instructions, image, units) and box(instructions, image, units)). Suite 1.11 adds $booster ({name, images?, require?, options?}: Booster(name, images, require, options), each argument passed only when present) for SDK specification 1.3; a booster given as a plain name string, or as a plain wire-form object, is passed as is. Suite 1.13 adds the collections calls: collections.create(name, type), collections.list(), collections.get(collection_id), collections.delete(collection_id), collections.enroll(collection_id, image, reference, label?), collections.list_items(collection_id, offset?, limit?) and collections.delete_item(collection_id, item_id). Suite 1.15 adds collections.update_item(collection_id, item_id, reference?, label?, metadata?) (label given as null clears it), collections.enroll's metadata? and collections.list_items' reference? and reference_prefix?. Suite 1.18 adds usage.key(key_id, start?, end?, granularity?, group_by?), usage.list(start, end, granularity?, group_by?, labels?, device_id?, key_ids?, scope?, status?, include_empty?, limit?, cursor?) and usage.all(the same but cursor). Suite 1.20 adds keys.create(name, device_id?, labels?, limits?, daily_spend_cap?, expires_at?, may_search_collections?, idempotency_key?), keys.list(labels?, device_id?, status?, limit?, cursor?), keys.all(the same but cursor), keys.update(key_id, name?, labels?, limits?, daily_spend_cap?, expires_at?, may_search_collections?) (null clears labels, limits, the cap and the expiry), keys.revoke(key_id) and keys.revoke_by_labels(labels, device_ids?, dry_run?).",
       "required": [
         "method",
         "args"
@@ -119,7 +119,13 @@
             "collections.update_item",
             "usage.key",
             "usage.list",
-            "usage.all"
+            "usage.all",
+            "keys.create",
+            "keys.list",
+            "keys.all",
+            "keys.update",
+            "keys.revoke",
+            "keys.revoke_by_labels"
           ]
         },
         "args": {
@@ -1697,7 +1703,13 @@
                 "deleted",
                 "key_usage",
                 "usage_page",
-                "usage_items"
+                "usage_items",
+                "created_key",
+                "api_key",
+                "key_page",
+                "api_keys",
+                "key_revoked",
+                "keys_revoked"
               ]
             },
             "decision": {
@@ -1776,6 +1788,33 @@
               "items": {
                 "type": "object"
               }
+            },
+            "created_key": {
+              "type": "object",
+              "description": "Suite 1.20: keys.create's object as sent: the key and its secret; nested objects compare by the keys given, lists whole."
+            },
+            "api_key": {
+              "type": "object",
+              "description": "Suite 1.20: keys.update's key as sent; nested objects compare by the keys given, lists whole."
+            },
+            "key_page": {
+              "type": "object",
+              "description": "Suite 1.20: keys.list's page as sent; nested objects compare by the keys given, lists whole."
+            },
+            "api_keys": {
+              "type": "array",
+              "description": "Suite 1.20: keys.all's keys, every page's in order, each compared by the keys given.",
+              "items": {
+                "type": "object"
+              }
+            },
+            "key_revoked": {
+              "type": "object",
+              "description": "Suite 1.20: keys.revoke's object as sent; nested objects compare by the keys given, lists whole."
+            },
+            "keys_revoked": {
+              "type": "object",
+              "description": "Suite 1.20: keys.revoke_by_labels' object as sent; nested objects compare by the keys given, lists whole."
             }
           },
           "additionalProperties": false

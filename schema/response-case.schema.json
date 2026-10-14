@@ -139,6 +139,26 @@
         "usage_page": {
           "type": "object",
           "description": "Suite 1.18: usage.list's page as sent; nested objects compare by the keys given, lists whole."
+        },
+        "created_key": {
+          "type": "object",
+          "description": "Suite 1.20: keys.create's object as sent: the key and its secret; nested objects compare by the keys given, lists whole."
+        },
+        "api_key": {
+          "type": "object",
+          "description": "Suite 1.20: keys.update's key as sent; nested objects compare by the keys given, lists whole."
+        },
+        "key_page": {
+          "type": "object",
+          "description": "Suite 1.20: keys.list's page as sent; nested objects compare by the keys given, lists whole."
+        },
+        "key_revoked": {
+          "type": "object",
+          "description": "Suite 1.20: keys.revoke's object as sent; nested objects compare by the keys given, lists whole."
+        },
+        "keys_revoked": {
+          "type": "object",
+          "description": "Suite 1.20: keys.revoke_by_labels' object as sent; nested objects compare by the keys given, lists whole."
         }
       },
       "additionalProperties": false

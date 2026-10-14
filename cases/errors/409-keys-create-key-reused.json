@@ -1,0 +1,34 @@
+{
+  "id": "409-keys-create-key-reused",
+  "description": "A create's Idempotency-Key used with another body, or by another keys key, is the 409 idempotency_key_reused, raised, never retried.",
+  "client": {
+    "api_key": "dn_test_scope-keys",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.create",
+    "args": {
+      "name": "Drone 7",
+      "idempotency_key": "provision drone-7"
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This Idempotency-Key was already used with a different request."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"idempotency_key_reused\", \"message\": \"This Idempotency-Key was already used with a different request.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "idempotency_key_reused",
+        "message": "This Idempotency-Key was already used with a different request."
+      }
+    }
+  }
+}

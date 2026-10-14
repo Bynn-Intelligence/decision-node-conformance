@@ -1,0 +1,39 @@
+{
+  "id": "429-keys-creation-rate",
+  "description": "Keys made faster than the workspace may: the 429 rate_limit_error with detail.details.reason key_creation_rate and Retry-After. RateLimitError with its details and retry_after.",
+  "client": {
+    "api_key": "dn_test_scope-keys",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.create",
+    "args": {
+      "name": "Drone 7"
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Keys are being made faster than this workspace may: 20 a second, bursts of 200, 50,000 a day.",
+      "retry-after": "10",
+      "retry-after-ms": "10000"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"rate_limit_error\", \"message\": \"Keys are being made faster than this workspace may: 20 a second, bursts of 200, 50,000 a day.\", \"details\": {\"reason\": \"key_creation_rate\"}}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RateLimitError",
+      "fields": {
+        "status": 429,
+        "error_type": "rate_limit_error",
+        "message": "Keys are being made faster than this workspace may: 20 a second, bursts of 200, 50,000 a day.",
+        "details": {
+          "reason": "key_creation_rate"
+        },
+        "retry_after": 10
+      }
+    }
+  }
+}

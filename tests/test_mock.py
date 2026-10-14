@@ -2083,5 +2083,53 @@ class TestPublishable(Spec11):
         self.assertEqual((st, out["detail"]["message"]), (403, "A publishable key may only make decisions."))
 
 
+class TestKeys(Spec11):
+    """Suite 1.20: a keys key's decide keys."""
+
+    def h(self, key="dn_test_scope-keys", idem=None):
+        out = {"Authorization": "Bearer " + key, "Content-Type": "application/json", "x-mock-session": "k1"}
+        if idem:
+            out["Idempotency-Key"] = idem
+        return out
+
+    def test_create_replays_its_secret_and_refuses_others(self):
+        body = {"name": "Gate 9", "device_id": "gate-9"}
+        st, _, first = self.call("POST", "/v1/keys", body, self.h(idem="prov-9"))
+        self.assertEqual((st, first["key"]["created_by_key"] is not None, first["secret"].startswith("dn_live_")), (201, True, True))
+        st, hd, again = self.call("POST", "/v1/keys", body, self.h(idem="prov-9"))
+        self.assertEqual((st, again["secret"], again["key"]["id"], hd.get("x-decisionnode-idempotent-replay")), (201, first["secret"], first["key"]["id"], "true"))
+        st, _, out = self.call("POST", "/v1/keys", dict(body, name="Gate 10"), self.h(idem="prov-9"))
+        self.assertEqual((st, out["detail"]["error_type"]), (409, "idempotency_key_reused"))
+        st, _, out = self.call("POST", "/v1/keys", body, self.h("dn_test_scope-keys-other", idem="prov-9"))
+        self.assertEqual((st, out["detail"]["error_type"]), (409, "idempotency_key_reused"))
+        self.assertEqual(self.call("DELETE", "/v1/keys/" + first["key"]["id"], None, self.h())[0], 200)
+        st, _, out = self.call("POST", "/v1/keys", body, self.h(idem="prov-9"))
+        self.assertEqual((st, out["detail"]["error_type"]), (409, "key_not_replayable"))
+        # Without a key, every create is a new key with a new secret.
+        a = self.call("POST", "/v1/keys", {"name": "Gate 11"}, self.h())[2]
+        st, _, out = self.call("POST", "/v1/keys", {"name": "Gate 11"}, self.h())
+        self.assertEqual((st, out["detail"][0]["type"]), (422, "name_taken"))
+        self.assertNotEqual(a["secret"], first["secret"])
+
+    def test_fields_and_errors(self):
+        for body, loc, msg in (({}, ["body", "name"], "Field required"),
+                               ({"name": "Gate", "limits": {"tokens_per_second": 0}}, ["body", "limits", "tokens_per_second"], "A key's tokens a second is a whole number from 1 to the workspace's 200000, or null."),
+                               ({"name": "Gate", "colour": "red"}, ["body", "colour"], "Extra inputs are not permitted"),
+                               ({"name": "Gate", "may_search_collections": "yes"}, ["body", "may_search_collections"], "Input should be a valid boolean")):
+            st, _, out = self.call("POST", "/v1/keys", body, self.h())
+            self.assertEqual((st, out["detail"][0]["loc"], out["detail"][0]["msg"]), (422, loc, msg), body)
+        st, _, out = self.call("PATCH", "/v1/keys/key_00000000000000000000000000000d01", {}, self.h())
+        self.assertEqual((st, out["detail"]["message"]), (400, "Nothing to change."))
+        st, _, out = self.call("PATCH", "/v1/keys/key_00000000000000000000000000000d01", {"device_id": "x"}, self.h())
+        self.assertEqual((st, out["detail"][0]["msg"]), (422, "A key's device_id is set when it is made: revoke it and make another."))
+        st, _, out = self.call("GET", "/v1/keys?limit=0", None, self.h())
+        self.assertEqual((st, out["detail"]["message"]), (400, "limit is a whole number from 1 to 200."))
+        st, _, out = self.call("POST", "/v1/keys/revoke", {"labels": {"customer": "acme"}, "dry_run": "true"}, self.h())
+        self.assertEqual((st, out["detail"][0]["type"]), (422, "bool_type"))
+        for key, msg in (("dn_test_conformance", "Keys are managed with a keys key, made in the console."), ("dn_pub_x", "A publishable key may only make decisions.")):
+            st, _, out = self.call("GET", "/v1/keys", None, self.h(key))
+            self.assertEqual((st, out["detail"]["message"]), (403, msg))
+
+
 if __name__ == "__main__":
     unittest.main()

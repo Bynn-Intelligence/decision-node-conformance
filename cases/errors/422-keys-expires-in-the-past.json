@@ -1,0 +1,54 @@
+{
+  "id": "422-keys-expires-in-the-past",
+  "description": "An expiry in the past (it must be a minute to 10 years ahead, from the server's now) is the 422 at [\"body\", \"expires_at\"]. ValidationError.",
+  "client": {
+    "api_key": "dn_test_scope-keys",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.create",
+    "args": {
+      "name": "Drone 9",
+      "expires_at": "2020-01-01T00:00:00Z"
+    }
+  },
+  "response": {
+    "status": 422,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"detail\": [{\"type\": \"value_error\", \"loc\": [\"body\", \"expires_at\"], \"msg\": \"expires_at is a time (RFC 3339) from a minute to 10 years ahead, or null.\", \"input\": \"2020-01-01T00:00:00Z\"}]}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/keys",
+    "headers": {
+      "authorization": "Bearer dn_test_scope-keys",
+      "content-type": "application/json"
+    },
+    "body": {
+      "name": "Drone 9",
+      "expires_at": "2020-01-01T00:00:00Z"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "ValidationError",
+      "fields": {
+        "status": 422,
+        "entries": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "expires_at"
+            ],
+            "msg": "expires_at is a time (RFC 3339) from a minute to 10 years ahead, or null.",
+            "input": "2020-01-01T00:00:00Z"
+          }
+        ]
+      }
+    }
+  }
+}

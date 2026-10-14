@@ -1,0 +1,40 @@
+{
+  "id": "409-keys-revoke-already-revoked",
+  "description": "Revoking a key that is revoked already is the 409 already_revoked: the base error, as every 409.",
+  "client": {
+    "api_key": "dn_test_scope-keys",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.revoke",
+    "args": {
+      "key_id": "key_00000000000000000000000000000d02"
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This key is revoked already."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"already_revoked\", \"message\": \"This key is revoked already.\"}}"
+  },
+  "natural_request": {
+    "method": "DELETE",
+    "path": "/v1/keys/key_00000000000000000000000000000d02",
+    "headers": {
+      "authorization": "Bearer dn_test_scope-keys"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "error_type": "already_revoked",
+        "message": "This key is revoked already."
+      }
+    }
+  }
+}

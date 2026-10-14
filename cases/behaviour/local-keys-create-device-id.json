@@ -1,0 +1,35 @@
+{
+  "id": "local-keys-create-device-id",
+  "description": "A device_id starting with a space. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.create",
+    "args": {
+      "name": "Drone 9",
+      "device_id": " drone-9"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "device_id"
+            ],
+            "msg": "device_id is 1 to 128 printable ASCII characters, not starting with a space.",
+            "input": " drone-9"
+          }
+        ]
+      }
+    }
+  }
+}

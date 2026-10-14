@@ -1,0 +1,41 @@
+{
+  "id": "keys-revoke-sent",
+  "description": "keys.revoke sends DELETE /v1/keys/{key_id}, the id escaped as a path segment. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.revoke",
+    "args": {
+      "key_id": "key_00000000000000000000000000000d01"
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "key_00000000000000000000000000000d01",
+            "revoked": true
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "DELETE",
+      "path": "/v1/keys/key_00000000000000000000000000000d01",
+      "headers": {
+        "authorization": "Bearer dn_test_scope-keys"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      }
+    }
+  }
+}

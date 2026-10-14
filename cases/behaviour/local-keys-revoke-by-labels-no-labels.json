@@ -1,0 +1,34 @@
+{
+  "id": "local-keys-revoke-by-labels-no-labels",
+  "description": "A bulk revoke with no label: it names at least one, so it can never revoke every key. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.revoke_by_labels",
+    "args": {
+      "labels": {}
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "labels"
+            ],
+            "msg": "A bulk revoke names at least one label: every key it revokes has them all.",
+            "input": null
+          }
+        ]
+      }
+    }
+  }
+}

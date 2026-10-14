@@ -1,0 +1,24 @@
+{
+  "id": "local-keys-list-limit-201",
+  "description": "limit 201: a whole number from 1 to 200. Checked locally: BadRequestError, api_usage_error, the API's message; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.list",
+    "args": {
+      "limit": 201
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "limit is a whole number from 1 to 200."
+      }
+    }
+  }
+}

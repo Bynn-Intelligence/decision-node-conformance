@@ -1,0 +1,66 @@
+{
+  "id": "keys-update-null-clears-by-mock",
+  "description": "keys.update with labels, limits and the cap given as null clears them.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "steps": [
+    {
+      "save_as": "made",
+      "call": {
+        "method": "keys.create",
+        "args": {
+          "name": "Gate 3",
+          "labels": {
+            "site": "oslo"
+          },
+          "limits": {
+            "requests_per_second": 5
+          },
+          "daily_spend_cap": {
+            "usd": 1.5
+          }
+        }
+      },
+      "outcome": {
+        "result": "created_key",
+        "created_key": {
+          "key": {
+            "limits": {
+              "requests_per_second": 5,
+              "tokens_per_second": null
+            },
+            "daily_spend_cap": {
+              "usd": 1.5
+            }
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "keys.update",
+        "args": {
+          "key_id": {
+            "$ref": "made.key.id"
+          },
+          "labels": null,
+          "limits": null,
+          "daily_spend_cap": null
+        }
+      },
+      "outcome": {
+        "result": "api_key",
+        "api_key": {
+          "labels": {},
+          "limits": null,
+          "daily_spend_cap": null,
+          "spent_today": null
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 2
+  }
+}

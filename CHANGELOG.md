@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.20 (for SDK specification 1.3)
+
+A keys key's decide keys, `/v1/keys`. `SPEC_VERSION` stays `"1.3"`.
+
+- Calls: `keys.create(name, device_id, labels, limits, daily_spend_cap, expires_at, may_search_collections, idempotency_key)`, with an `Idempotency-Key` (the one given, else a new UUID per call, the same on every attempt), so a retry or a repeat answers the same key and secret; `keys.list(labels, device_id, status, limit, cursor)` and `keys.all(...)`, which follows `next_cursor`; `keys.update(key_id, ...)`, a field given as null clearing it; `keys.revoke(key_id)`; `keys.revoke_by_labels(labels, device_ids, dry_run)`. Each returns the API's object as sent.
+- Local checks: a name's length, `device_id`, the labels, the shape of `limits`, the daily spend cap, an update with nothing to change, the Idempotency-Key, `keys.list`'s filters and limit, a bulk revoke without a label or with over 1,000 devices, each as the API answers it. A limit's ceiling, the expiry's window and a name's characters are the server's.
+- Retries: a `429` `key_spend_cap_reached` is never retried (the cap resets at 00:00 UTC), on every call; a create answered the `409` `idempotency_in_progress` waits its `Retry-After` and tries again with its key.
+- `GET /v1/keys/{id}` is not a call: the API has no such route.
+- Errors: the `403` `key_scope_denied` for a full, a decide or a publishable key; the `404` for a key the keys key does not manage; the `409`s `already_revoked`, `key_expired`, `key_not_replayable` and `idempotency_key_reused`; the `422`s `name_taken`, `device_id_taken`, a limit over the workspace's and an expiry out of its window; the `429` `rate_limit_error` with `details.reason` `key_creation_rate`; the `429` `key_spend_cap_reached` with its `details`.
+- Case format: the methods `keys.*`; the results `created_key`, `api_key`, `key_page`, `api_keys`, `key_revoked` and `keys_revoked`; a natural request's method `PATCH`.
+- Mock: `/v1/keys` for a key holding `scope-keys`, per session and workspace, seeded with the usage fixture's decide keys.
+
+Cases: 840 in all (requests 140, responses 117, errors 135, behaviour 446, constants 2): 46 new (7 requests, 2 responses, 14 errors, 23 behaviour).
+
 ## 1.19 (for SDK specification 1.3)
 
 Publishable keys. `SPEC_VERSION` stays `"1.3"`.

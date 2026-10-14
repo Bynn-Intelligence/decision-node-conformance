@@ -1,0 +1,38 @@
+{
+  "id": "403-keys-decide-key",
+  "description": "A decide key on /v1/keys is the 403 key_scope_denied. PermissionDeniedError.",
+  "client": {
+    "api_key": "dn_test_scope-decide",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "keys.list",
+    "args": {}
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This key may only make decisions."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"key_scope_denied\", \"message\": \"This key may only make decisions.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/keys",
+    "headers": {
+      "authorization": "Bearer dn_test_scope-decide"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "key_scope_denied",
+        "message": "This key may only make decisions."
+      }
+    }
+  }
+}

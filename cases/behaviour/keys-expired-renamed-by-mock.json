@@ -1,0 +1,25 @@
+{
+  "id": "keys-expired-renamed-by-mock",
+  "description": "An expired key's name alone may change; it stays expired.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.update",
+    "args": {
+      "key_id": "key_00000000000000000000000000000d03",
+      "name": "Drone 3 retired"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "api_key",
+      "api_key": {
+        "id": "key_00000000000000000000000000000d03",
+        "name": "Drone 3 retired",
+        "status": "expired"
+      }
+    }
+  }
+}

@@ -1914,7 +1914,9 @@ KEY_PUBLISHABLE_ONLY = "A publishable key may only make decisions."
 PUBLISHABLE_ORIGINS = ("https://app.example.com",)
 PUBLISHABLE_FLASH_ONLY = ["decisionnode-flash"]
 DECIDE_KEY_ROUTES = ("decide", "models")
-KEYS_KEY_ROUTES = ("key_usage", "usage_page")
+KEYS_KEY_ROUTES = ("key_usage", "usage_page", "keys_create", "keys_list", "keys_update", "keys_revoke", "keys_revoke_bulk")
+KEYS_ROUTES = ("keys_create", "keys_list", "keys_update", "keys_revoke", "keys_revoke_bulk")
+KEY_NOT_KEYS = "Keys are managed with a keys key, made in the console."
 
 
 def printable(value: str, most: int) -> str:
@@ -2161,6 +2163,181 @@ def usage_parse_cursor(raw: str):
         return None
 
 
+# --------------------------------------------------------------------------- /v1/keys (suite 1.20)
+
+KEY_SECRET_PREFIX = "dn_live_"
+KEYS_PAGE_DEFAULT, KEYS_PAGE_MAX = 50, 200
+KEYS_REVOKE_PER_CALL, KEYS_MAX_REVOKE_DEVICES, KEYS_MAX_LABELS = 10_000, 1_000, 16
+# The workspace's own limits, the ceiling of a key's (the mock's).
+WORKSPACE_LIMITS = {"requests_per_second": 50, "tokens_per_second": 200_000}
+DAILY_CAP_MAX_USD = 1000.0
+EXPIRY_MAX_DAYS = 3653
+
+
+class KeyFault(Exception):
+    """A refused field: its path (dotted) and why; the 422 value_error entry."""
+
+    def __init__(self, path: str, message: str):
+        super().__init__(message)
+        self.path, self.message = path, message
+
+
+def key_entry(kind: str, loc: list, msg: str, value) -> dict:
+    return centry(kind, ["body"] + list(loc), msg, value)
+
+
+def key_fault(f: KeyFault, value) -> Refused:
+    return refuse_422([key_entry("value_error", f.path.split("."), f.message, value)])
+
+
+def key_name(raw: str) -> str:
+    name = raw.strip()
+    if not name:
+        raise KeyFault("name", "Give the key a name.")
+    if len(name) > 48:
+        raise KeyFault("name", "Key names are at most 48 characters.")
+    if not all(c.isalnum() or c in "_ .-" for c in name):
+        raise KeyFault("name", "Use letters, digits, spaces, dots, dashes and underscores.")
+    return name
+
+
+def key_device_id(raw: str) -> str:
+    if not raw or len(raw) > 128 or not all(0x20 <= ord(c) <= 0x7E for c in raw) or raw.startswith(" "):
+        raise KeyFault("device_id", "device_id is 1 to 128 printable ASCII characters, not starting with a space.")
+    return raw
+
+
+def key_labels(value) -> dict:
+    if not isinstance(value, dict):
+        raise KeyFault("labels", "labels is an object of names to values.")
+    if len(value) > KEYS_MAX_LABELS:
+        raise KeyFault("labels", "A key has at most 16 labels.")
+    out = {}
+    for name, v in value.items():
+        if not LABEL_NAME.fullmatch(name):
+            raise KeyFault("labels", "A label's name is 1 to 32 of a-z, 0-9, _ . and -.")
+        if not isinstance(v, str) or not 1 <= len(v) <= 64 or any(unicodedata.category(c) == "Cc" for c in v):
+            raise KeyFault("labels." + name, "A label's value is 1 to 64 characters of text.")
+        out[name] = v
+    return out
+
+
+def key_cap(value) -> int:
+    usd = value.get("usd") if isinstance(value, dict) else None
+    ok = isinstance(usd, (int, float)) and not isinstance(usd, bool) and math.isfinite(usd)
+    cents = round(usd * 100) if ok else 0
+    if not ok or abs(usd * 100 - cents) >= 1e-6 or cents < 1 or usd > DAILY_CAP_MAX_USD:
+        raise KeyFault("daily_spend_cap", "daily_spend_cap.usd is from 0.01 to 1000, in cents, or null.")
+    return cents * 10_000
+
+
+def key_expiry(raw, now: float) -> str:
+    fault = KeyFault("expires_at", "expires_at is a time (RFC 3339) from a minute to 10 years ahead, or null.")
+    if not isinstance(raw, str):
+        raise fault
+    try:
+        at = usage_time("expires_at", raw.strip())
+    except Refused:
+        raise fault
+    if at < now + 60 or at > now + EXPIRY_MAX_DAYS * 86400:
+        raise fault
+    return usage_iso(at)
+
+
+def key_limit(value, field: str, what: str):
+    ceiling = WORKSPACE_LIMITS[field]
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= ceiling:
+        raise KeyFault("limits." + field, "A key's %s is a whole number from 1 to the workspace's %d, or null." % (what, ceiling))
+    return value
+
+
+def key_fields(body: dict, now: float, allow_device: bool) -> dict:
+    """The body's fields beyond the name, each checked in the body's order; a field
+    present with null clears it. The first fault is the 422."""
+    out: dict = {}
+    for name, value in body.items():
+        if name == "name":
+            continue
+        if name == "device_id" and allow_device:
+            if value is None:
+                out["device_id"] = None
+            elif isinstance(value, str):
+                try:
+                    out["device_id"] = key_device_id(value)
+                except KeyFault as f:
+                    raise key_fault(f, value)
+            else:
+                raise key_fault(KeyFault("device_id", "device_id is 1 to 128 printable ASCII characters, not starting with a space."), value)
+        elif name == "device_id":
+            raise refuse_422([key_entry("value_error", ["device_id"], "A key's device_id is set when it is made: revoke it and make another.", value)])
+        elif name == "labels":
+            try:
+                out["labels"] = {} if value is None else key_labels(value)
+            except KeyFault as f:
+                raise key_fault(f, value)
+        elif name == "limits":
+            if value is None:
+                out["limits"] = (None, None)
+            elif isinstance(value, dict):
+                try:
+                    out["limits"] = (key_limit(value.get("requests_per_second"), "requests_per_second", "requests a second"),
+                                     key_limit(value.get("tokens_per_second"), "tokens_per_second", "tokens a second"))
+                except KeyFault as f:
+                    raise key_fault(f, value)
+            else:
+                raise refuse_422([key_entry("value_error", ["limits"], "limits is an object, or null.", value)])
+        elif name == "daily_spend_cap":
+            try:
+                out["cap"] = None if value is None else key_cap(value)
+            except KeyFault as f:
+                raise key_fault(f, value)
+        elif name == "expires_at":
+            try:
+                out["expires_at"] = None if value is None else key_expiry(value, now)
+            except KeyFault as f:
+                raise key_fault(f, value)
+        elif name == "may_search_collections":
+            if not isinstance(value, bool):
+                raise refuse_422([key_entry("bool_type", ["may_search_collections"], "Input should be a valid boolean", value)])
+            out["may_search"] = value
+        else:
+            raise refuse_422([key_entry("extra_forbidden", [name], "Extra inputs are not permitted", None)])
+    return out
+
+
+def key_secret(key_id: str, salt: str) -> str:
+    return KEY_SECRET_PREFIX + hashlib.sha256(("%s\n%s" % (key_id, salt)).encode()).hexdigest()
+
+
+def key_status(k: dict, now: float) -> str:
+    if k["revoked_at"] is not None:
+        return "revoked"
+    if k["expires_at"] is not None and usage_epoch(k["expires_at"]) <= now:
+        return "expired"
+    return "active"
+
+
+def key_wire(k: dict, now: float) -> dict:
+    """A decide key as /v1/keys shows it."""
+    limits = None if k["rps"] is None and k["tps"] is None else {"requests_per_second": k["rps"], "tokens_per_second": k["tps"]}
+    return {
+        "id": k["id"], "name": k["name"], "prefix": KEY_SECRET_PREFIX, "last4": k["last4"], "status": key_status(k, now), "scope": "decide",
+        "may_search_collections": k["may_search"], "limits": limits,
+        "daily_spend_cap": None if k["cap"] is None else {"usd": usd(k["cap"] / 1e6)},
+        "spent_today": None if k["cap"] is None else {"usd": 0},
+        "expires_at": k["expires_at"], "device_id": k["device_id"], "labels": dict(sorted(k["labels"].items())),
+        "created_by_key": None if k["created_by"] is None else {"id": k["created_by"]},
+        "created_at": k["created_at"], "last_used_at": None, "revoked_at": k["revoked_at"],
+    }
+
+
+def calling_key_id(key: str | None) -> str:
+    """The calling key's id, as created_by_key names it."""
+    return "key_" + hashlib.sha256((key or "").encode()).hexdigest()[:32]
+
+
 
 def workspace_of(key: str | None) -> str:
     """Keys share a workspace by default; a key holding ws-<name> is in workspace <name>."""
@@ -2309,6 +2486,10 @@ class State:
         self.batches: dict = {}
         self.collections: dict = {}
         self.idempotency: dict = {}
+        # Suite 1.20: each session's workspaces' decide keys, and the creates kept for
+        # their Idempotency-Key.
+        self.api_keys: dict = {}
+        self.key_creates: dict = {}
 
     def session(self, sid: str) -> dict:
         s = self.sessions.get(sid)
@@ -2372,6 +2553,8 @@ class State:
                 self.batches.clear()
                 self.collections.clear()
                 self.idempotency.clear()
+                self.api_keys.clear()
+                self.key_creates.clear()
                 for ses in self.dn_sessions.values():
                     ses["close_request"] = (1001, "mock reset")
                 self.dn_sessions.clear()
@@ -2392,6 +2575,9 @@ class State:
                     del self.collections[key]
                 for key in [k for k in self.idempotency if k[0] == sid]:
                     del self.idempotency[key]
+                for store in (self.api_keys, self.key_creates):
+                    for key in [k for k in store if k[0] == sid]:
+                        del store[key]
                 for xid in [x for x, ses in self.dn_sessions.items() if ses["sid"] == sid]:
                     self.dn_sessions[xid]["close_request"] = (1001, "mock reset")
                     del self.dn_sessions[xid]
@@ -2532,6 +2718,10 @@ API_ROUTES = [
     (re.compile(r"^/v1/collections/([^/]+)/items/([^/]+)$"), {"PATCH": "item_update", "DELETE": "item_delete"}),
     # Per-key usage (suite 1.18).
     (re.compile(r"^/v1/keys/([^/]+)/usage$"), {"GET": "key_usage"}),
+    # A keys key's decide keys (suite 1.20).
+    (re.compile(r"^/v1/keys$"), {"POST": "keys_create", "GET": "keys_list"}),
+    (re.compile(r"^/v1/keys/revoke$"), {"POST": "keys_revoke_bulk"}),
+    (re.compile(r"^/v1/keys/([^/]+)$"), {"PATCH": "keys_update", "DELETE": "keys_revoke"}),
     (re.compile(r"^/v1/usage$"), {"GET": "usage_page"}),
 ]
 
@@ -2900,6 +3090,10 @@ class Handler(BaseHTTPRequestHandler):
             # A decide key makes decisions and lists the models, nothing else: refused
             # before anything is read or counted.
             self.refuse(rid, typed_error(403, "key_scope_denied", KEY_SCOPE_DENIED))
+            return
+        if key_scope(self.key()) == "full" and name in KEYS_ROUTES:
+            # Keys are managed with a keys key alone.
+            self.refuse(rid, typed_error(403, "key_scope_denied", KEY_NOT_KEYS))
             return
         if key_scope(self.key()) == "keys" and name not in KEYS_KEY_ROUTES:
             # A keys key manages keys and reads their usage, nothing else.
@@ -4230,6 +4424,235 @@ class Handler(BaseHTTPRequestHandler):
         body = {"period": {"start": usage_iso(span["start"]), "end": usage_iso(span["end"])}, "as_of": usage_as_of(span, now),
                 "items": [usage_of(k, span, now) for k in page], "next_cursor": usage_cursor(page[-1]) if more and page else None}
         self.send(200, body, {"x-request-id": rid, "Cache-Control": "private, no-store"})
+
+    # ----------------------------------------------------------------- /v1/keys
+
+    def managed_keys(self) -> list:
+        """The session's workspace's decide keys, seeded from the usage fixture's."""
+        state: State = self.server.state
+        ws = workspace_of(self.key())
+        with state.lock:
+            if (self.sid, ws) not in state.api_keys:
+                state.api_keys[(self.sid, ws)] = [
+                    {"id": k["id"], "name": k["name"], "last4": k["id"][-4:], "device_id": k["device_id"], "labels": dict(k["labels"]),
+                     "created_at": k["created_at"], "revoked_at": k["revoked_at"], "expires_at": k["expires_at"], "may_search": False,
+                     "rps": None, "tps": None, "cap": None, "created_by": None, "salt": None}
+                    for k in USAGE_KEYS.get(ws, []) if k["scope"] == "decide"]
+            return state.api_keys[(self.sid, ws)]
+
+    def find_key(self, raw: str) -> dict:
+        for k in self.managed_keys():
+            if k["id"] == raw:
+                return k
+        raise typed_error(404, "not_found_error", "Not found.")
+
+    def key_object(self, rid, status, body):
+        self.send(status, body, {"x-request-id": rid})
+
+    def api_keys_create(self, rid, started, body_bytes, query):
+        now = self.now()
+        try:
+            body = parse_body(body_bytes)
+            if not isinstance(body, dict):
+                raise refuse_422([key_entry("model_attributes_type", [], "Input should be an object", body)])
+            name_value = body.get("name")
+            if not isinstance(name_value, str):
+                raise refuse_422([key_entry("missing", ["name"], "Field required", None)])
+            try:
+                name = key_name(name_value)
+            except KeyFault as f:
+                raise key_fault(f, name_value)
+            f = key_fields(body, now, allow_device=True)
+            keys = self.headers.get_all("Idempotency-Key") or []
+            if len(keys) > 1 or (keys and not (1 <= len(keys[0]) <= 255 and all(0x20 <= ord(c) <= 0x7E for c in keys[0]))):
+                raise usage_error(IDEMPOTENCY_MALFORMED)
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        state: State = self.server.state
+        caller = calling_key_id(self.key())
+        sha = hashlib.sha256(body_bytes).hexdigest()
+        if keys:
+            kept = state.key_creates.get((self.sid, workspace_of(self.key()), keys[0]))
+            if kept is not None:
+                if kept["sha"] != sha:
+                    self.refuse(rid, typed_error(409, "idempotency_key_reused", IDEMPOTENCY_REUSED))
+                    return
+                if kept["by"] != caller:
+                    self.refuse(rid, typed_error(409, "idempotency_key_reused", IDEMPOTENCY_REUSED))
+                    return
+                k = next(k for k in self.managed_keys() if k["id"] == kept["key_id"])
+                if k["revoked_at"] is not None:
+                    self.refuse(rid, typed_error(409, "key_not_replayable", "The key this Idempotency-Key made is revoked or its secret can no longer be shown: revoke it if it is not, then create a new key with a new Idempotency-Key."))
+                    return
+                self.send(201, {"key": key_wire(k, now), "secret": key_secret(k["id"], k["salt"])}, {"x-request-id": rid, "x-decisionnode-idempotent-replay": "true"})
+                return
+        device = f.get("device_id")
+        for k in self.managed_keys():
+            if key_status(k, now) != "active":
+                continue
+            if k["name"] == name:
+                self.refuse(rid, refuse_422([key_entry("name_taken", ["name"], "An active key of this workspace has this name", name)]))
+                return
+            if device is not None and k["device_id"] == device:
+                self.refuse(rid, refuse_422([key_entry("device_id_taken", ["device_id"], "An active key of this workspace has this device_id: revoke it first", device)]))
+                return
+        kid = "key_" + uuid.uuid4().hex
+        salt = uuid.uuid4().hex
+        secret = key_secret(kid, salt)
+        rps, tps = f.get("limits", (None, None))
+        k = {"id": kid, "name": name, "last4": secret[-4:], "device_id": device, "labels": f.get("labels", {}), "created_at": iso(math.floor(now)),
+             "revoked_at": None, "expires_at": f.get("expires_at"), "may_search": f.get("may_search", False), "rps": rps, "tps": tps,
+             "cap": f.get("cap"), "created_by": caller, "salt": salt, "seq": next(CREATION_ORDER)}
+        with state.lock:
+            self.managed_keys().append(k)
+            if keys:
+                state.key_creates[(self.sid, workspace_of(self.key()), keys[0])] = {"sha": sha, "by": caller, "key_id": kid}
+        self.send(201, {"key": key_wire(k, now), "secret": secret}, {"x-request-id": rid})
+
+    def api_keys_list(self, rid, started, body_bytes, query):
+        now = self.now()
+        try:
+            labels, device, status, limit, cursor = {}, None, "active", KEYS_PAGE_DEFAULT, None
+            for name, value in self.usage_pairs()[:64]:
+                if name == "label":
+                    if ":" not in value:
+                        raise usage_error("A label filter is name:value.")
+                    k, v = value.split(":", 1)
+                    if not LABEL_NAME.fullmatch(k) or not 1 <= len(v) <= 64 or any(unicodedata.category(c) == "Cc" for c in v):
+                        raise usage_error("A label filter is name:value, as labels are written.")
+                    labels[k] = v
+                elif name == "device_id":
+                    try:
+                        device = key_device_id(value)
+                    except KeyFault as f:
+                        raise usage_error(f.message)
+                elif name == "status":
+                    if value not in ("active", "expired", "revoked", "all"):
+                        raise usage_error("status is active, expired, revoked or all.")
+                    status = value
+                elif name == "limit":
+                    if not re.fullmatch(r"-?\d+", value) or not 1 <= int(value) <= KEYS_PAGE_MAX:
+                        raise usage_error("limit is a whole number from 1 to 200.")
+                    limit = int(value)
+                elif name == "cursor":
+                    cursor = usage_parse_cursor(value)
+                    if cursor is None:
+                        raise usage_error("cursor is a next_cursor this list gave.")
+                else:
+                    raise usage_error("Unknown query parameter: %s." % printable(name, 32))
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        rows = []
+        for k in sorted(self.managed_keys(), key=lambda k: (k["created_at"], k["id"]), reverse=True):
+            if status != "all" and key_status(k, now) != status:
+                continue
+            if any(k["labels"].get(n) != v for n, v in labels.items()):
+                continue
+            if device is not None and k["device_id"] != device:
+                continue
+            if cursor is not None and (int(usage_epoch(k["created_at"]) * 1_000_000), k["id"]) >= cursor:
+                continue
+            rows.append(k)
+        page = rows[:limit]
+        nxt = usage_cursor(page[-1]) if len(rows) > limit and page else None
+        self.send(200, {"items": [key_wire(k, now) for k in page], "next_cursor": nxt}, {"x-request-id": rid})
+
+    def api_keys_update(self, rid, started, body_bytes, query, key_id):
+        now = self.now()
+        try:
+            body = parse_body(body_bytes)
+            if not isinstance(body, dict):
+                raise refuse_422([key_entry("model_attributes_type", [], "Input should be an object", body)])
+            if not body:
+                raise usage_error("Nothing to change.")
+            name = None
+            if "name" in body:
+                try:
+                    name = key_name(body["name"] if isinstance(body["name"], str) else "")
+                except KeyFault as f:
+                    raise key_fault(f, body["name"])
+            f = key_fields(body, now, allow_device=False)
+            k = self.find_key(key_id)
+            if k["revoked_at"] is not None:
+                raise typed_error(409, "already_revoked", "This key is revoked already.")
+            name_only = list(body) == ["name"]
+            if not name_only and key_status(k, now) == "expired":
+                raise typed_error(409, "key_expired", "This key has expired: make a new one. An expired key is never brought back.")
+            new_name = name if name is not None else k["name"]
+            if any(o is not k and key_status(o, now) == "active" and o["name"] == new_name for o in self.managed_keys()):
+                raise refuse_422([key_entry("name_taken", ["name"], "An active key of this workspace has this name", new_name)])
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        with self.server.state.lock:
+            k["name"] = new_name
+            if "labels" in f:
+                k["labels"] = f["labels"]
+            if "limits" in f:
+                k["rps"], k["tps"] = f["limits"]
+            if "cap" in f:
+                k["cap"] = f["cap"]
+            if "expires_at" in f:
+                k["expires_at"] = f["expires_at"]
+            if "may_search" in f:
+                k["may_search"] = f["may_search"]
+        self.send(200, key_wire(k, now), {"x-request-id": rid})
+
+    def api_keys_revoke(self, rid, started, body_bytes, query, key_id):
+        try:
+            k = self.find_key(key_id)
+            if k["revoked_at"] is not None:
+                raise typed_error(409, "already_revoked", "This key is revoked already.")
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        with self.server.state.lock:
+            k["revoked_at"] = iso(math.floor(self.now()))
+        self.send(200, {"id": k["id"], "revoked": True}, {"x-request-id": rid})
+
+    def api_keys_revoke_bulk(self, rid, started, body_bytes, query):
+        try:
+            body = parse_body(body_bytes)
+            if not isinstance(body, dict):
+                raise refuse_422([key_entry("model_attributes_type", [], "Input should be an object", body)])
+            labels_value = body.get("labels")
+            try:
+                labels = key_labels(labels_value)
+            except KeyFault as f:
+                raise key_fault(f, labels_value)
+            if not labels:
+                raise refuse_422([key_entry("value_error", ["labels"], "A bulk revoke names at least one label: every key it revokes has them all.", labels_value)])
+            devices = body.get("device_ids")
+            if devices is not None:
+                if not isinstance(devices, list) or len(devices) > KEYS_MAX_REVOKE_DEVICES:
+                    raise refuse_422([key_entry("value_error", ["device_ids"], "device_ids is a list of at most 1,000 device ids.", devices)])
+                for d in devices:
+                    try:
+                        key_device_id(d if isinstance(d, str) else "")
+                    except KeyFault as f:
+                        raise key_fault(f, d)
+            dry_run = body.get("dry_run")
+            if dry_run is not None and not isinstance(dry_run, bool):
+                raise refuse_422([key_entry("bool_type", ["dry_run"], "Input should be a valid boolean", dry_run)])
+            for name in body:
+                if name not in ("labels", "device_ids", "dry_run"):
+                    raise refuse_422([key_entry("extra_forbidden", [name], "Extra inputs are not permitted", None)])
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        picked = [k for k in self.managed_keys() if k["revoked_at"] is None and all(k["labels"].get(n) == v for n, v in labels.items())
+                  and (devices is None or k["device_id"] in devices)]
+        if dry_run:
+            self.send(200, {"would_revoke": min(len(picked), KEYS_REVOKE_PER_CALL), "more": len(picked) > KEYS_REVOKE_PER_CALL}, {"x-request-id": rid})
+            return
+        done = sorted(picked, key=lambda k: k["id"])[:KEYS_REVOKE_PER_CALL]
+        at = iso(math.floor(self.now()))
+        with self.server.state.lock:
+            for k in done:
+                k["revoked_at"] = at
+        self.send(200, {"revoked": len(done), "more": len(picked) > len(done)}, {"x-request-id": rid})
 
     def result_line(self, ln) -> str:
         return '{"custom_id":%s,"status":%s,"body":%s,"headers":%s}' % (compact(ln["custom_id"]), compact(ln["status"]), ln["result_text"], compact(ln["headers"]))

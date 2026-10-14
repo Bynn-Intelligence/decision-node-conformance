@@ -1,0 +1,66 @@
+{
+  "id": "keys-list-sent",
+  "description": "keys.list sends GET /v1/keys with each label as label=name:value (sorted by name), device_id, status, limit and cursor, each only when given. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.list",
+    "args": {
+      "labels": {
+        "plan": "pro",
+        "customer": "acme"
+      },
+      "device_id": "drone-1",
+      "status": "all",
+      "limit": 20,
+      "cursor": "MTc4Njc4MDgwMDAwMDAwMDow"
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "items": [],
+            "next_cursor": null
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/keys",
+      "headers": {
+        "authorization": "Bearer dn_test_scope-keys"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      },
+      "query_all": {
+        "label": [
+          "customer:acme",
+          "plan:pro"
+        ],
+        "device_id": [
+          "drone-1"
+        ],
+        "status": [
+          "all"
+        ],
+        "limit": [
+          "20"
+        ],
+        "cursor": [
+          "MTc4Njc4MDgwMDAwMDAwMDow"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "id": "key-spend-cap-not-retried",
+  "description": "A 429 key_spend_cap_reached is never retried: the cap resets at 00:00 UTC, so a retry cannot pass before then. One attempt, RateLimitError.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 429,
+          "headers": {
+            "content-type": "application/json",
+            "retry-after": "1",
+            "retry-after-ms": "10",
+            "x-decisionnode-error": "This key's daily spend cap of USD 2.00 is reached. It resets at 00:00 UTC."
+          },
+          "body": {
+            "detail": {
+              "error_type": "key_spend_cap_reached",
+              "message": "This key's daily spend cap of USD 2.00 is reached. It resets at 00:00 UTC.",
+              "details": {
+                "resets_at": "2026-10-15T00:00:00Z",
+                "cap": {
+                  "usd": 2
+                },
+                "spent": {
+                  "usd": 2.000123
+                }
+              }
+            }
+          }
+        },
+        {
+          "action": "normal"
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "model": "decisionnode-flash",
+      "questions": {
+        "ok": {
+          "$truth": {
+            "instructions": "Is it fine?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "RateLimitError",
+      "fields": {
+        "status": 429,
+        "error_type": "key_spend_cap_reached",
+        "details": {
+          "resets_at": "2026-10-15T00:00:00Z",
+          "cap": {
+            "usd": 2
+          },
+          "spent": {
+            "usd": 2.000123
+          }
+        }
+      }
+    }
+  }
+}

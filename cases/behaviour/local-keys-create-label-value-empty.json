@@ -1,0 +1,38 @@
+{
+  "id": "local-keys-create-label-value-empty",
+  "description": "An empty label value, the entry at [\"body\", \"labels\", <name>]. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "call": {
+    "method": "keys.create",
+    "args": {
+      "name": "Drone 9",
+      "labels": {
+        "site": ""
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "labels",
+              "site"
+            ],
+            "msg": "A label's value is 1 to 64 characters of text.",
+            "input": null
+          }
+        ]
+      }
+    }
+  }
+}

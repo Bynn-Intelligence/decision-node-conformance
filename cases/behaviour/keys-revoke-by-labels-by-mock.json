@@ -1,0 +1,86 @@
+{
+  "id": "keys-revoke-by-labels-by-mock",
+  "description": "A dry run counts the active keys carrying every label given; the real run revokes them; a second run finds none.",
+  "client": {
+    "api_key": "dn_test_scope-keys"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "keys.revoke_by_labels",
+        "args": {
+          "labels": {
+            "customer": "acme"
+          },
+          "dry_run": true
+        }
+      },
+      "outcome": {
+        "result": "keys_revoked",
+        "keys_revoked": {
+          "would_revoke": 1,
+          "more": false
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "keys.revoke_by_labels",
+        "args": {
+          "labels": {
+            "customer": "acme"
+          }
+        }
+      },
+      "outcome": {
+        "result": "keys_revoked",
+        "keys_revoked": {
+          "revoked": 1,
+          "more": false
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "keys.revoke_by_labels",
+        "args": {
+          "labels": {
+            "customer": "acme"
+          }
+        }
+      },
+      "outcome": {
+        "result": "keys_revoked",
+        "keys_revoked": {
+          "revoked": 0,
+          "more": false
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "keys.all",
+        "args": {
+          "status": "revoked",
+          "labels": {
+            "customer": "acme"
+          }
+        }
+      },
+      "outcome": {
+        "result": "api_keys",
+        "api_keys": [
+          {
+            "id": "key_00000000000000000000000000000d01"
+          },
+          {
+            "id": "key_00000000000000000000000000000d02"
+          }
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 4
+  }
+}
