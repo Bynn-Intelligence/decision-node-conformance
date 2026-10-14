@@ -1,0 +1,46 @@
+{
+  "id": "429-publishable-in-flight",
+  "description": "A publishable key with too many calls running at once: the 429 rate_limit_error with detail.details.reason in_flight. RateLimitError with its details.",
+  "client": {
+    "api_key": "dn_pub_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "model": "decisionnode-flash",
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Too many of this key's calls are running at once. Retry after 1 s.",
+      "retry-after": "1",
+      "retry-after-ms": "1000"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"rate_limit_error\", \"message\": \"Too many of this key's calls are running at once. Retry after 1 s.\", \"details\": {\"reason\": \"in_flight\"}}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RateLimitError",
+      "fields": {
+        "status": 429,
+        "error_type": "rate_limit_error",
+        "message": "Too many of this key's calls are running at once. Retry after 1 s.",
+        "details": {
+          "reason": "in_flight"
+        },
+        "retry_after": 1
+      }
+    }
+  }
+}

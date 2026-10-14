@@ -1,0 +1,59 @@
+{
+  "id": "403-origin-not-allowed",
+  "description": "A publishable key called from an Origin it does not list is the 403 origin_not_allowed. PermissionDeniedError.",
+  "client": {
+    "api_key": "dn_pub_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "model": "decisionnode-flash",
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This key does not answer calls from this origin."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"origin_not_allowed\", \"message\": \"This key does not answer calls from this origin.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_pub_test_conformance",
+      "content-type": "application/json",
+      "origin": "https://other.example.com"
+    },
+    "body": {
+      "model": "decisionnode-flash",
+      "state": "",
+      "questions": {
+        "someone_at_gate": {
+          "type": "truth",
+          "instructions": "Is someone standing at the gate?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "origin_not_allowed",
+        "message": "This key does not answer calls from this origin."
+      }
+    }
+  }
+}

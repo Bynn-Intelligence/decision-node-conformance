@@ -1908,6 +1908,11 @@ def validate_presign(body) -> list:
 KEY_SCOPE_DENIED = "This key may only make decisions."
 KEY_SEARCH_DENIED = "This key may not search collections."
 KEY_KEYS_ONLY = "This key may only manage keys."
+KEY_PUBLISHABLE_ONLY = "A publishable key may only make decisions."
+# A publishable key (suite 1.19), dn_pub_...: decisions only, from its origins or, unless
+# it holds web-only, from a native app (no Origin); holding flash-only, Flash alone.
+PUBLISHABLE_ORIGINS = ("https://app.example.com",)
+PUBLISHABLE_FLASH_ONLY = ["decisionnode-flash"]
 DECIDE_KEY_ROUTES = ("decide", "models")
 KEYS_KEY_ROUTES = ("key_usage", "usage_page")
 
@@ -1922,6 +1927,8 @@ def printable(value: str, most: int) -> str:
 def key_scope(key: str | None) -> str:
     """A key holding scope-decide is a decide key, one holding scope-keys a keys key
     (suite 1.18); every other key is a full one."""
+    if (key or "").startswith("dn_pub_"):
+        return "publishable"
     if "scope-decide" in (key or ""):
         return "decide"
     return "keys" if "scope-keys" in (key or "") else "full"
@@ -2898,6 +2905,19 @@ class Handler(BaseHTTPRequestHandler):
             # A keys key manages keys and reads their usage, nothing else.
             self.refuse(rid, typed_error(403, "key_scope_denied", KEY_KEYS_ONLY))
             return
+        if key_scope(self.key()) == "publishable":
+            # A publishable key makes decisions (the models list included in its refusal),
+            # from its origins, or from a native app unless it holds web-only.
+            if name != "decide":
+                self.refuse(rid, typed_error(403, "key_scope_denied", KEY_PUBLISHABLE_ONLY))
+                return
+            origin = self.headers.get("Origin")
+            if origin is not None and origin not in PUBLISHABLE_ORIGINS:
+                self.refuse(rid, typed_error(403, "origin_not_allowed", "This key does not answer calls from this origin."))
+                return
+            if origin is None and "web-only" in (self.key() or ""):
+                self.refuse(rid, typed_error(403, "origin_not_allowed", "This key answers calls from its origins only: a call without an Origin needs a key that allows native apps."))
+                return
         query = parse_qs(parts.query, keep_blank_values=True) if parts is not None else {}
         getattr(self, "api_" + name)(rid, started, body_bytes, query, *args)
 
@@ -2936,6 +2956,10 @@ class Handler(BaseHTTPRequestHandler):
         consumed: list = []
         try:
             req = validate(body_bytes, profile, self.resolver(consumed), workspace_of(self.key()), self.booster_conf(), self.max_places(), self.search_collection)
+            if key_scope(self.key()) == "publishable" and "flash-only" in (self.key() or "") and ("@" in req["model"] or family_of(req["model"]) != "decisionnode-flash"):
+                allowed = ", ".join(PUBLISHABLE_FLASH_ONLY)
+                raise Refused(403, {"detail": {"error_type": "model_not_allowed", "message": "This key may not ask this model. Its models: %s." % allowed,
+                                               "details": {"allowed": list(PUBLISHABLE_FLASH_ONLY)}}}, "This key may not ask this model. Its models: %s." % allowed)
         except Refused as exc:
             detail = exc.body.get("detail") if isinstance(exc.body, dict) else None
             if not (isinstance(detail, dict) and str(detail.get("error_type", "")).startswith("upload_")):

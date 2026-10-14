@@ -1,0 +1,58 @@
+{
+  "id": "publishable-key-models-by-mock",
+  "description": "A Flash-only publishable key: Flash answers; MoE is the 403 model_not_allowed with details.allowed, not retried.",
+  "client": {
+    "api_key": "dn_pub_test_flash-only"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "model": "decisionnode-flash",
+          "questions": {
+            "someone_at_gate": {
+              "$truth": {
+                "instructions": "Is someone standing at the gate?"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "result": "decision"
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "model": "decisionnode-moe",
+          "questions": {
+            "someone_at_gate": {
+              "$truth": {
+                "instructions": "Is someone standing at the gate?"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "error": "PermissionDeniedError",
+        "fields": {
+          "status": 403,
+          "error_type": "model_not_allowed",
+          "message": "This key may not ask this model. Its models: decisionnode-flash.",
+          "details": {
+            "allowed": [
+              "decisionnode-flash"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 2
+  }
+}

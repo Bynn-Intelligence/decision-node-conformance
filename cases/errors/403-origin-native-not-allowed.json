@@ -1,0 +1,58 @@
+{
+  "id": "403-origin-native-not-allowed",
+  "description": "A publishable key that does not allow native apps, called without an Origin (as a server-side SDK calls), is the 403 origin_not_allowed. PermissionDeniedError.",
+  "client": {
+    "api_key": "dn_pub_test_web-only",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "model": "decisionnode-flash",
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This key answers calls from its origins only: a call without an Origin needs a key that allows native apps."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"origin_not_allowed\", \"message\": \"This key answers calls from its origins only: a call without an Origin needs a key that allows native apps.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_pub_test_web-only",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-flash",
+      "state": "",
+      "questions": {
+        "someone_at_gate": {
+          "type": "truth",
+          "instructions": "Is someone standing at the gate?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "origin_not_allowed",
+        "message": "This key answers calls from its origins only: a call without an Origin needs a key that allows native apps."
+      }
+    }
+  }
+}

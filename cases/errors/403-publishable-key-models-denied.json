@@ -1,0 +1,38 @@
+{
+  "id": "403-publishable-key-models-denied",
+  "description": "A publishable key (dn_pub_, for browsers and apps) listing the models (GET /v1/models, which a decide key may call) is the 403 key_scope_denied: it may only make decisions. PermissionDeniedError, never retried.",
+  "client": {
+    "api_key": "dn_pub_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "models",
+    "args": {}
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "A publishable key may only make decisions."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"key_scope_denied\", \"message\": \"A publishable key may only make decisions.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/models",
+    "headers": {
+      "authorization": "Bearer dn_pub_test_conformance"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "key_scope_denied",
+        "message": "A publishable key may only make decisions."
+      }
+    }
+  }
+}

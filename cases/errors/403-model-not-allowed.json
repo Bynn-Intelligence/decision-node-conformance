@@ -1,0 +1,63 @@
+{
+  "id": "403-model-not-allowed",
+  "description": "A publishable key asking a model outside its list is the 403 model_not_allowed, its list in detail.details.allowed: PermissionDeniedError with that error_type and details.",
+  "client": {
+    "api_key": "dn_pub_test_flash-only",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "model": "decisionnode-moe",
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This key may not ask this model. Its models: decisionnode-flash."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"model_not_allowed\", \"message\": \"This key may not ask this model. Its models: decisionnode-flash.\", \"details\": {\"allowed\": [\"decisionnode-flash\"]}}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_pub_test_flash-only",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "",
+      "questions": {
+        "someone_at_gate": {
+          "type": "truth",
+          "instructions": "Is someone standing at the gate?"
+        }
+      }
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "model_not_allowed",
+        "message": "This key may not ask this model. Its models: decisionnode-flash.",
+        "details": {
+          "allowed": [
+            "decisionnode-flash"
+          ]
+        }
+      }
+    }
+  }
+}

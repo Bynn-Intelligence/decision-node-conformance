@@ -1,0 +1,26 @@
+{
+  "id": "publishable-key-decides-by-mock",
+  "description": "A publishable key that allows native apps makes a decision from an SDK, which sends no Origin, with its key as any other.",
+  "client": {
+    "api_key": "dn_pub_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "model": "decisionnode-flash",
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}

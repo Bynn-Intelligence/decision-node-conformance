@@ -2061,5 +2061,27 @@ class TestUsage(Spec11):
         st, _, out = self.get("/v1/usage?start=2025-08-26T23:00:00Z&end=2026-10-01T00:00:00Z")
         self.assertEqual((st, out["detail"]["message"]), (400, "A period is at most 400 days."))
 
+class TestPublishable(Spec11):
+    """Suite 1.19: a publishable key decides from its origins or a native app, and nothing else."""
+
+    def post(self, key, origin=None, model="decisionnode-flash"):
+        h = {"Authorization": "Bearer " + key, "Content-Type": "application/json", "x-mock-session": "p1"}
+        if origin:
+            h["Origin"] = origin
+        return self.call("POST", "/v1/decide", {"model": model, "questions": {"q": {"type": "truth", "instructions": "Is it fine?"}}}, h)
+
+    def test_origins_models_and_routes(self):
+        self.assertEqual(self.post("dn_pub_test", "https://app.example.com")[0], 200)
+        self.assertEqual(self.post("dn_pub_test")[0], 200)
+        for key, origin, model, want in (("dn_pub_test", "https://other.example.com", "decisionnode-flash", "origin_not_allowed"),
+                                         ("dn_pub_test_web-only", None, "decisionnode-flash", "origin_not_allowed"),
+                                         ("dn_pub_test_flash-only", None, "decisionnode-moe", "model_not_allowed")):
+            st, _, out = self.post(key, origin, model)
+            self.assertEqual((st, out["detail"]["error_type"]), (403, want), key)
+        self.assertEqual(self.post("dn_pub_test_web-only", "https://app.example.com")[0], 200)
+        st, _, out = self.call("GET", "/v1/models", headers={"Authorization": "Bearer dn_pub_test"})
+        self.assertEqual((st, out["detail"]["message"]), (403, "A publishable key may only make decisions."))
+
+
 if __name__ == "__main__":
     unittest.main()

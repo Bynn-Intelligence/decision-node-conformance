@@ -1,0 +1,46 @@
+{
+  "id": "429-publishable-client-rate",
+  "description": "A publishable key's calls from one address past its rate: the 429 rate_limit_error with detail.details.reason client_rate and Retry-After. RateLimitError with its details and retry_after.",
+  "client": {
+    "api_key": "dn_pub_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "model": "decisionnode-flash",
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Rate limit reached for this address. Retry after 4 s.",
+      "retry-after": "4",
+      "retry-after-ms": "4000"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"rate_limit_error\", \"message\": \"Rate limit reached for this address. Retry after 4 s.\", \"details\": {\"reason\": \"client_rate\"}}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RateLimitError",
+      "fields": {
+        "status": 429,
+        "error_type": "rate_limit_error",
+        "message": "Rate limit reached for this address. Retry after 4 s.",
+        "details": {
+          "reason": "client_rate"
+        },
+        "retry_after": 4
+      }
+    }
+  }
+}

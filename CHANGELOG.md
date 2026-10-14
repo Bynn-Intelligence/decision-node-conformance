@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.19 (for SDK specification 1.3)
+
+Publishable keys. `SPEC_VERSION` stays `"1.3"`.
+
+- Errors: a publishable key (`dn_pub_`) outside decisions, its usage and the models list included, is the `403` `key_scope_denied` "A publishable key may only make decisions."; from an origin it does not list, or without one when it allows no native app, the `403` `origin_not_allowed`; asking a model it does not list, the `403` `model_not_allowed` with `details.allowed`; its rate per address and its calls in flight, the `429` `rate_limit_error` with `details.reason` `client_rate` or `in_flight`, retried as every `429`. Each is a `PermissionDeniedError` or a `RateLimitError` read as sent; nothing is checked locally.
+- Mock: a key starting `dn_pub_` is publishable, held to its origin and, holding `flash-only`, to Flash.
+- The README says the versioning rule: every change is the next minor version, never a patch.
+
+Cases: 794 in all (requests 133, responses 115, errors 121, behaviour 423, constants 2): 11 new (8 errors, 3 behaviour).
+
 ## 1.18 (for SDK specification 1.3)
 
 Per-key usage. `SPEC_VERSION` stays `"1.3"`.

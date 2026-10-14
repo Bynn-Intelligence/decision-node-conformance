@@ -1,0 +1,53 @@
+{
+  "id": "publishable-429-retried",
+  "description": "A publishable key's 429 client_rate is retried as every 429, after its retry-after-ms: two attempts, then the decision.",
+  "client": {
+    "api_key": "dn_pub_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 429,
+          "headers": {
+            "content-type": "application/json",
+            "retry-after": "1",
+            "retry-after-ms": "10",
+            "x-decisionnode-error": "Rate limit reached for this address. Retry after 4 s."
+          },
+          "body": {
+            "detail": {
+              "error_type": "rate_limit_error",
+              "message": "Rate limit reached for this address. Retry after 4 s.",
+              "details": {
+                "reason": "client_rate"
+              }
+            }
+          }
+        },
+        {
+          "action": "normal"
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "model": "decisionnode-flash",
+      "questions": {
+        "someone_at_gate": {
+          "$truth": {
+            "instructions": "Is someone standing at the gate?"
+          }
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "decision"
+    }
+  }
+}
