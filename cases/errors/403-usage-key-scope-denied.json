@@ -1,0 +1,41 @@
+{
+  "id": "403-usage-key-scope-denied",
+  "description": "A decide key reading usage is the 403 key_scope_denied: only a full key or a keys key reads usage. PermissionDeniedError, never retried.",
+  "client": {
+    "api_key": "dn_test_scope-decide",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "usage.list",
+    "args": {
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z"
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "This key may only make decisions."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"key_scope_denied\", \"message\": \"This key may only make decisions.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/usage?start=2026-09-01T00:00:00Z&end=2026-10-01T00:00:00Z",
+    "headers": {
+      "authorization": "Bearer dn_test_scope-decide"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "error_type": "key_scope_denied",
+        "message": "This key may only make decisions."
+      }
+    }
+  }
+}

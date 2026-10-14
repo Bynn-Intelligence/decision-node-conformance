@@ -77,7 +77,7 @@ import unicodedata
 import uuid
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, quote, urlsplit
+from urllib.parse import parse_qs, parse_qsl, quote, urlsplit
 
 VERSION = "1.6.0"
 
@@ -1907,7 +1907,9 @@ def validate_presign(body) -> list:
 
 KEY_SCOPE_DENIED = "This key may only make decisions."
 KEY_SEARCH_DENIED = "This key may not search collections."
+KEY_KEYS_ONLY = "This key may only manage keys."
 DECIDE_KEY_ROUTES = ("decide", "models")
+KEYS_KEY_ROUTES = ("key_usage", "usage_page")
 
 
 def printable(value: str, most: int) -> str:
@@ -1918,13 +1920,239 @@ def printable(value: str, most: int) -> str:
 
 
 def key_scope(key: str | None) -> str:
-    """A key holding scope-decide is a decide key; every other key is a full one."""
-    return "decide" if "scope-decide" in (key or "") else "full"
+    """A key holding scope-decide is a decide key, one holding scope-keys a keys key
+    (suite 1.18); every other key is a full one."""
+    if "scope-decide" in (key or ""):
+        return "decide"
+    return "keys" if "scope-keys" in (key or "") else "full"
 
 
 def may_search_collections(key: str | None) -> bool:
     """A full key always may; a decide key only when it holds may-search."""
     return key_scope(key) == "full" or "may-search" in (key or "")
+
+# --------------------------------------------------------------------------- per-key usage (suite 1.18)
+
+# Each workspace's customer keys and their usage, by the hour: a fixed set, so a case can
+# expect its figures. A row is (key id, hour, model, channel, requests,
+# free_tier_requests, input_tokens, image_tokens, video_tokens, booster_calls,
+# model micro-dollars, booster micro-dollars); the routes sum them.
+USAGE_KEYS = {
+    "default": [
+        {"id": "key_00000000000000000000000000000d01", "name": "Drone 1", "scope": "decide", "device_id": "drone-1",
+         "labels": {"customer": "acme", "plan": "pro"}, "created_at": "2026-08-20T08:00:00Z", "revoked_at": None, "expires_at": None},
+        {"id": "key_00000000000000000000000000000d02", "name": "Drone 2", "scope": "decide", "device_id": "drone-2",
+         "labels": {"customer": "acme", "plan": "basic"}, "created_at": "2026-08-15T08:00:00Z", "revoked_at": "2026-09-20T12:00:00Z", "expires_at": None},
+        {"id": "key_00000000000000000000000000000d03", "name": "Drone 3", "scope": "decide", "device_id": "drone-3",
+         "labels": {"customer": "globex", "plan": "pro"}, "created_at": "2026-08-10T08:00:00Z", "revoked_at": None, "expires_at": "2026-09-25T00:00:00Z"},
+        {"id": "key_00000000000000000000000000000f04", "name": "Ingest server", "scope": "full", "device_id": None,
+         "labels": {}, "created_at": "2026-08-05T08:00:00Z", "revoked_at": None, "expires_at": None},
+        {"id": "key_00000000000000000000000000000e05", "name": "Provisioner", "scope": "keys", "device_id": None,
+         "labels": {}, "created_at": "2026-08-01T08:00:00Z", "revoked_at": None, "expires_at": None},
+    ],
+    "acme": [
+        {"id": "key_00000000000000000000000000000a01", "name": "Acme drone", "scope": "decide", "device_id": "acme-1",
+         "labels": {"customer": "acme"}, "created_at": "2026-08-01T08:00:00Z", "revoked_at": None, "expires_at": None},
+    ],
+}
+USAGE_ROWS = [
+    ("key_00000000000000000000000000000d01", "2026-08-31T23:00:00Z", MOE, "live", 2, 0, 1800, 0, 0, 0, 76, 0),
+    ("key_00000000000000000000000000000d01", "2026-09-03T09:00:00Z", MOE, "live", 3, 0, 3000, 1200, 0, 1, 126, 24000),
+    ("key_00000000000000000000000000000d01", "2026-09-03T10:00:00Z", MOE, "batch", 2, 0, 2000, 0, 0, 0, 59, 0),
+    ("key_00000000000000000000000000000d01", "2026-09-04T14:00:00Z", FLASH, "session", 1, 0, 800, 0, 0, 0, 28, 0),
+    ("key_00000000000000000000000000000d01", "2026-09-04T15:00:00Z", FLASH, "live", 4, 4, 1600, 0, 0, 0, 0, 0),
+    ("key_00000000000000000000000000000d02", "2026-09-12T08:00:00Z", FLASH, "live", 5, 0, 4000, 0, 0, 0, 140, 0),
+    ("key_00000000000000000000000000000d03", "2026-09-14T06:00:00Z", MOE, "live", 1, 0, 500, 300, 0, 2, 21, 48000),
+    ("key_00000000000000000000000000000f04", "2026-09-02T00:00:00Z", FLASH, "batch", 100, 0, 50000, 0, 0, 0, 875, 0),
+    ("key_00000000000000000000000000000f04", "2026-09-02T01:00:00Z", MOE, "live", 1, 0, 700, 0, 0, 0, 29, 0),
+    ("key_00000000000000000000000000000a01", "2026-09-05T10:00:00Z", MOE, "live", 7, 0, 7000, 0, 0, 0, 294, 0),
+]
+USAGE_MAX_DAYS, USAGE_MAX_HOURLY_DAYS = 400, 7
+USAGE_PAGE_DEFAULT, USAGE_PAGE_MAX, USAGE_PAGE_MAX_BUCKETED, USAGE_MAX_KEY_IDS = 100, 1000, 100, 100
+USAGE_MAX_ROWS, USAGE_MAX_MODELS_COUNTED = 150_000, 16
+USAGE_CHANNELS = ("live", "batch", "session")
+KEY_ID = re.compile(r"key_[0-9a-f]{32}")
+LABEL_NAME = re.compile(r"[a-z0-9_.-]{1,32}")
+
+
+def usage_time(name: str, raw: str) -> float:
+    """An RFC 3339 time, any offset, as seconds since the epoch."""
+    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(\.\d+)?([Zz]|[+-]\d{2}:\d{2})", raw)
+    if not m:
+        raise usage_error("%s is an RFC 3339 time, such as 2026-10-01T00:00:00Z." % name)
+    import calendar
+    try:
+        y, mo, d, h, mi, se = (int(m.group(i)) for i in range(1, 7))
+        datetime_check = time.strptime("%04d-%02d-%02d %02d:%02d:%02d" % (y, mo, d, h, mi, min(se, 59)), "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        raise usage_error("%s is an RFC 3339 time, such as 2026-10-01T00:00:00Z." % name)
+    t = calendar.timegm(datetime_check) + float(m.group(7) or 0)
+    tz = m.group(8)
+    if tz not in ("Z", "z"):
+        sign = 1 if tz[0] == "+" else -1
+        t -= sign * (int(tz[1:3]) * 3600 + int(tz[4:6]) * 60)
+    return t
+
+
+def usage_iso(t: float) -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(t))
+
+
+def usage_epoch(iso_text: str) -> float:
+    import calendar
+    return float(calendar.timegm(time.strptime(iso_text, "%Y-%m-%dT%H:%M:%SZ")))
+
+
+def usage_span(asked: dict, now: float, defaults: bool) -> dict:
+    """The period read: start down and end up to whole UTC hours; without them, the
+    UTC month so far (one key's route only); then its bounds, as the API checks them."""
+    start, end = asked.get("start"), asked.get("end")
+    if start is None or end is None:
+        if not defaults:
+            raise usage_error("start and end are required.")
+        g = time.gmtime(now)
+        start = start if start is not None else float(__import__("calendar").timegm((g.tm_year, g.tm_mon, 1, 0, 0, 0)))
+        end = end if end is not None else now
+    start = start - start % 3600
+    end = end if end % 3600 == 0 else end - end % 3600 + 3600
+    if end <= start:
+        raise usage_error("end is after start.")
+    if end - start > USAGE_MAX_DAYS * 86400:
+        raise usage_error("A period is at most 400 days.")
+    granularity = asked.get("granularity") or "none"
+    if granularity == "hour" and end - start > USAGE_MAX_HOURLY_DAYS * 86400:
+        raise usage_error("granularity hour is for a period of at most 7 days; use day or month.")
+    return {"start": start, "end": end, "granularity": granularity, "group_by": asked.get("group_by")}
+
+
+def usage_period_take(asked: dict, name: str, value: str) -> bool:
+    """Takes name if it is one of the period's (start, end, granularity, group_by)."""
+    if name in ("start", "end"):
+        asked[name] = usage_time(name, value)
+    elif name == "granularity":
+        if value not in ("none", "hour", "day", "month"):
+            raise usage_error("granularity is none, hour, day or month.")
+        asked[name] = value
+    elif name == "group_by":
+        if value not in ("model", "channel"):
+            raise usage_error("group_by is model or channel.")
+        asked[name] = value
+    else:
+        return False
+    return True
+
+
+def usage_bucket_start(t: float, granularity: str) -> float:
+    g = time.gmtime(t)
+    import calendar
+    if granularity == "hour":
+        return t - t % 3600
+    if granularity == "day":
+        return t - t % 86400
+    return float(calendar.timegm((g.tm_year, g.tm_mon, 1, 0, 0, 0)))
+
+
+def usage_bucket_end(t: float, granularity: str) -> float:
+    import calendar
+    if granularity == "hour":
+        return t + 3600
+    if granularity == "day":
+        return t + 86400
+    g = time.gmtime(t)
+    y, mo = (g.tm_year + 1, 1) if g.tm_mon == 12 else (g.tm_year, g.tm_mon + 1)
+    return float(calendar.timegm((y, mo, 1, 0, 0, 0)))
+
+
+def usage_add(t: dict, row) -> None:
+    for k, v in zip(("requests", "free_tier_requests", "input_tokens", "image_tokens", "video_tokens", "booster_calls", "model_micros", "boosters_micros"), row[4:]):
+        t[k] = t.get(k, 0) + v
+
+
+def usage_totals(t: dict) -> dict:
+    """Totals as the API writes them: the counts, and the cost as an answer's
+    usage.cost writes it, without its free_tier (free_tier_requests counts those)."""
+    model, boosters = t.get("model_micros", 0), t.get("boosters_micros", 0)
+    return {
+        "requests": t.get("requests", 0), "free_tier_requests": t.get("free_tier_requests", 0),
+        "input_tokens": t.get("input_tokens", 0), "image_tokens": t.get("image_tokens", 0),
+        "video_tokens": t.get("video_tokens", 0), "booster_calls": t.get("booster_calls", 0),
+        "cost": {"usd": usd((model + boosters) / 1e6), "model_usd": usd(model / 1e6), "boosters_usd": usd(boosters / 1e6)},
+    }
+
+
+def usage_key_object(k: dict, now: float) -> dict:
+    if k["revoked_at"] is not None:
+        status = "revoked"
+    elif k["expires_at"] is not None and usage_epoch(k["expires_at"]) <= now:
+        status = "expired"
+    else:
+        status = "active"
+    return {"id": k["id"], "name": k["name"], "scope": k["scope"], "device_id": k["device_id"], "labels": dict(sorted(k["labels"].items())),
+            "status": status, "created_at": k["created_at"], "revoked_at": k["revoked_at"], "expires_at": k["expires_at"]}
+
+
+def usage_of(k: dict, span: dict, now: float) -> dict:
+    """One key's usage over span: its totals and, as asked, its buckets (only those with
+    usage, oldest first, the first and last cut to the period) and its groups."""
+    rows = [r for r in USAGE_ROWS if r[0] == k["id"] and span["start"] <= usage_epoch(r[1]) < span["end"]]
+    totals: dict = {}
+    for r in rows:
+        usage_add(totals, r)
+    out = {"key": usage_key_object(k, now), "totals": usage_totals(totals)}
+    g = span["granularity"]
+    if g != "none":
+        buckets: dict = {}
+        for r in rows:
+            b = usage_bucket_start(usage_epoch(r[1]), g)
+            usage_add(buckets.setdefault(b, {}), r)
+        out["buckets"] = [{"start": usage_iso(max(b, span["start"])), "end": usage_iso(min(usage_bucket_end(b, g), span["end"])), "totals": usage_totals(t)}
+                          for b, t in sorted(buckets.items())]
+    if span["group_by"] == "model":
+        models: dict = {}
+        for r in rows:
+            usage_add(models.setdefault(r[2], {}), r)
+        out["by_model"] = [{"model": m, "totals": usage_totals(t)} for m, t in sorted(models.items())]
+    elif span["group_by"] == "channel":
+        channels: dict = {c: {} for c in USAGE_CHANNELS}
+        for r in rows:
+            usage_add(channels[r[3]], r)
+        out["by_channel"] = [{"channel": c, "totals": usage_totals(channels[c])} for c in USAGE_CHANNELS]
+    return out
+
+
+def usage_visible(workspace: str, scope: str) -> list:
+    """The keys a caller may see: a full key every customer key of its workspace, a
+    keys key the decide keys; newest first (created_at, then id)."""
+    keys = USAGE_KEYS.get(workspace, [])
+    if scope == "keys":
+        keys = [k for k in keys if k["scope"] == "decide"]
+    return sorted(keys, key=lambda k: (k["created_at"], k["id"]), reverse=True)
+
+
+def usage_as_of(span: dict, now: float) -> str:
+    """How far the figures are complete: up to about two minutes ago, to the minute;
+    never past the period's end."""
+    folded = now - 120
+    return usage_iso(min(span["end"], folded - folded % 60))
+
+
+def usage_cursor(k: dict) -> str:
+    micros = int(usage_epoch(k["created_at"]) * 1_000_000)
+    return base64.urlsafe_b64encode(("%d:%s" % (micros, k["id"][4:])).encode()).decode().rstrip("=")
+
+
+def usage_parse_cursor(raw: str):
+    if len(raw) > 128:
+        return None
+    try:
+        text = base64.urlsafe_b64decode(raw + "=" * (-len(raw) % 4)).decode()
+        micros, hexid = text.split(":", 1)
+        if not re.fullmatch(r"-?\d+", micros) or not re.fullmatch(r"[0-9a-f]{32}", hexid.replace("-", "")):
+            return None
+        return int(micros), "key_" + hexid.replace("-", "")
+    except (ValueError, UnicodeDecodeError, binascii.Error):
+        return None
+
 
 
 def workspace_of(key: str | None) -> str:
@@ -2295,6 +2523,9 @@ API_ROUTES = [
     (re.compile(r"^/v1/collections/([^/]+)$"), {"GET": "collection_get", "DELETE": "collection_delete"}),
     (re.compile(r"^/v1/collections/([^/]+)/items$"), {"POST": "item_enroll", "GET": "item_list"}),
     (re.compile(r"^/v1/collections/([^/]+)/items/([^/]+)$"), {"PATCH": "item_update", "DELETE": "item_delete"}),
+    # Per-key usage (suite 1.18).
+    (re.compile(r"^/v1/keys/([^/]+)/usage$"), {"GET": "key_usage"}),
+    (re.compile(r"^/v1/usage$"), {"GET": "usage_page"}),
 ]
 
 
@@ -2662,6 +2893,10 @@ class Handler(BaseHTTPRequestHandler):
             # A decide key makes decisions and lists the models, nothing else: refused
             # before anything is read or counted.
             self.refuse(rid, typed_error(403, "key_scope_denied", KEY_SCOPE_DENIED))
+            return
+        if key_scope(self.key()) == "keys" and name not in KEYS_KEY_ROUTES:
+            # A keys key manages keys and reads their usage, nothing else.
+            self.refuse(rid, typed_error(403, "key_scope_denied", KEY_KEYS_ONLY))
             return
         query = parse_qs(parts.query, keep_blank_values=True) if parts is not None else {}
         getattr(self, "api_" + name)(rid, started, body_bytes, query, *args)
@@ -3851,6 +4086,126 @@ class Handler(BaseHTTPRequestHandler):
         with self.server.state.lock:
             own["items"].pop(item_id, None)
         self.send(200, {"id": item_id, "deleted": True}, {"x-request-id": rid})
+
+    # ----------------------------------------------------------------- per-key usage
+
+    def usage_pairs(self) -> list:
+        """The query's pairs in order, repeats kept, as the API reads them."""
+        return parse_qsl(urlsplit(self.path).query, keep_blank_values=True)[:256]
+
+    def api_key_usage(self, rid, started, body_bytes, query, key_id):
+        """GET /v1/keys/{key_id}/usage: one key's usage. The query is checked first; a key
+        outside the caller's set, of another workspace or malformed, is the 404."""
+        now = self.now()
+        try:
+            asked: dict = {}
+            for name, value in self.usage_pairs():
+                if not usage_period_take(asked, name, value):
+                    raise usage_error("Unknown query parameter: %s." % printable(name, 32))
+            span = usage_span(asked, now, defaults=True)
+            visible = {k["id"]: k for k in usage_visible(workspace_of(self.key()), key_scope(self.key()))}
+            key = visible.get(key_id) if KEY_ID.fullmatch(key_id) else None
+            if key is None:
+                raise typed_error(404, "not_found_error", "Not found.")
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        body = usage_of(key, span, now)
+        out = {"key": body.pop("key"), "period": {"start": usage_iso(span["start"]), "end": usage_iso(span["end"])}, "as_of": usage_as_of(span, now)}
+        out.update(body)
+        self.send(200, out, {"x-request-id": rid, "Cache-Control": "private, no-store"})
+
+    def api_usage_page(self, rid, started, body_bytes, query):
+        """GET /v1/usage: a page of keys, newest first, each with its usage over the
+        period; within the read's budget, so a page can hold fewer keys than limit."""
+        now = self.now()
+        try:
+            asked: dict = {}
+            labels, device, keys, scope, status, include_empty, limit, cursor = {}, None, [], None, "all", False, None, None
+            for name, value in self.usage_pairs():
+                if usage_period_take(asked, name, value):
+                    continue
+                if name == "label":
+                    if ":" not in value:
+                        raise usage_error("A label filter is name:value.")
+                    k, v = value.split(":", 1)
+                    if not LABEL_NAME.fullmatch(k) or not 1 <= len(v) <= 64 or any(unicodedata.category(c) == "Cc" for c in v):
+                        raise usage_error("A label filter is name:value, as labels are written.")
+                    labels[k] = v
+                elif name == "device_id":
+                    if not value or len(value) > 128 or not all(0x20 <= ord(c) <= 0x7E for c in value) or value.startswith(" "):
+                        raise usage_error("device_id is 1 to 128 printable ASCII characters, not starting with a space.")
+                    device = value
+                elif name == "key_id":
+                    if not KEY_ID.fullmatch(value):
+                        raise usage_error("key_id is a key's id, key_ and 32 hex digits.")
+                    if len(keys) == USAGE_MAX_KEY_IDS:
+                        raise usage_error("At most 100 key_id filters.")
+                    keys.append(value)
+                elif name == "scope":
+                    if value not in ("full", "decide", "keys"):
+                        raise usage_error("scope is full, decide or keys.")
+                    scope = value
+                elif name == "status":
+                    if value not in ("active", "expired", "revoked", "all"):
+                        raise usage_error("status is active, expired, revoked or all.")
+                    status = value
+                elif name == "include_empty":
+                    if value not in ("true", "false"):
+                        raise usage_error("include_empty is true or false.")
+                    include_empty = value == "true"
+                elif name == "limit":
+                    if not re.fullmatch(r"-?\d+", value) or not 1 <= int(value) <= USAGE_PAGE_MAX:
+                        raise usage_error("limit is a whole number from 1 to 1000.")
+                    limit = int(value)
+                elif name == "cursor":
+                    cursor = usage_parse_cursor(value)
+                    if cursor is None:
+                        raise usage_error("cursor is a next_cursor this list gave.")
+                else:
+                    raise usage_error("Unknown query parameter: %s." % printable(name, 32))
+            span = usage_span(asked, now, defaults=False)
+            bucketed = span["granularity"] != "none"
+            if limit is not None and bucketed and limit > USAGE_PAGE_MAX_BUCKETED:
+                raise usage_error("limit is at most 100 with a granularity other than none.")
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        hours = max(1, int((span["end"] - span["start"]) // 3600))
+        limit = min(limit if limit is not None else (USAGE_PAGE_MAX_BUCKETED if bucketed else USAGE_PAGE_DEFAULT), max(1, USAGE_MAX_ROWS // hours))
+        chosen = []
+        for k in usage_visible(workspace_of(self.key()), key_scope(self.key())):
+            st = usage_key_object(k, now)["status"]
+            if status != "all" and st != status:
+                continue
+            if any(k["labels"].get(n) != v for n, v in labels.items()):
+                continue
+            if device is not None and k["device_id"] != device:
+                continue
+            if keys and k["id"] not in keys:
+                continue
+            if scope is not None and k["scope"] != scope:
+                continue
+            if cursor is not None and (int(usage_epoch(k["created_at"]) * 1_000_000), k["id"]) >= cursor:
+                continue
+            if not include_empty and not any(r[0] == k["id"] and span["start"] <= usage_epoch(r[1]) < span["end"] for r in USAGE_ROWS):
+                continue
+            chosen.append(k)
+            if len(chosen) == limit + 1:
+                break
+        # As many as fit the read's budget: each key's hours times the models it ever used.
+        fit, rows = 0, 0
+        for k in chosen[:limit]:
+            models = len({r[2] for r in USAGE_ROWS if r[0] == k["id"]})
+            rows += hours * min(models, USAGE_MAX_MODELS_COUNTED)
+            if fit > 0 and rows > USAGE_MAX_ROWS:
+                break
+            fit += 1
+        more = len(chosen) > fit
+        page = chosen[:fit]
+        body = {"period": {"start": usage_iso(span["start"]), "end": usage_iso(span["end"])}, "as_of": usage_as_of(span, now),
+                "items": [usage_of(k, span, now) for k in page], "next_cursor": usage_cursor(page[-1]) if more and page else None}
+        self.send(200, body, {"x-request-id": rid, "Cache-Control": "private, no-store"})
 
     def result_line(self, ln) -> str:
         return '{"custom_id":%s,"status":%s,"body":%s,"headers":%s}' % (compact(ln["custom_id"]), compact(ln["status"]), ln["result_text"], compact(ln["headers"]))

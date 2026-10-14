@@ -1,0 +1,41 @@
+{
+  "id": "400-usage-end-not-after-start",
+  "description": "An end that is not after the start, once both are rounded to the hour. The period's rules and the cursor are the server's: the 400 api_usage_error with its message, BadRequestError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "usage.list",
+    "args": {
+      "start": "2026-09-01T10:15:00Z",
+      "end": "2026-09-01T09:30:00Z"
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "end is after start."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"end is after start.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/usage?start=2026-09-01T10:15:00Z&end=2026-09-01T09:30:00Z",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "end is after start."
+      }
+    }
+  }
+}

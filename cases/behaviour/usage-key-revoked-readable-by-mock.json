@@ -1,0 +1,55 @@
+{
+  "id": "usage-key-revoked-readable-by-mock",
+  "description": "A revoked key's usage stays readable, its status revoked: the case of billing after a revocation.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "usage.key",
+    "args": {
+      "key_id": "key_00000000000000000000000000000d02",
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "key_usage",
+      "key_usage": {
+        "key": {
+          "id": "key_00000000000000000000000000000d02",
+          "name": "Drone 2",
+          "scope": "decide",
+          "device_id": "drone-2",
+          "labels": {
+            "customer": "acme",
+            "plan": "basic"
+          },
+          "status": "revoked",
+          "created_at": "2026-08-15T08:00:00Z",
+          "revoked_at": "2026-09-20T12:00:00Z",
+          "expires_at": null
+        },
+        "period": {
+          "start": "2026-09-01T00:00:00Z",
+          "end": "2026-10-01T00:00:00Z"
+        },
+        "as_of": "2026-10-01T00:00:00Z",
+        "totals": {
+          "requests": 5,
+          "free_tier_requests": 0,
+          "input_tokens": 4000,
+          "image_tokens": 0,
+          "video_tokens": 0,
+          "booster_calls": 0,
+          "cost": {
+            "usd": 0.00014,
+            "model_usd": 0.00014,
+            "boosters_usd": 0.0
+          }
+        }
+      }
+    }
+  }
+}

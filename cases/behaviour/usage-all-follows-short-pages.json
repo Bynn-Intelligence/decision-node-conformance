@@ -1,0 +1,176 @@
+{
+  "id": "usage-all-follows-short-pages",
+  "description": "A page can hold fewer keys than limit (the read's budget), so a page of one key with a next_cursor is not the last: usage.all asks again with that cursor and stops only at a null next_cursor.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "period": {
+              "start": "2026-09-01T00:00:00Z",
+              "end": "2026-10-01T00:00:00Z"
+            },
+            "as_of": "2026-10-01T00:00:00Z",
+            "items": [
+              {
+                "key": {
+                  "id": "key_00000000000000000000000000000d01",
+                  "name": "Drone 1",
+                  "scope": "decide",
+                  "device_id": "drone-1",
+                  "labels": {
+                    "customer": "acme",
+                    "plan": "pro"
+                  },
+                  "status": "active",
+                  "created_at": "2026-08-20T08:00:00Z",
+                  "revoked_at": null,
+                  "expires_at": null
+                },
+                "totals": {
+                  "requests": 10,
+                  "free_tier_requests": 4,
+                  "input_tokens": 7400,
+                  "image_tokens": 1200,
+                  "video_tokens": 0,
+                  "booster_calls": 1,
+                  "cost": {
+                    "usd": 0.024213,
+                    "model_usd": 0.000213,
+                    "boosters_usd": 0.024
+                  }
+                }
+              }
+            ],
+            "next_cursor": "c2"
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "period": {
+              "start": "2026-09-01T00:00:00Z",
+              "end": "2026-10-01T00:00:00Z"
+            },
+            "as_of": "2026-10-01T00:00:00Z",
+            "items": [
+              {
+                "key": {
+                  "id": "key_00000000000000000000000000000d02",
+                  "name": "Drone 2",
+                  "scope": "decide",
+                  "device_id": "drone-2",
+                  "labels": {
+                    "customer": "acme",
+                    "plan": "basic"
+                  },
+                  "status": "revoked",
+                  "created_at": "2026-08-15T08:00:00Z",
+                  "revoked_at": "2026-09-20T12:00:00Z",
+                  "expires_at": null
+                },
+                "totals": {
+                  "requests": 5,
+                  "free_tier_requests": 0,
+                  "input_tokens": 4000,
+                  "image_tokens": 0,
+                  "video_tokens": 0,
+                  "booster_calls": 0,
+                  "cost": {
+                    "usd": 0.00014,
+                    "model_usd": 0.00014,
+                    "boosters_usd": 0.0
+                  }
+                }
+              }
+            ],
+            "next_cursor": null
+          }
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "usage.all",
+    "args": {
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z"
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "usage_items",
+      "usage_items": [
+        {
+          "key": {
+            "id": "key_00000000000000000000000000000d01",
+            "name": "Drone 1",
+            "scope": "decide",
+            "device_id": "drone-1",
+            "labels": {
+              "customer": "acme",
+              "plan": "pro"
+            },
+            "status": "active",
+            "created_at": "2026-08-20T08:00:00Z",
+            "revoked_at": null,
+            "expires_at": null
+          },
+          "totals": {
+            "requests": 10,
+            "free_tier_requests": 4,
+            "input_tokens": 7400,
+            "image_tokens": 1200,
+            "video_tokens": 0,
+            "booster_calls": 1,
+            "cost": {
+              "usd": 0.024213,
+              "model_usd": 0.000213,
+              "boosters_usd": 0.024
+            }
+          }
+        },
+        {
+          "key": {
+            "id": "key_00000000000000000000000000000d02",
+            "name": "Drone 2",
+            "scope": "decide",
+            "device_id": "drone-2",
+            "labels": {
+              "customer": "acme",
+              "plan": "basic"
+            },
+            "status": "revoked",
+            "created_at": "2026-08-15T08:00:00Z",
+            "revoked_at": "2026-09-20T12:00:00Z",
+            "expires_at": null
+          },
+          "totals": {
+            "requests": 5,
+            "free_tier_requests": 0,
+            "input_tokens": 4000,
+            "image_tokens": 0,
+            "video_tokens": 0,
+            "booster_calls": 0,
+            "cost": {
+              "usd": 0.00014,
+              "model_usd": 0.00014,
+              "boosters_usd": 0.0
+            }
+          }
+        }
+      ]
+    }
+  }
+}

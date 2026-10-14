@@ -1,0 +1,41 @@
+{
+  "id": "400-usage-period-too-long",
+  "description": "A period over 400 days. The period's rules and the cursor are the server's: the 400 api_usage_error with its message, BadRequestError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "usage.list",
+    "args": {
+      "start": "2025-01-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z"
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "A period is at most 400 days."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"A period is at most 400 days.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/usage?start=2025-01-01T00:00:00Z&end=2026-10-01T00:00:00Z",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "A period is at most 400 days."
+      }
+    }
+  }
+}

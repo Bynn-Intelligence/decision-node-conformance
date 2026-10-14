@@ -1,0 +1,92 @@
+{
+  "id": "usage-key-buckets-cut-to-period-by-mock",
+  "description": "A period that starts and ends inside a day: the first and last buckets are cut to the period.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "usage.key",
+    "args": {
+      "key_id": "key_00000000000000000000000000000d01",
+      "start": "2026-09-03T09:30:00Z",
+      "end": "2026-09-04T14:20:00Z",
+      "granularity": "day"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "key_usage",
+      "key_usage": {
+        "key": {
+          "id": "key_00000000000000000000000000000d01",
+          "name": "Drone 1",
+          "scope": "decide",
+          "device_id": "drone-1",
+          "labels": {
+            "customer": "acme",
+            "plan": "pro"
+          },
+          "status": "active",
+          "created_at": "2026-08-20T08:00:00Z",
+          "revoked_at": null,
+          "expires_at": null
+        },
+        "period": {
+          "start": "2026-09-03T09:00:00Z",
+          "end": "2026-09-04T15:00:00Z"
+        },
+        "as_of": "2026-09-04T15:00:00Z",
+        "totals": {
+          "requests": 6,
+          "free_tier_requests": 0,
+          "input_tokens": 5800,
+          "image_tokens": 1200,
+          "video_tokens": 0,
+          "booster_calls": 1,
+          "cost": {
+            "usd": 0.024213,
+            "model_usd": 0.000213,
+            "boosters_usd": 0.024
+          }
+        },
+        "buckets": [
+          {
+            "start": "2026-09-03T09:00:00Z",
+            "end": "2026-09-04T00:00:00Z",
+            "totals": {
+              "requests": 5,
+              "free_tier_requests": 0,
+              "input_tokens": 5000,
+              "image_tokens": 1200,
+              "video_tokens": 0,
+              "booster_calls": 1,
+              "cost": {
+                "usd": 0.024185,
+                "model_usd": 0.000185,
+                "boosters_usd": 0.024
+              }
+            }
+          },
+          {
+            "start": "2026-09-04T00:00:00Z",
+            "end": "2026-09-04T15:00:00Z",
+            "totals": {
+              "requests": 1,
+              "free_tier_requests": 0,
+              "input_tokens": 800,
+              "image_tokens": 0,
+              "video_tokens": 0,
+              "booster_calls": 0,
+              "cost": {
+                "usd": 2.8e-05,
+                "model_usd": 2.8e-05,
+                "boosters_usd": 0.0
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

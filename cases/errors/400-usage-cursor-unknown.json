@@ -1,0 +1,42 @@
+{
+  "id": "400-usage-cursor-unknown",
+  "description": "A cursor this list did not give. The period's rules and the cursor are the server's: the 400 api_usage_error with its message, BadRequestError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "usage.list",
+    "args": {
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z",
+      "cursor": "nope"
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "cursor is a next_cursor this list gave."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"cursor is a next_cursor this list gave.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/usage?start=2026-09-01T00:00:00Z&end=2026-10-01T00:00:00Z&cursor=nope",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "cursor is a next_cursor this list gave."
+      }
+    }
+  }
+}

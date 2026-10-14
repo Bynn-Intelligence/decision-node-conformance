@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.18 (for SDK specification 1.3)
+
+Per-key usage. `SPEC_VERSION` stays `"1.3"`.
+
+- Calls: `usage.key(key_id, start, end, granularity, group_by)` (`GET /v1/keys/{key_id}/usage`), `usage.list(start, end, granularity, group_by, labels, device_id, key_ids, scope, status, include_empty, limit, cursor)` (`GET /v1/usage`) and `usage.all(...)`, which follows `next_cursor` until it is null, since a page can hold fewer keys than `limit`. Each returns the API's object as sent; reads retry as any call.
+- Local checks: the rules the API checks as it reads the query (`granularity`, `group_by`, the label filter, `device_id`, a key id and at most 100 of them, `scope`, `status`, `limit`), each the `400` `api_usage_error` with the API's message. The period's rules, the cursor and the key's `404` are the server's.
+- Errors: the `403` `key_scope_denied` for a decide key; the `404` `not_found_error` "Not found." for a key outside the caller's set, another workspace's, unknown or malformed; the `429` `rate_limit_error` of the reads' own rate; the `529` `overloaded_error`.
+- Case format: the methods `usage.key`, `usage.list` and `usage.all`; the results `key_usage`, `usage_page` and `usage_items`; a request's `query_all`, every parameter with all its values.
+- Mock: both routes over a fixed set of keys and hourly usage per workspace, as the API checks and sums them; a key holding `scope-keys` is a keys key, refused with "This key may only manage keys." on every other route.
+
+Cases: 783 in all (requests 133, responses 115, errors 113, behaviour 420, constants 2): 48 new (5 requests, 2 responses, 11 errors, 30 behaviour).
+
 ## 1.17 (for SDK specification 1.3)
 
 The batch price is each model's, never the batch's. `SPEC_VERSION` stays `"1.3"`.

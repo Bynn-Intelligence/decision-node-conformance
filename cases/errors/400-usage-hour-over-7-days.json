@@ -1,0 +1,43 @@
+{
+  "id": "400-usage-hour-over-7-days",
+  "description": "granularity hour over more than 7 days. The period's rules and the cursor are the server's: the 400 api_usage_error with its message, BadRequestError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "usage.key",
+    "args": {
+      "key_id": "key_00000000000000000000000000000d01",
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z",
+      "granularity": "hour"
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "granularity hour is for a period of at most 7 days; use day or month."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"granularity hour is for a period of at most 7 days; use day or month.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/keys/key_00000000000000000000000000000d01/usage?start=2026-09-01T00:00:00Z&end=2026-10-01T00:00:00Z&granularity=hour",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "granularity hour is for a period of at most 7 days; use day or month."
+      }
+    }
+  }
+}

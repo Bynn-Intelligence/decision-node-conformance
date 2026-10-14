@@ -1,0 +1,190 @@
+{
+  "id": "usage-page-object",
+  "description": "A page of keys' usage: period and as_of once, items (each a key, its totals and, as asked, by_channel listing live, batch and session, a quiet one at 0) and next_cursor. Kept as sent.",
+  "call": {
+    "method": "usage.list",
+    "args": {
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z",
+      "group_by": "channel"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"period\": {\"start\": \"2026-09-01T00:00:00Z\", \"end\": \"2026-10-01T00:00:00Z\"}, \"as_of\": \"2026-10-01T00:00:00Z\", \"items\": [{\"key\": {\"id\": \"key_00000000000000000000000000000d01\", \"name\": \"Drone 1\", \"scope\": \"decide\", \"device_id\": \"drone-1\", \"labels\": {\"customer\": \"acme\", \"plan\": \"pro\"}, \"status\": \"active\", \"created_at\": \"2026-08-20T08:00:00Z\", \"revoked_at\": null, \"expires_at\": null}, \"totals\": {\"requests\": 10, \"free_tier_requests\": 4, \"input_tokens\": 7400, \"image_tokens\": 1200, \"video_tokens\": 0, \"booster_calls\": 1, \"cost\": {\"usd\": 0.024213, \"model_usd\": 0.000213, \"boosters_usd\": 0.024}}, \"by_channel\": [{\"channel\": \"live\", \"totals\": {\"requests\": 7, \"free_tier_requests\": 4, \"input_tokens\": 4600, \"image_tokens\": 1200, \"video_tokens\": 0, \"booster_calls\": 1, \"cost\": {\"usd\": 0.024126, \"model_usd\": 0.000126, \"boosters_usd\": 0.024}}}, {\"channel\": \"batch\", \"totals\": {\"requests\": 2, \"free_tier_requests\": 0, \"input_tokens\": 2000, \"image_tokens\": 0, \"video_tokens\": 0, \"booster_calls\": 0, \"cost\": {\"usd\": 5.9e-05, \"model_usd\": 5.9e-05, \"boosters_usd\": 0.0}}}, {\"channel\": \"session\", \"totals\": {\"requests\": 1, \"free_tier_requests\": 0, \"input_tokens\": 800, \"image_tokens\": 0, \"video_tokens\": 0, \"booster_calls\": 0, \"cost\": {\"usd\": 2.8e-05, \"model_usd\": 2.8e-05, \"boosters_usd\": 0.0}}}]}, {\"key\": {\"id\": \"key_00000000000000000000000000000d02\", \"name\": \"Drone 2\", \"scope\": \"decide\", \"device_id\": \"drone-2\", \"labels\": {\"customer\": \"acme\", \"plan\": \"basic\"}, \"status\": \"revoked\", \"created_at\": \"2026-08-15T08:00:00Z\", \"revoked_at\": \"2026-09-20T12:00:00Z\", \"expires_at\": null}, \"totals\": {\"requests\": 5, \"free_tier_requests\": 0, \"input_tokens\": 4000, \"image_tokens\": 0, \"video_tokens\": 0, \"booster_calls\": 0, \"cost\": {\"usd\": 0.00014, \"model_usd\": 0.00014, \"boosters_usd\": 0.0}}, \"by_channel\": [{\"channel\": \"live\", \"totals\": {\"requests\": 5, \"free_tier_requests\": 0, \"input_tokens\": 4000, \"image_tokens\": 0, \"video_tokens\": 0, \"booster_calls\": 0, \"cost\": {\"usd\": 0.00014, \"model_usd\": 0.00014, \"boosters_usd\": 0.0}}}, {\"channel\": \"batch\", \"totals\": {\"requests\": 0, \"free_tier_requests\": 0, \"input_tokens\": 0, \"image_tokens\": 0, \"video_tokens\": 0, \"booster_calls\": 0, \"cost\": {\"usd\": 0.0, \"model_usd\": 0.0, \"boosters_usd\": 0.0}}}, {\"channel\": \"session\", \"totals\": {\"requests\": 0, \"free_tier_requests\": 0, \"input_tokens\": 0, \"image_tokens\": 0, \"video_tokens\": 0, \"booster_calls\": 0, \"cost\": {\"usd\": 0.0, \"model_usd\": 0.0, \"boosters_usd\": 0.0}}}]}], \"next_cursor\": \"MTc4Njc4MDgwMDAwMDAwMDow\"}"
+  },
+  "expect": {
+    "usage_page": {
+      "period": {
+        "start": "2026-09-01T00:00:00Z",
+        "end": "2026-10-01T00:00:00Z"
+      },
+      "as_of": "2026-10-01T00:00:00Z",
+      "items": [
+        {
+          "key": {
+            "id": "key_00000000000000000000000000000d01",
+            "name": "Drone 1",
+            "scope": "decide",
+            "device_id": "drone-1",
+            "labels": {
+              "customer": "acme",
+              "plan": "pro"
+            },
+            "status": "active",
+            "created_at": "2026-08-20T08:00:00Z",
+            "revoked_at": null,
+            "expires_at": null
+          },
+          "totals": {
+            "requests": 10,
+            "free_tier_requests": 4,
+            "input_tokens": 7400,
+            "image_tokens": 1200,
+            "video_tokens": 0,
+            "booster_calls": 1,
+            "cost": {
+              "usd": 0.024213,
+              "model_usd": 0.000213,
+              "boosters_usd": 0.024
+            }
+          },
+          "by_channel": [
+            {
+              "channel": "live",
+              "totals": {
+                "requests": 7,
+                "free_tier_requests": 4,
+                "input_tokens": 4600,
+                "image_tokens": 1200,
+                "video_tokens": 0,
+                "booster_calls": 1,
+                "cost": {
+                  "usd": 0.024126,
+                  "model_usd": 0.000126,
+                  "boosters_usd": 0.024
+                }
+              }
+            },
+            {
+              "channel": "batch",
+              "totals": {
+                "requests": 2,
+                "free_tier_requests": 0,
+                "input_tokens": 2000,
+                "image_tokens": 0,
+                "video_tokens": 0,
+                "booster_calls": 0,
+                "cost": {
+                  "usd": 5.9e-05,
+                  "model_usd": 5.9e-05,
+                  "boosters_usd": 0.0
+                }
+              }
+            },
+            {
+              "channel": "session",
+              "totals": {
+                "requests": 1,
+                "free_tier_requests": 0,
+                "input_tokens": 800,
+                "image_tokens": 0,
+                "video_tokens": 0,
+                "booster_calls": 0,
+                "cost": {
+                  "usd": 2.8e-05,
+                  "model_usd": 2.8e-05,
+                  "boosters_usd": 0.0
+                }
+              }
+            }
+          ]
+        },
+        {
+          "key": {
+            "id": "key_00000000000000000000000000000d02",
+            "name": "Drone 2",
+            "scope": "decide",
+            "device_id": "drone-2",
+            "labels": {
+              "customer": "acme",
+              "plan": "basic"
+            },
+            "status": "revoked",
+            "created_at": "2026-08-15T08:00:00Z",
+            "revoked_at": "2026-09-20T12:00:00Z",
+            "expires_at": null
+          },
+          "totals": {
+            "requests": 5,
+            "free_tier_requests": 0,
+            "input_tokens": 4000,
+            "image_tokens": 0,
+            "video_tokens": 0,
+            "booster_calls": 0,
+            "cost": {
+              "usd": 0.00014,
+              "model_usd": 0.00014,
+              "boosters_usd": 0.0
+            }
+          },
+          "by_channel": [
+            {
+              "channel": "live",
+              "totals": {
+                "requests": 5,
+                "free_tier_requests": 0,
+                "input_tokens": 4000,
+                "image_tokens": 0,
+                "video_tokens": 0,
+                "booster_calls": 0,
+                "cost": {
+                  "usd": 0.00014,
+                  "model_usd": 0.00014,
+                  "boosters_usd": 0.0
+                }
+              }
+            },
+            {
+              "channel": "batch",
+              "totals": {
+                "requests": 0,
+                "free_tier_requests": 0,
+                "input_tokens": 0,
+                "image_tokens": 0,
+                "video_tokens": 0,
+                "booster_calls": 0,
+                "cost": {
+                  "usd": 0.0,
+                  "model_usd": 0.0,
+                  "boosters_usd": 0.0
+                }
+              }
+            },
+            {
+              "channel": "session",
+              "totals": {
+                "requests": 0,
+                "free_tier_requests": 0,
+                "input_tokens": 0,
+                "image_tokens": 0,
+                "video_tokens": 0,
+                "booster_calls": 0,
+                "cost": {
+                  "usd": 0.0,
+                  "model_usd": 0.0,
+                  "boosters_usd": 0.0
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "next_cursor": "MTc4Njc4MDgwMDAwMDAwMDow"
+    }
+  }
+}

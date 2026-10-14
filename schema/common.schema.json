@@ -81,7 +81,7 @@
     },
     "call": {
       "type": "object",
-      "description": "One SDK call by neutral method name and neutral argument names. Inside args, an object with the single key $truth, $choice, $score or $image stands for a builder call; every other value is passed as plain data. Spec 1.1 adds $number (instructions, min, max, step) and $text ({repeat, times}: the string repeated, for large bodies), and inside behaviour steps {\"$ref\": \"name.path\"} for a value saved by an earlier step. Suite 1.5 adds $nest ({depth, value}: value inside depth arrays, for the nesting limit without a deep case file). Suite 1.6 adds $list ({count, item}: count copies of item, {i} in its strings replaced by the 0-based index) and check: true (the same request handed to the SDK's check_request instead of being sent; methods decide, open_session, batches.create, batches.add). Suite 1.7 adds $video ({id, frames, fps?, start?, end?}: Video(id, frames, fps, start, end)) with each frame a $frame ({t, path | data_base64 | data_text, media_type?}: VideoFrame(t, data, media_type)), for SDK specification 1.2. Suite 1.8 adds $point and $box ({instructions, image?, units?}: point(instructions, image, units) and box(instructions, image, units)). Suite 1.11 adds $booster ({name, images?, require?, options?}: Booster(name, images, require, options), each argument passed only when present) for SDK specification 1.3; a booster given as a plain name string, or as a plain wire-form object, is passed as is. Suite 1.13 adds the collections calls: collections.create(name, type), collections.list(), collections.get(collection_id), collections.delete(collection_id), collections.enroll(collection_id, image, reference, label?), collections.list_items(collection_id, offset?, limit?) and collections.delete_item(collection_id, item_id). Suite 1.15 adds collections.update_item(collection_id, item_id, reference?, label?, metadata?) (label given as null clears it), collections.enroll's metadata? and collections.list_items' reference? and reference_prefix?.",
+      "description": "One SDK call by neutral method name and neutral argument names. Inside args, an object with the single key $truth, $choice, $score or $image stands for a builder call; every other value is passed as plain data. Spec 1.1 adds $number (instructions, min, max, step) and $text ({repeat, times}: the string repeated, for large bodies), and inside behaviour steps {\"$ref\": \"name.path\"} for a value saved by an earlier step. Suite 1.5 adds $nest ({depth, value}: value inside depth arrays, for the nesting limit without a deep case file). Suite 1.6 adds $list ({count, item}: count copies of item, {i} in its strings replaced by the 0-based index) and check: true (the same request handed to the SDK's check_request instead of being sent; methods decide, open_session, batches.create, batches.add). Suite 1.7 adds $video ({id, frames, fps?, start?, end?}: Video(id, frames, fps, start, end)) with each frame a $frame ({t, path | data_base64 | data_text, media_type?}: VideoFrame(t, data, media_type)), for SDK specification 1.2. Suite 1.8 adds $point and $box ({instructions, image?, units?}: point(instructions, image, units) and box(instructions, image, units)). Suite 1.11 adds $booster ({name, images?, require?, options?}: Booster(name, images, require, options), each argument passed only when present) for SDK specification 1.3; a booster given as a plain name string, or as a plain wire-form object, is passed as is. Suite 1.13 adds the collections calls: collections.create(name, type), collections.list(), collections.get(collection_id), collections.delete(collection_id), collections.enroll(collection_id, image, reference, label?), collections.list_items(collection_id, offset?, limit?) and collections.delete_item(collection_id, item_id). Suite 1.15 adds collections.update_item(collection_id, item_id, reference?, label?, metadata?) (label given as null clears it), collections.enroll's metadata? and collections.list_items' reference? and reference_prefix?. Suite 1.18 adds usage.key(key_id, start?, end?, granularity?, group_by?), usage.list(start, end, granularity?, group_by?, labels?, device_id?, key_ids?, scope?, status?, include_empty?, limit?, cursor?) and usage.all(the same but cursor).",
       "required": [
         "method",
         "args"
@@ -116,7 +116,10 @@
             "collections.enroll",
             "collections.list_items",
             "collections.delete_item",
-            "collections.update_item"
+            "collections.update_item",
+            "usage.key",
+            "usage.list",
+            "usage.all"
           ]
         },
         "args": {
@@ -1527,6 +1530,16 @@
             "type": "string"
           }
         },
+        "query_all": {
+          "type": "object",
+          "description": "Suite 1.18: every parameter of the query with all its values, a repeated one in its order; the order between parameters is free.",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
         "status": {
           "type": [
             "integer",
@@ -1681,7 +1694,10 @@
                 "collections",
                 "item",
                 "item_page",
-                "deleted"
+                "deleted",
+                "key_usage",
+                "usage_page",
+                "usage_items"
               ]
             },
             "decision": {
@@ -1742,6 +1758,21 @@
             },
             "collections": {
               "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "key_usage": {
+              "type": "object",
+              "description": "Suite 1.18: usage.key's object as sent; nested objects compare by the keys given, lists whole."
+            },
+            "usage_page": {
+              "type": "object",
+              "description": "Suite 1.18: usage.list's page as sent; nested objects compare by the keys given, lists whole."
+            },
+            "usage_items": {
+              "type": "array",
+              "description": "Suite 1.18: usage.all's items, every page's in order, each compared by the keys given.",
               "items": {
                 "type": "object"
               }

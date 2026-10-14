@@ -478,6 +478,7 @@ class DecisionNode:
         self._cache_lock = threading.Lock()
         self.batches = Batches(self)
         self.collections = Collections(self)
+        self.usage = Usage(self)
 
     # ---- transport
 
@@ -2520,6 +2521,103 @@ class Collections:
 
     def delete_item(self, collection_id, item_id):
         return self._call("DELETE", "/v1/collections/%s/items/%s" % (self._id(collection_id), self._id(item_id)))
+
+
+USAGE_GRANULARITIES = ("none", "hour", "day", "month")
+USAGE_GROUPS = ("model", "channel")
+USAGE_SCOPES = ("full", "decide", "keys")
+USAGE_STATUSES = ("active", "expired", "revoked", "all")
+USAGE_PAGE_MAX = 1000
+USAGE_MAX_KEY_IDS = 100
+USAGE_KEY_ID = r"key_[0-9a-f]{32}"
+USAGE_LABEL_NAME = r"[a-z0-9_.-]{1,32}"
+
+
+class Usage:
+    """Suite 1.18: per-key usage. key(key_id, ...) is GET /v1/keys/{key_id}/usage and
+    list(start, end, ...) GET /v1/usage, each returning the API's object as sent; all
+    follows next_cursor until it is null and returns every page's items, since a page can
+    hold fewer keys than limit. Reads retry as any call. The rules the API checks while it
+    reads the query are checked locally first; the period's (the hours it is rounded to,
+    400 days, hour granularity over 7 days, limit with buckets) and the cursor are the
+    server's."""
+
+    def __init__(self, client):
+        self.c = client
+
+    def _period(self, start, end, granularity, group_by) -> list:
+        if granularity is not None and granularity not in USAGE_GRANULARITIES:
+            raise local_error(BadRequestError, "granularity is none, hour, day or month.")
+        if group_by is not None and group_by not in USAGE_GROUPS:
+            raise local_error(BadRequestError, "group_by is model or channel.")
+        q = []
+        for name, value in (("start", start), ("end", end), ("granularity", granularity), ("group_by", group_by)):
+            if value is not None:
+                q.append((name, value))
+        return q
+
+    def _get(self, path, q):
+        query = "&".join("%s=%s" % (quote(k, safe=""), quote(str(v), safe="")) for k, v in q)
+        parsed, _, _ = self.c._exchange("GET", path + ("?" + query if query else ""))
+        return parsed
+
+    def key(self, key_id, start=None, end=None, granularity=None, group_by=None):
+        """One key's usage; start and end default, on the server, to the UTC month so far."""
+        q = self._period(start, end, granularity, group_by)
+        return self._get("/v1/keys/%s/usage" % quote(str(key_id), safe=""), q)
+
+    def _list_query(self, start, end, granularity, group_by, labels, device_id, key_ids, scope, status, include_empty, limit, cursor) -> list:
+        q = self._period(start, end, granularity, group_by)
+        # Labels by name, so a map without order sends them the same every time.
+        for name, value in sorted((labels or {}).items()):
+            if not isinstance(name, str) or not re.fullmatch(USAGE_LABEL_NAME, name) or not isinstance(value, str) \
+                    or not 1 <= len(value) <= 64 or any(unicodedata.category(c) == "Cc" for c in value):
+                raise local_error(BadRequestError, "A label filter is name:value, as labels are written.")
+            q.append(("label", "%s:%s" % (name, value)))
+        if device_id is not None:
+            if not isinstance(device_id, str) or not 1 <= len(device_id) <= 128 or not all(0x20 <= ord(ch) <= 0x7E for ch in device_id) or device_id.startswith(" "):
+                raise local_error(BadRequestError, "device_id is 1 to 128 printable ASCII characters, not starting with a space.")
+            q.append(("device_id", device_id))
+        for i, kid in enumerate(key_ids or []):
+            if not isinstance(kid, str) or not re.fullmatch(USAGE_KEY_ID, kid):
+                raise local_error(BadRequestError, "key_id is a key's id, key_ and 32 hex digits.")
+            if i == USAGE_MAX_KEY_IDS:
+                raise local_error(BadRequestError, "At most 100 key_id filters.")
+            q.append(("key_id", kid))
+        if scope is not None:
+            if scope not in USAGE_SCOPES:
+                raise local_error(BadRequestError, "scope is full, decide or keys.")
+            q.append(("scope", scope))
+        if status is not None:
+            if status not in USAGE_STATUSES:
+                raise local_error(BadRequestError, "status is active, expired, revoked or all.")
+            q.append(("status", status))
+        if include_empty is not None:
+            if not isinstance(include_empty, bool):
+                raise local_error(BadRequestError, "include_empty is true or false.")
+            q.append(("include_empty", "true" if include_empty else "false"))
+        if limit is not None:
+            if not _is_int(limit) or not 1 <= limit <= USAGE_PAGE_MAX:
+                raise local_error(BadRequestError, "limit is a whole number from 1 to 1000.")
+            q.append(("limit", limit))
+        if cursor is not None:
+            q.append(("cursor", cursor))
+        return q
+
+    def list(self, start, end, granularity=None, group_by=None, labels=None, device_id=None, key_ids=None, scope=None,
+             status=None, include_empty=None, limit=None, cursor=None):
+        return self._get("/v1/usage", self._list_query(start, end, granularity, group_by, labels, device_id, key_ids, scope, status, include_empty, limit, cursor))
+
+    def all(self, start, end, granularity=None, group_by=None, labels=None, device_id=None, key_ids=None, scope=None,
+            status=None, include_empty=None, limit=None):
+        """Every key's usage over the period: list's pages, next_cursor followed until null."""
+        items, cursor = [], None
+        while True:
+            page = self.list(start, end, granularity, group_by, labels, device_id, key_ids, scope, status, include_empty, limit, cursor)
+            items.extend(page.get("items") or [])
+            cursor = page.get("next_cursor")
+            if not cursor:
+                return items
 
 
 class Batches:

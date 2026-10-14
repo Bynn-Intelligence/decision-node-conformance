@@ -1,0 +1,42 @@
+{
+  "id": "404-usage-key-not-found",
+  "description": "A key outside the caller's set (another workspace's here) is the 404 not_found_error, \"Not found.\", the same as for a key that does not exist, so key ids cannot be probed. NotFoundError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "usage.key",
+    "args": {
+      "key_id": "key_00000000000000000000000000000a01",
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z"
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Not found."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"not_found_error\", \"message\": \"Not found.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/keys/key_00000000000000000000000000000a01/usage?start=2026-09-01T00:00:00Z&end=2026-10-01T00:00:00Z",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "NotFoundError",
+      "fields": {
+        "status": 404,
+        "error_type": "not_found_error",
+        "message": "Not found."
+      }
+    }
+  }
+}

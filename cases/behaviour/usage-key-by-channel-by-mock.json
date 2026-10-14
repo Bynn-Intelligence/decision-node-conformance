@@ -1,0 +1,103 @@
+{
+  "id": "usage-key-by-channel-by-mock",
+  "description": "group_by channel: by_channel always lists live, batch and session, a quiet one at 0.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "usage.key",
+    "args": {
+      "key_id": "key_00000000000000000000000000000f04",
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z",
+      "group_by": "channel"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "key_usage",
+      "key_usage": {
+        "key": {
+          "id": "key_00000000000000000000000000000f04",
+          "name": "Ingest server",
+          "scope": "full",
+          "device_id": null,
+          "labels": {},
+          "status": "active",
+          "created_at": "2026-08-05T08:00:00Z",
+          "revoked_at": null,
+          "expires_at": null
+        },
+        "period": {
+          "start": "2026-09-01T00:00:00Z",
+          "end": "2026-10-01T00:00:00Z"
+        },
+        "as_of": "2026-10-01T00:00:00Z",
+        "totals": {
+          "requests": 101,
+          "free_tier_requests": 0,
+          "input_tokens": 50700,
+          "image_tokens": 0,
+          "video_tokens": 0,
+          "booster_calls": 0,
+          "cost": {
+            "usd": 0.000904,
+            "model_usd": 0.000904,
+            "boosters_usd": 0.0
+          }
+        },
+        "by_channel": [
+          {
+            "channel": "live",
+            "totals": {
+              "requests": 1,
+              "free_tier_requests": 0,
+              "input_tokens": 700,
+              "image_tokens": 0,
+              "video_tokens": 0,
+              "booster_calls": 0,
+              "cost": {
+                "usd": 2.9e-05,
+                "model_usd": 2.9e-05,
+                "boosters_usd": 0.0
+              }
+            }
+          },
+          {
+            "channel": "batch",
+            "totals": {
+              "requests": 100,
+              "free_tier_requests": 0,
+              "input_tokens": 50000,
+              "image_tokens": 0,
+              "video_tokens": 0,
+              "booster_calls": 0,
+              "cost": {
+                "usd": 0.000875,
+                "model_usd": 0.000875,
+                "boosters_usd": 0.0
+              }
+            }
+          },
+          {
+            "channel": "session",
+            "totals": {
+              "requests": 0,
+              "free_tier_requests": 0,
+              "input_tokens": 0,
+              "image_tokens": 0,
+              "video_tokens": 0,
+              "booster_calls": 0,
+              "cost": {
+                "usd": 0.0,
+                "model_usd": 0.0,
+                "boosters_usd": 0.0
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

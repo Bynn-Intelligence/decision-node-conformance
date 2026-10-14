@@ -1,0 +1,25 @@
+{
+  "id": "local-usage-granularity",
+  "description": "A granularity other than none, hour, day or month. Checked locally: BadRequestError, api_usage_error, the API's message; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "usage.key",
+    "args": {
+      "key_id": "key_00000000000000000000000000000d01",
+      "granularity": "week"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "granularity is none, hour, day or month."
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "429-usage-rate-limited",
+  "description": "Usage reads have their own rate, 10 a second per workspace across both routes, apart from decisions: past it the 429 rate_limit_error with Retry-After. RateLimitError with retry_after.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "usage.list",
+    "args": {
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z"
+    }
+  },
+  "response": {
+    "status": 429,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Rate limit reached. Retry after 1 s.",
+      "retry-after": "1",
+      "retry-after-ms": "1000"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"rate_limit_error\", \"message\": \"Rate limit reached. Retry after 1 s.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "RateLimitError",
+      "fields": {
+        "status": 429,
+        "error_type": "rate_limit_error",
+        "message": "Rate limit reached. Retry after 1 s.",
+        "retry_after": 1
+      }
+    }
+  }
+}

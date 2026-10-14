@@ -362,6 +362,9 @@ def invoke(client, call: dict, ctx=None):
         return client.check_request(method, **a)
     if method.startswith("batches."):
         return getattr(client.batches, method.split(".", 1)[1])(**a)
+    if method.startswith("usage."):
+        # Suite 1.18: key, list, all.
+        return getattr(client.usage, method.split(".", 1)[1])(**a)
     if method.startswith("collections."):
         # Create, list, get, delete, enroll, list_items, delete_item, from 1.15 update_item.
         return getattr(client.collections, method.split(".", 1)[1])(**a)
@@ -547,6 +550,14 @@ def check_request(exp: dict, got: dict, where: str) -> None:
         q = {k: v[0] for k, v in parse_qs(got.get("query") or "", keep_blank_values=True).items()}
         if q != exp["query"]:
             raise Fail("%s query: expected %s, got %s" % (where, exp["query"], q))
+    if "query_all" in exp:
+        # Suite 1.18: every value of each parameter, a repeated one in its order; the
+        # order between parameters is free.
+        from urllib.parse import parse_qs
+
+        q = parse_qs(got.get("query") or "", keep_blank_values=True)
+        if q != exp["query_all"]:
+            raise Fail("%s query: expected %s, got %s" % (where, exp["query_all"], q))
     if "status" in exp and got.get("status") != exp["status"]:
         raise Fail("%s status: the mock answered %s, expected %s" % (where, got.get("status"), exp["status"]))
     headers = got["headers"]
@@ -666,15 +677,17 @@ def run_response(case: dict, mock: Mock) -> None:
 
 # The collections calls' results, each the API's object as sent (an
 # SDK's typed object is compared by its fields' wire names). collections is the list.
-COLLECTION_KINDS = ("collection", "collections", "item", "item_page", "deleted")
+COLLECTION_KINDS = ("collection", "collections", "item", "item_page", "deleted", "key_usage", "usage_page", "usage_items")
+# The kinds whose result is a list, compared element by element by the keys given.
+LIST_KINDS = ("collections", "usage_items")
 
 
 def check_collection_result(kind: str, expected, result, path: str) -> None:
-    if kind == "collections":
+    if kind in LIST_KINDS:
         if not isinstance(result, list):
-            raise Fail("%s: expected a list of collections, got %s" % (path, type(result).__name__))
+            raise Fail("%s: expected a list, got %s" % (path, type(result).__name__))
         if len(expected) != len(result):
-            raise Fail("%s: expected %d collections, got %d" % (path, len(expected), len(result)))
+            raise Fail("%s: expected %d entries, got %d" % (path, len(expected), len(result)))
         for i, (e, r) in enumerate(zip(expected, result)):
             match(e, r, "%s[%d]" % (path, i))
         return

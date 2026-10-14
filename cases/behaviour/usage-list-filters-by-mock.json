@@ -1,0 +1,246 @@
+{
+  "id": "usage-list-filters-by-mock",
+  "description": "status, scope, device_id and key_id: revoked keys, full keys, one device, and two keys by id (listed newest first, whatever order they were asked in).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "call": {
+        "method": "usage.list",
+        "args": {
+          "start": "2026-09-01T00:00:00Z",
+          "end": "2026-10-01T00:00:00Z",
+          "status": "revoked"
+        }
+      },
+      "outcome": {
+        "result": "usage_page",
+        "usage_page": {
+          "period": {
+            "start": "2026-09-01T00:00:00Z",
+            "end": "2026-10-01T00:00:00Z"
+          },
+          "as_of": "2026-10-01T00:00:00Z",
+          "items": [
+            {
+              "key": {
+                "id": "key_00000000000000000000000000000d02",
+                "name": "Drone 2",
+                "scope": "decide",
+                "device_id": "drone-2",
+                "labels": {
+                  "customer": "acme",
+                  "plan": "basic"
+                },
+                "status": "revoked",
+                "created_at": "2026-08-15T08:00:00Z",
+                "revoked_at": "2026-09-20T12:00:00Z",
+                "expires_at": null
+              },
+              "totals": {
+                "requests": 5,
+                "free_tier_requests": 0,
+                "input_tokens": 4000,
+                "image_tokens": 0,
+                "video_tokens": 0,
+                "booster_calls": 0,
+                "cost": {
+                  "usd": 0.00014,
+                  "model_usd": 0.00014,
+                  "boosters_usd": 0.0
+                }
+              }
+            }
+          ],
+          "next_cursor": null
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "usage.list",
+        "args": {
+          "start": "2026-09-01T00:00:00Z",
+          "end": "2026-10-01T00:00:00Z",
+          "scope": "full"
+        }
+      },
+      "outcome": {
+        "result": "usage_page",
+        "usage_page": {
+          "period": {
+            "start": "2026-09-01T00:00:00Z",
+            "end": "2026-10-01T00:00:00Z"
+          },
+          "as_of": "2026-10-01T00:00:00Z",
+          "items": [
+            {
+              "key": {
+                "id": "key_00000000000000000000000000000f04",
+                "name": "Ingest server",
+                "scope": "full",
+                "device_id": null,
+                "labels": {},
+                "status": "active",
+                "created_at": "2026-08-05T08:00:00Z",
+                "revoked_at": null,
+                "expires_at": null
+              },
+              "totals": {
+                "requests": 101,
+                "free_tier_requests": 0,
+                "input_tokens": 50700,
+                "image_tokens": 0,
+                "video_tokens": 0,
+                "booster_calls": 0,
+                "cost": {
+                  "usd": 0.000904,
+                  "model_usd": 0.000904,
+                  "boosters_usd": 0.0
+                }
+              }
+            }
+          ],
+          "next_cursor": null
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "usage.list",
+        "args": {
+          "start": "2026-09-01T00:00:00Z",
+          "end": "2026-10-01T00:00:00Z",
+          "device_id": "drone-3"
+        }
+      },
+      "outcome": {
+        "result": "usage_page",
+        "usage_page": {
+          "period": {
+            "start": "2026-09-01T00:00:00Z",
+            "end": "2026-10-01T00:00:00Z"
+          },
+          "as_of": "2026-10-01T00:00:00Z",
+          "items": [
+            {
+              "key": {
+                "id": "key_00000000000000000000000000000d03",
+                "name": "Drone 3",
+                "scope": "decide",
+                "device_id": "drone-3",
+                "labels": {
+                  "customer": "globex",
+                  "plan": "pro"
+                },
+                "status": "expired",
+                "created_at": "2026-08-10T08:00:00Z",
+                "revoked_at": null,
+                "expires_at": "2026-09-25T00:00:00Z"
+              },
+              "totals": {
+                "requests": 1,
+                "free_tier_requests": 0,
+                "input_tokens": 500,
+                "image_tokens": 300,
+                "video_tokens": 0,
+                "booster_calls": 2,
+                "cost": {
+                  "usd": 0.048021,
+                  "model_usd": 2.1e-05,
+                  "boosters_usd": 0.048
+                }
+              }
+            }
+          ],
+          "next_cursor": null
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "usage.list",
+        "args": {
+          "start": "2026-09-01T00:00:00Z",
+          "end": "2026-10-01T00:00:00Z",
+          "key_ids": [
+            "key_00000000000000000000000000000f04",
+            "key_00000000000000000000000000000d01"
+          ]
+        }
+      },
+      "outcome": {
+        "result": "usage_page",
+        "usage_page": {
+          "period": {
+            "start": "2026-09-01T00:00:00Z",
+            "end": "2026-10-01T00:00:00Z"
+          },
+          "as_of": "2026-10-01T00:00:00Z",
+          "items": [
+            {
+              "key": {
+                "id": "key_00000000000000000000000000000d01",
+                "name": "Drone 1",
+                "scope": "decide",
+                "device_id": "drone-1",
+                "labels": {
+                  "customer": "acme",
+                  "plan": "pro"
+                },
+                "status": "active",
+                "created_at": "2026-08-20T08:00:00Z",
+                "revoked_at": null,
+                "expires_at": null
+              },
+              "totals": {
+                "requests": 10,
+                "free_tier_requests": 4,
+                "input_tokens": 7400,
+                "image_tokens": 1200,
+                "video_tokens": 0,
+                "booster_calls": 1,
+                "cost": {
+                  "usd": 0.024213,
+                  "model_usd": 0.000213,
+                  "boosters_usd": 0.024
+                }
+              }
+            },
+            {
+              "key": {
+                "id": "key_00000000000000000000000000000f04",
+                "name": "Ingest server",
+                "scope": "full",
+                "device_id": null,
+                "labels": {},
+                "status": "active",
+                "created_at": "2026-08-05T08:00:00Z",
+                "revoked_at": null,
+                "expires_at": null
+              },
+              "totals": {
+                "requests": 101,
+                "free_tier_requests": 0,
+                "input_tokens": 50700,
+                "image_tokens": 0,
+                "video_tokens": 0,
+                "booster_calls": 0,
+                "cost": {
+                  "usd": 0.000904,
+                  "model_usd": 0.000904,
+                  "boosters_usd": 0.0
+                }
+              }
+            }
+          ],
+          "next_cursor": null
+        }
+      }
+    }
+  ],
+  "expect": {
+    "attempts": 4
+  }
+}

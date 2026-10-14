@@ -1998,5 +1998,68 @@ class TestCollections(Spec11):
         st2, hd2, again_nf = post("/v1/collections/%s/items" % col["id"], item, "k-4", "c7", "t-idem-no-face")
         self.assertEqual((st, st2, again_nf, hd2.get("x-decisionnode-idempotent-replay")), (422, 422, first_nf, "true"))
 
+class TestUsage(Spec11):
+    """Suite 1.18: per-key usage, its figures checked by hand against the fixture."""
+
+    K1, K4, KA = "key_00000000000000000000000000000d01", "key_00000000000000000000000000000f04", "key_00000000000000000000000000000a01"
+    SEPT = "start=2026-09-01T00:00:00Z&end=2026-10-01T00:00:00Z"
+
+    def get(self, path, key="dn_test_conformance"):
+        return self.call("GET", path, headers={"Authorization": "Bearer " + key, "x-mock-session": "u1"})
+
+    def test_totals_sum_the_hours_of_the_period(self):
+        st, hd, out = self.get("/v1/keys/%s/usage?%s" % (self.K1, self.SEPT))
+        self.assertEqual((st, hd.get("cache-control")), (200, "private, no-store"))
+        # Sept 3 09h, 10h, Sept 4 14h, 15h (free); the hour of August 31 left out.
+        self.assertEqual(out["totals"], {"requests": 10, "free_tier_requests": 4, "input_tokens": 7400, "image_tokens": 1200, "video_tokens": 0,
+                                         "booster_calls": 1, "cost": {"usd": 0.024213, "model_usd": 0.000213, "boosters_usd": 0.024}})
+        self.assertEqual((out["period"], out["as_of"]), ({"start": "2026-09-01T00:00:00Z", "end": "2026-10-01T00:00:00Z"}, "2026-10-01T00:00:00Z"))
+        self.assertEqual(list(out), ["key", "period", "as_of", "totals"])
+        st, _, out = self.get("/v1/keys/%s/usage?start=2026-09-03T11:30:00%%2B02:00&end=2026-09-04T16:10:00%%2B02:00&granularity=day" % self.K1)
+        self.assertEqual(out["period"], {"start": "2026-09-03T09:00:00Z", "end": "2026-09-04T15:00:00Z"})
+        self.assertEqual([(b["start"], b["end"], b["totals"]["requests"]) for b in out["buckets"]],
+                         [("2026-09-03T09:00:00Z", "2026-09-04T00:00:00Z", 5), ("2026-09-04T00:00:00Z", "2026-09-04T15:00:00Z", 1)])
+        st, _, out = self.get("/v1/keys/%s/usage?%s&group_by=channel" % (self.K4, self.SEPT))
+        self.assertEqual([(c["channel"], c["totals"]["requests"]) for c in out["by_channel"]], [("live", 1), ("batch", 100), ("session", 0)])
+
+    def test_who_sees_what(self):
+        st, _, out = self.get("/v1/usage?" + self.SEPT)
+        self.assertEqual([i["key"]["name"] for i in out["items"]], ["Drone 1", "Drone 2", "Drone 3", "Ingest server"])
+        self.assertEqual([i["key"]["status"] for i in out["items"]], ["active", "revoked", "expired", "active"])
+        st, _, out = self.get("/v1/usage?" + self.SEPT, "dn_test_scope-keys")
+        self.assertEqual([i["key"]["scope"] for i in out["items"]], ["decide"] * 3)
+        for path, key, want in (("/v1/keys/%s/usage" % self.K4, "dn_test_scope-keys", (404, "not_found_error")),
+                                ("/v1/keys/%s/usage" % self.KA, "dn_test_conformance", (404, "not_found_error")),
+                                ("/v1/usage?" + self.SEPT, "dn_test_scope-decide", (403, "key_scope_denied"))):
+            st, _, out = self.get(path, key)
+            self.assertEqual((st, out["detail"]["error_type"]), want, path)
+        st, _, out = self.call("POST", "/v1/batches", {}, {"Authorization": "Bearer dn_test_scope-keys", "Content-Type": "application/json"})
+        self.assertEqual((st, out["detail"]["message"]), (403, "This key may only manage keys."))
+
+    def test_query_checked_in_order(self):
+        for path, msg in (("/v1/keys/not-a-key/usage?bogus=1", "Unknown query parameter: bogus."),
+                          ("/v1/keys/not-a-key/usage?granularity=week", "granularity is none, hour, day or month."),
+                          ("/v1/usage?start=2026-09-01T00:00:00Z", "start and end are required."),
+                          ("/v1/usage?%s&granularity=day&limit=101" % self.SEPT, "limit is at most 100 with a granularity other than none."),
+                          ("/v1/usage?%s&limit=0" % self.SEPT, "limit is a whole number from 1 to 1000."),
+                          ("/v1/usage?%s&label=customer" % self.SEPT, "A label filter is name:value.")):
+            st, hd, out = self.get(path)
+            self.assertEqual((st, out["detail"]["message"], hd.get("x-decisionnode-error")), (400, msg, msg), path)
+        # The query before the key: a malformed id with a good query is the 404.
+        self.assertEqual(self.get("/v1/keys/not-a-key/usage")[0], 404)
+
+    def test_cursor_and_budget(self):
+        st, _, page = self.get("/v1/usage?%s&limit=3" % self.SEPT)
+        self.assertEqual(len(page["items"]), 3)
+        st, _, rest = self.get("/v1/usage?%s&limit=3&cursor=%s" % (self.SEPT, page["next_cursor"]))
+        self.assertEqual(([i["key"]["name"] for i in rest["items"]], rest["next_cursor"]), (["Ingest server"], None))
+        # A 400-day period is the longest: 9,600 hours, which still fit these four keys
+        # (the read's budget of 150,000 rows is 15 keys of one model there); one hour more
+        # is the 400.
+        st, _, wide = self.get("/v1/usage?start=2025-08-27T00:00:00Z&end=2026-10-01T00:00:00Z&limit=1000")
+        self.assertEqual((st, len(wide["items"]), wide["next_cursor"]), (200, 4, None))
+        st, _, out = self.get("/v1/usage?start=2025-08-26T23:00:00Z&end=2026-10-01T00:00:00Z")
+        self.assertEqual((st, out["detail"]["message"]), (400, "A period is at most 400 days."))
+
 if __name__ == "__main__":
     unittest.main()

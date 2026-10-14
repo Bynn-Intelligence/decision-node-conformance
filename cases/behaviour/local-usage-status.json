@@ -1,0 +1,26 @@
+{
+  "id": "local-usage-status",
+  "description": "A status other than active, expired, revoked or all. Checked locally: BadRequestError, api_usage_error, the API's message; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "usage.list",
+    "args": {
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z",
+      "status": "deleted"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "status is active, expired, revoked or all."
+      }
+    }
+  }
+}

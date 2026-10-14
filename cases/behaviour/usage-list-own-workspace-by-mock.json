@@ -1,0 +1,58 @@
+{
+  "id": "usage-list-own-workspace-by-mock",
+  "description": "A workspace sees its own keys only: another workspace's key lists its keys, never these.",
+  "client": {
+    "api_key": "dn_test_ws-acme"
+  },
+  "call": {
+    "method": "usage.list",
+    "args": {
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "usage_page",
+      "usage_page": {
+        "period": {
+          "start": "2026-09-01T00:00:00Z",
+          "end": "2026-10-01T00:00:00Z"
+        },
+        "as_of": "2026-10-01T00:00:00Z",
+        "items": [
+          {
+            "key": {
+              "id": "key_00000000000000000000000000000a01",
+              "name": "Acme drone",
+              "scope": "decide",
+              "device_id": "acme-1",
+              "labels": {
+                "customer": "acme"
+              },
+              "status": "active",
+              "created_at": "2026-08-01T08:00:00Z",
+              "revoked_at": null,
+              "expires_at": null
+            },
+            "totals": {
+              "requests": 7,
+              "free_tier_requests": 0,
+              "input_tokens": 7000,
+              "image_tokens": 0,
+              "video_tokens": 0,
+              "booster_calls": 0,
+              "cost": {
+                "usd": 0.000294,
+                "model_usd": 0.000294,
+                "boosters_usd": 0.0
+              }
+            }
+          }
+        ],
+        "next_cursor": null
+      }
+    }
+  }
+}

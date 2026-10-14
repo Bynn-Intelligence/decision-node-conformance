@@ -1,0 +1,40 @@
+{
+  "id": "404-usage-key-malformed",
+  "description": "A key id that is not key_ and 32 lowercase hex digits is the same 404: nothing tells it apart from an unknown key.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "usage.key",
+    "args": {
+      "key_id": "not-a-key"
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-error": "Not found."
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"not_found_error\", \"message\": \"Not found.\"}}"
+  },
+  "natural_request": {
+    "method": "GET",
+    "path": "/v1/keys/not-a-key/usage",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance"
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "NotFoundError",
+      "fields": {
+        "status": 404,
+        "error_type": "not_found_error",
+        "message": "Not found."
+      }
+    }
+  }
+}

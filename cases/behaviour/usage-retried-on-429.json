@@ -1,0 +1,86 @@
+{
+  "id": "usage-retried-on-429",
+  "description": "A usage read is retried as any call: a 429 with retry-after-ms, then the answer, two attempts.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 429,
+          "headers": {
+            "content-type": "application/json",
+            "retry-after": "1",
+            "retry-after-ms": "10",
+            "x-decisionnode-error": "Rate limit reached. Retry after 1 s."
+          },
+          "body": {
+            "detail": {
+              "error_type": "rate_limit_error",
+              "message": "Rate limit reached. Retry after 1 s."
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "period": {
+              "start": "2026-09-01T00:00:00Z",
+              "end": "2026-10-01T00:00:00Z"
+            },
+            "as_of": "2026-10-01T00:00:00Z",
+            "items": [
+              {
+                "key": {
+                  "id": "key_00000000000000000000000000000d01",
+                  "name": "Drone 1",
+                  "scope": "decide",
+                  "device_id": "drone-1",
+                  "labels": {
+                    "customer": "acme",
+                    "plan": "pro"
+                  },
+                  "status": "active",
+                  "created_at": "2026-08-20T08:00:00Z",
+                  "revoked_at": null,
+                  "expires_at": null
+                },
+                "totals": {
+                  "requests": 10,
+                  "free_tier_requests": 4,
+                  "input_tokens": 7400,
+                  "image_tokens": 1200,
+                  "video_tokens": 0,
+                  "booster_calls": 1,
+                  "cost": {
+                    "usd": 0.024213,
+                    "model_usd": 0.000213,
+                    "boosters_usd": 0.024
+                  }
+                }
+              }
+            ],
+            "next_cursor": null
+          }
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "usage.list",
+    "args": {
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z"
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "usage_page"
+    }
+  }
+}

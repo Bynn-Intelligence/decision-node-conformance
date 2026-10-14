@@ -1,0 +1,53 @@
+{
+  "id": "usage-list-cursor-sent",
+  "description": "usage.list sends the cursor it is given as cursor, unchanged. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "usage.list",
+    "args": {
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z",
+      "cursor": "MTc4Njc4MDgwMDAwMDAwMDow"
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "period": {
+              "start": "2026-09-01T00:00:00Z",
+              "end": "2026-10-01T00:00:00Z"
+            },
+            "as_of": "2026-10-01T00:00:00Z",
+            "items": [],
+            "next_cursor": null
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "GET",
+      "path": "/v1/usage",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      },
+      "query": {
+        "start": "2026-09-01T00:00:00Z",
+        "end": "2026-10-01T00:00:00Z",
+        "cursor": "MTc4Njc4MDgwMDAwMDAwMDow"
+      }
+    }
+  }
+}

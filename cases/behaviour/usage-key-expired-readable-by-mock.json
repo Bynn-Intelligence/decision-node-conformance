@@ -1,0 +1,55 @@
+{
+  "id": "usage-key-expired-readable-by-mock",
+  "description": "An expired key's usage stays readable, its status expired.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "usage.key",
+    "args": {
+      "key_id": "key_00000000000000000000000000000d03",
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "key_usage",
+      "key_usage": {
+        "key": {
+          "id": "key_00000000000000000000000000000d03",
+          "name": "Drone 3",
+          "scope": "decide",
+          "device_id": "drone-3",
+          "labels": {
+            "customer": "globex",
+            "plan": "pro"
+          },
+          "status": "expired",
+          "created_at": "2026-08-10T08:00:00Z",
+          "revoked_at": null,
+          "expires_at": "2026-09-25T00:00:00Z"
+        },
+        "period": {
+          "start": "2026-09-01T00:00:00Z",
+          "end": "2026-10-01T00:00:00Z"
+        },
+        "as_of": "2026-10-01T00:00:00Z",
+        "totals": {
+          "requests": 1,
+          "free_tier_requests": 0,
+          "input_tokens": 500,
+          "image_tokens": 300,
+          "video_tokens": 0,
+          "booster_calls": 2,
+          "cost": {
+            "usd": 0.048021,
+            "model_usd": 2.1e-05,
+            "boosters_usd": 0.048
+          }
+        }
+      }
+    }
+  }
+}

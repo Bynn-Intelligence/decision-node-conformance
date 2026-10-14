@@ -1,0 +1,35 @@
+{
+  "id": "529-usage-overloaded",
+  "description": "A usage read that gets no database turn within a second is the 529 overloaded_error. OverloadedError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "usage.list",
+    "args": {
+      "start": "2026-09-01T00:00:00Z",
+      "end": "2026-10-01T00:00:00Z"
+    }
+  },
+  "response": {
+    "status": 529,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "retry-after": "1",
+      "retry-after-ms": "1000"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"overloaded_error\", \"message\": \"Overloaded. Retry after 1 s.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "OverloadedError",
+      "fields": {
+        "status": 529,
+        "error_type": "overloaded_error",
+        "retry_after": 1
+      }
+    }
+  }
+}
