@@ -66,9 +66,7 @@
                       "queued_requests_per_key": 100000,
                       "time_to_completion_hours": 24,
                       "result_retention_days": 7,
-                      "max_custom_id_chars": 512,
-                      "price_per_million_input_tokens": 0.021,
-                      "price_factor": 0.5
+                      "max_custom_id_chars": 512
                     }
                   },
                   {
@@ -117,9 +115,7 @@
                       "queued_requests_per_key": 100000,
                       "time_to_completion_hours": 24,
                       "result_retention_days": 7,
-                      "max_custom_id_chars": 512,
-                      "price_per_million_input_tokens": 0.0105,
-                      "price_factor": 0.5
+                      "max_custom_id_chars": 512
                     }
                   }
                 ]

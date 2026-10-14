@@ -79,6 +79,11 @@ def match(expected, actual, path: str) -> None:
     """Every key of expected must be in actual with the same value. Keys in EXACT compare whole."""
     if isinstance(expected, dict) and isinstance(actual, dict) and not is_pattern(expected):
         for k, v in expected.items():
+            if v == {"$absent": True}:
+                # Suite 1.17: the key must not be there at all.
+                if k in actual:
+                    raise Fail("%s.%s: expected no such key, got %s" % (path, k, short(actual[k])))
+                continue
             if k not in actual:
                 raise Fail("%s.%s: missing (expected %s)" % (path, k, short(v)))
             if k in EXACT:

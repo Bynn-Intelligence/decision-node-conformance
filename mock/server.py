@@ -137,13 +137,15 @@ for _old, _family in OLDER_IDS.items():
 FAMILY_OF = {m["resolves_to"]: m["family"] for m in MODELS}
 DEFAULT_MODEL = "decisionnode-moe"
 
-# What an answer cost: usage.cost on every answer. The prices are
-# the mock's own; the API's live in its database. A batch line is billed at the batch
-# price (the live price times BATCH_PRICE_FACTOR); the mock has no free tier.
+# What an answer cost: usage.cost on every answer. The live prices are the mock's own
+# (one price for every token, images and video frames included); the API's live in its
+# database. A batch line pays its family's share of the live price, the
+# batch_price_factor each /v1/models entry states, as the API's catalogue sets it; a
+# fine-tuned model has none. The mock has no free tier.
 PRICE_PER_MILLION = {"decisionnode-moe": 0.042, "decisionnode-flash": 0.021}
+BATCH_PRICE_FACTORS = {"decisionnode-moe": 0.7, "decisionnode-flash": 0.5}
 FINE_TUNED_PREMIUM_PER_MILLION = 0.02
 BOOSTER_CALL_USD = 0.002
-BATCH_PRICE_FACTOR = 0.5
 FALLBACK_MODEL = {MOE: FLASH}  # live /v1/decide only
 
 # Fine-tuned models (suite 1.11): <family>@<workspace-slug>/<name> is the version deployed
@@ -323,6 +325,7 @@ def models_body(workspace: str = "default", max_places: int = PLACES_MAX) -> dic
                 "version": m["resolves_to"],
                 "alias": m["family"],
                 **({"current_version": m["resolves_to"]} if m["name"] == m["family"] else {}),
+                **model_prices(m["family"]),
                 **model_limits(m, max_places),
             }
         )
@@ -343,6 +346,7 @@ def models_body(workspace: str = "default", max_places: int = PLACES_MAX) -> dic
                     "description": v["description"],
                     "release_date": v["release_date"],
                     "version": fine_tuned_id(v),
+                    **model_prices(FAMILY_OF[base["resolves_to"]], fine_tuned=True),
                     **model_limits(base, max_places),
                     "fine_tuned": True,
                     "base": v["base"],
@@ -381,8 +385,6 @@ def model_limits(m: dict, max_places: int = PLACES_MAX) -> dict:
             "time_to_completion_hours": BATCH_EXPIRY_HOURS,
             "result_retention_days": BATCH_RESULTS_DAYS,
             "max_custom_id_chars": 512,
-            "price_per_million_input_tokens": 0.021 if m["family"] == "decisionnode-moe" else 0.0105,
-            "price_factor": 0.5,
         },
     }
 
@@ -1585,6 +1587,28 @@ def cost_of(model: str, tokens: int, booster_calls: int = 0, price_factor: float
     model_usd = usd(tokens * per_million / 1e6 * price_factor)
     boosters_usd = usd(booster_calls * BOOSTER_CALL_USD)
     return {"usd": usd(model_usd + boosters_usd), "model_usd": model_usd, "boosters_usd": boosters_usd, "free_tier": False}
+
+
+def family_of(model: str) -> str:
+    base = model.split("@", 1)[0]
+    return FAMILY_OF.get(base) or FINE_TUNED_BASES.get(base) or base
+
+
+def batch_price_factor(model: str) -> float:
+    """The share of the live price a batch line of model pays: its family's, as its
+    /v1/models entry states it."""
+    return BATCH_PRICE_FACTORS.get(family_of(model), 1.0)
+
+
+def model_prices(family: str, fine_tuned: bool = False) -> dict:
+    """A /v1/models entry's prices, named as the API names them (USD per million
+    tokens). The mock bills every token alike, so images and video frames cost what
+    input does; a fine-tuned model adds its premium and states no batch factor."""
+    price = round(PRICE_PER_MILLION.get(family, 0.0) + (FINE_TUNED_PREMIUM_PER_MILLION if fine_tuned else 0.0), 9)
+    out = {"price_per_million_input": price, "price_per_million_output": 0, "price_per_million_image": price, "price_per_million_video": price}
+    if not fine_tuned:
+        out["batch_price_factor"] = BATCH_PRICE_FACTORS[family]
+    return out
 
 
 def decide(req: dict, legacy_noul: bool = False, price_factor: float = 1.0) -> tuple:
@@ -3257,7 +3281,6 @@ class Handler(BaseHTTPRequestHandler):
             "ended_at": iso(b["ended_at"]) if ended else None,
             "results_url": "http://%s/v1/batches/%s/results" % (b["host"], b["id"]) if ended else None,
             "results_expire_at": iso(b["ended_at"] + BATCH_RESULTS_DAYS * 86400) if ended else None,
-            "price_factor": 0.5,
             "usage": {"input_tokens": usage, "output_tokens": 0},
             "error": b["error"],
         }
@@ -3278,7 +3301,7 @@ class Handler(BaseHTTPRequestHandler):
             headers = dict({"x-request-id": rid, "x-decisionnode-error": ascii_header(exc.reason)}, **exc.headers)
             line.update(status=exc.status, result_text=json.dumps(exc.body, ensure_ascii=False), headers=headers, state="done", tokens=0)
             return
-        body, seed = decide(req, price_factor=BATCH_PRICE_FACTOR)
+        body, seed = decide(req, price_factor=batch_price_factor(req["model"]))
         header, _ = safety_of(req, seed)
         headers = {"x-request-id": rid, "x-decisionnode-model": req["model"]}
         if req.get("booster_header"):

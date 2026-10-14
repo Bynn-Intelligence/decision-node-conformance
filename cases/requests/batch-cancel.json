@@ -27,7 +27,6 @@
             "ended_at": null,
             "results_url": null,
             "results_expire_at": null,
-            "price_factor": 0.5,
             "usage": {
               "input_tokens": 0,
               "output_tokens": 0

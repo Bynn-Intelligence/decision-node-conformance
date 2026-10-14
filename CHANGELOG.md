@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.17 (for SDK specification 1.3)
+
+The batch price is each model's, never the batch's. `SPEC_VERSION` stays `"1.3"`.
+
+- Types: `Batch` has no `price_factor`. The API does not send it, the batch price being each `/v1/models` entry's `batch_price_factor`, and each line's charge is in its usage. A `ModelInfo` carries the entry's prices as sent: `price_per_million_input`, `price_per_million_output`, `price_per_million_image`, `price_per_million_video` and `batch_price_factor` (none on a fine-tuned model).
+- Case format: an expected `{"$absent": true}`, the key must not be there at all.
+- Mock: `price_factor` gone from the batch object and from `/v1/models`' batch object, with `price_per_million_input_tokens`; each `/v1/models` entry states the prices under the API's names, `batch_price_factor` MoE 0.7 and Flash 0.5 (none on a fine-tuned entry, whose prices carry its premium); a batch line pays its own model's factor (MoE lines paid 0.5 before).
+- Cases: every `price_factor` gone from the batch cases and the recorded `/v1/models` answers.
+
+Cases: 735 in all (requests 128, responses 113, errors 102, behaviour 390, constants 2): 2 new (a batch object with no `price_factor`, the prices of `/v1/models`), 21 without `price_factor`.
+
 ## 1.16 (for SDK specification 1.3)
 
 The `face_recognition` reading names its collection and carries an own item's metadata. `SPEC_VERSION` stays `"1.3"`.

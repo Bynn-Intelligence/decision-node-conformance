@@ -91,7 +91,7 @@
         "raw": {},
         "batch": {
           "type": "object",
-          "description": "Every field of the batch object as sent; nested objects compare by the keys given."
+          "description": "Every field of the batch object as sent; nested objects compare by the keys given. From suite 1.17 a value of {\"$absent\": true} means the field must not be there (price_factor: the batch object states no price)."
         },
         "batch_page": {
           "type": "object"

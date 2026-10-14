@@ -1,0 +1,103 @@
+{
+  "id": "models-prices-and-batch-factor",
+  "description": "Each /v1/models entry states its prices: price_per_million_input, price_per_million_output, price_per_million_image and price_per_million_video (USD per million tokens) and batch_price_factor, the share of the live prices a batch line pays (MoE 0.7, Flash 0.5); a fine-tuned entry has no batch_price_factor, and no batch object carries a price. Every field besides name, description and release_date is in limits, unchanged.",
+  "call": {
+    "method": "models",
+    "args": {}
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"models\": [{\"name\": \"decisionnode-moe\", \"description\": \"Our most accurate decision model\", \"release_date\": \"2026-10-01\", \"version\": \"decisionnode-moe-0.9.0-rc1\", \"alias\": \"decisionnode-moe\", \"price_per_million_input\": 0.042, \"price_per_million_output\": 0, \"price_per_million_image\": 0.09, \"price_per_million_video\": 0.09, \"batch_price_factor\": 0.7, \"context_tokens\": 65536, \"max_images\": 16, \"batch\": {\"requests_per_batch\": 10000, \"batch_bytes\": 268435456, \"add_bytes\": 10485760, \"active_batches_per_key\": 10, \"queued_requests_per_key\": 100000, \"time_to_completion_hours\": 24, \"result_retention_days\": 7, \"max_custom_id_chars\": 512}, \"current_version\": \"decisionnode-moe-0.9.0-rc1\"}, {\"name\": \"decisionnode-flash\", \"description\": \"The fastest and cheapest tier\", \"release_date\": \"2026-10-01\", \"version\": \"decisionnode-flash-0.9.0-rc1\", \"alias\": \"decisionnode-flash\", \"price_per_million_input\": 0.035, \"price_per_million_output\": 0, \"price_per_million_image\": 0.08, \"price_per_million_video\": 0.08, \"batch_price_factor\": 0.5, \"context_tokens\": 65536, \"max_images\": 16, \"batch\": {\"requests_per_batch\": 10000, \"batch_bytes\": 268435456, \"add_bytes\": 10485760, \"active_batches_per_key\": 10, \"queued_requests_per_key\": 100000, \"time_to_completion_hours\": 24, \"result_retention_days\": 7, \"max_custom_id_chars\": 512}, \"current_version\": \"decisionnode-flash-0.9.0-rc1\"}, {\"name\": \"decisionnode-flash@acme/triage\", \"description\": \"Triage\", \"release_date\": \"2026-10-01\", \"version\": \"decisionnode-flash@acme/triage:1\", \"price_per_million_input\": 0.055, \"price_per_million_output\": 0, \"price_per_million_image\": 0.1, \"price_per_million_video\": 0.1, \"context_tokens\": 65536, \"max_images\": 16, \"batch\": {\"requests_per_batch\": 10000, \"batch_bytes\": 268435456, \"add_bytes\": 10485760, \"active_batches_per_key\": 10, \"queued_requests_per_key\": 100000, \"time_to_completion_hours\": 24, \"result_retention_days\": 7, \"max_custom_id_chars\": 512}, \"fine_tuned\": true, \"base\": \"decisionnode-flash\", \"family\": \"decisionnode-flash\", \"adapter_version\": 1, \"status\": \"deployed\"}]}"
+  },
+  "expect": {
+    "models": [
+      {
+        "name": "decisionnode-moe",
+        "description": "Our most accurate decision model",
+        "release_date": "2026-10-01",
+        "limits": {
+          "version": "decisionnode-moe-0.9.0-rc1",
+          "alias": "decisionnode-moe",
+          "price_per_million_input": 0.042,
+          "price_per_million_output": 0,
+          "price_per_million_image": 0.09,
+          "price_per_million_video": 0.09,
+          "batch_price_factor": 0.7,
+          "context_tokens": 65536,
+          "max_images": 16,
+          "batch": {
+            "requests_per_batch": 10000,
+            "batch_bytes": 268435456,
+            "add_bytes": 10485760,
+            "active_batches_per_key": 10,
+            "queued_requests_per_key": 100000,
+            "time_to_completion_hours": 24,
+            "result_retention_days": 7,
+            "max_custom_id_chars": 512
+          },
+          "current_version": "decisionnode-moe-0.9.0-rc1"
+        }
+      },
+      {
+        "name": "decisionnode-flash",
+        "description": "The fastest and cheapest tier",
+        "release_date": "2026-10-01",
+        "limits": {
+          "version": "decisionnode-flash-0.9.0-rc1",
+          "alias": "decisionnode-flash",
+          "price_per_million_input": 0.035,
+          "price_per_million_output": 0,
+          "price_per_million_image": 0.08,
+          "price_per_million_video": 0.08,
+          "batch_price_factor": 0.5,
+          "context_tokens": 65536,
+          "max_images": 16,
+          "batch": {
+            "requests_per_batch": 10000,
+            "batch_bytes": 268435456,
+            "add_bytes": 10485760,
+            "active_batches_per_key": 10,
+            "queued_requests_per_key": 100000,
+            "time_to_completion_hours": 24,
+            "result_retention_days": 7,
+            "max_custom_id_chars": 512
+          },
+          "current_version": "decisionnode-flash-0.9.0-rc1"
+        }
+      },
+      {
+        "name": "decisionnode-flash@acme/triage",
+        "description": "Triage",
+        "release_date": "2026-10-01",
+        "limits": {
+          "version": "decisionnode-flash@acme/triage:1",
+          "price_per_million_input": 0.055,
+          "price_per_million_output": 0,
+          "price_per_million_image": 0.1,
+          "price_per_million_video": 0.1,
+          "context_tokens": 65536,
+          "max_images": 16,
+          "batch": {
+            "requests_per_batch": 10000,
+            "batch_bytes": 268435456,
+            "add_bytes": 10485760,
+            "active_batches_per_key": 10,
+            "queued_requests_per_key": 100000,
+            "time_to_completion_hours": 24,
+            "result_retention_days": 7,
+            "max_custom_id_chars": 512
+          },
+          "fine_tuned": true,
+          "base": "decisionnode-flash",
+          "family": "decisionnode-flash",
+          "adapter_version": 1,
+          "status": "deployed"
+        }
+      }
+    ]
+  }
+}

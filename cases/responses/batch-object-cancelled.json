@@ -13,7 +13,7 @@
       "content-type": "application/json",
       "x-request-id": "req_case_0001"
     },
-    "body_text": "{\"id\": \"batch_01J9ZB8Q3T\", \"state\": \"cancelled\", \"counters\": {\"requests\": 3, \"queued\": 0, \"in_progress\": 0, \"completed\": 0, \"failed\": 0, \"expired\": 0, \"cancelled\": 3}, \"created_at\": \"2026-10-06T09:12:04Z\", \"finalized_at\": \"2026-10-06T09:12:31Z\", \"expires_at\": \"2026-10-07T09:12:31Z\", \"ended_at\": \"2026-10-06T09:20:12Z\", \"results_url\": \"https://api.decisionnode.com/v1/batches/batch_01J9ZB8Q3T/results\", \"results_expire_at\": \"2026-10-13T09:20:12Z\", \"price_factor\": 0.5, \"usage\": {\"input_tokens\": 0, \"output_tokens\": 0}, \"error\": null}"
+    "body_text": "{\"id\": \"batch_01J9ZB8Q3T\", \"state\": \"cancelled\", \"counters\": {\"requests\": 3, \"queued\": 0, \"in_progress\": 0, \"completed\": 0, \"failed\": 0, \"expired\": 0, \"cancelled\": 3}, \"created_at\": \"2026-10-06T09:12:04Z\", \"finalized_at\": \"2026-10-06T09:12:31Z\", \"expires_at\": \"2026-10-07T09:12:31Z\", \"ended_at\": \"2026-10-06T09:20:12Z\", \"results_url\": \"https://api.decisionnode.com/v1/batches/batch_01J9ZB8Q3T/results\", \"results_expire_at\": \"2026-10-13T09:20:12Z\", \"usage\": {\"input_tokens\": 0, \"output_tokens\": 0}, \"error\": null}"
   },
   "expect": {
     "batch": {
@@ -34,7 +34,6 @@
       "ended_at": "2026-10-06T09:20:12Z",
       "results_url": "https://api.decisionnode.com/v1/batches/batch_01J9ZB8Q3T/results",
       "results_expire_at": "2026-10-13T09:20:12Z",
-      "price_factor": 0.5,
       "usage": {
         "input_tokens": 0,
         "output_tokens": 0

@@ -886,7 +886,15 @@ class TestNumber(Spec11):
         self.assertEqual((m["number_one_question_values"], m["number_max_grid_values"], m["number_default_range"], m["number_default_step"]), (256, 4096, [0, 255], 1))
         self.assertEqual(m["upload_max_bytes"], 10485760)
         self.assertEqual(len(m["sessions"]), 11)
-        self.assertEqual(m["batch"]["price_factor"], 0.5)
+        # Suite 1.17: the batch price is the entry's batch_price_factor, never the batch
+        # object's, which states limits only.
+        self.assertNotIn("price_factor", m["batch"])
+        self.assertNotIn("price_per_million_input_tokens", m["batch"])
+        prices = {k: v for k, v in m.items() if k.startswith("price_per_million_") or k == "batch_price_factor"}
+        self.assertEqual(prices, {"price_per_million_input": 0.042, "price_per_million_output": 0, "price_per_million_image": 0.042,
+                                  "price_per_million_video": 0.042, "batch_price_factor": 0.7})
+        flash = next(e for e in self.call("GET", "/v1/models")[2]["models"] if e["name"] == "decisionnode-flash")
+        self.assertEqual(flash["batch_price_factor"], 0.5)
 
 
 class TestTruth(Spec11):
@@ -1104,7 +1112,7 @@ class TestBatches(Spec11):
         st, _, b = self.post("/v1/batches", "", "b1")
         self.assertEqual((st, b["state"], b["counters"]["requests"]), (201, "draft", 0))
         self.assertRegex(b["id"], r"^batch_[0-9A-HJKMNP-TV-Z]{10}$")
-        self.assertEqual(list(b), ["id", "state", "counters", "created_at", "finalized_at", "expires_at", "ended_at", "results_url", "results_expire_at", "price_factor", "usage", "error"])
+        self.assertEqual(list(b), ["id", "state", "counters", "created_at", "finalized_at", "expires_at", "ended_at", "results_url", "results_expire_at", "usage", "error"])
         st, _, b = self.post("/v1/batches", "\ufeff" + self.LINE % ("a", "x") + "\r\n\n" + self.LINE % ("b", "y"), "b1")
         self.assertEqual(b["counters"]["requests"], 2)
         st, _, b = self.post("/v1/batches", "[" + self.LINE % ("a", "x") + "]", "b1")
@@ -1126,6 +1134,23 @@ class TestBatches(Spec11):
             self.post("/v1/batches", "", "b1")
         st, hd, out = self.post("/v1/batches", "", "b1")
         self.assertEqual((st, out["detail"]["error_type"], hd["retry-after"]), (429, "batch_limit_exceeded", "30"))
+
+    def test_batch_line_pays_its_models_share(self):
+        """Suite 1.17: a batch line pays its model's batch_price_factor of the live price,
+        as /v1/models states it: MoE 0.7, Flash 0.5."""
+        q = {"q": {"type": "truth", "instructions": "Is it fine?"}}
+        lines = [{"custom_id": m, "model": m, "state": "the same state", "questions": q} for m in ("decisionnode-moe", "decisionnode-flash")]
+        st, _, b = self.post("/v1/batches", "\n".join(json.dumps(x) for x in lines), "b9")
+        self.post("/v1/batches/%s/finalize" % b["id"], "", "b9")
+        self.get("/v1/batches/" + b["id"], "b9")
+        self.assertEqual(self.get("/v1/batches/" + b["id"], "b9")[2]["state"], "completed")
+        st, _, raw = self.raw_call("GET", "/v1/batches/%s/results" % b["id"], None, self.h("b9"))
+        got = {x["custom_id"]: x["body"]["usage"]["cost"]["model_usd"] for x in map(json.loads, raw.decode().splitlines())}
+        factors = {e["name"]: e["batch_price_factor"] for e in self.call("GET", "/v1/models", headers=self.h("b9"))[2]["models"] if "batch_price_factor" in e}
+        for m in ("decisionnode-moe", "decisionnode-flash"):
+            live = self.call("POST", "/v1/decide", {"model": m, "state": "the same state", "questions": q}, self.h("b9"))[2]["usage"]["cost"]["model_usd"]
+            self.assertAlmostEqual(got[m], live * factors[m], places=9, msg=m)
+        self.assertEqual((factors["decisionnode-moe"], factors["decisionnode-flash"]), (0.7, 0.5))
 
     def test_lifecycle_results_and_list(self):
         text = "\n".join([self.LINE % ("ok", "x"), '{"custom_id": "bad", "model": "decisionnode-0.1", "questions": {"q": {"type": "truth", "instructions": "?"}}}', self.LINE % ("ok2", "y")])
@@ -1681,9 +1706,13 @@ class TestSuite111(Spec11):
         )
         self.assertEqual(extra["decisionnode-flash@acme/triage:1"]["status"], "ready")
         flash = next(m for m in others if m["name"] == "decisionnode-flash")
-        base = {k: v for k, v in flash.items() if k not in ("name", "description", "release_date", "version", "alias", "current_version")}
+        # Its base's limits; its own prices (the base's plus the premium) and no batch factor.
+        priced = ("batch_price_factor", "price_per_million_input", "price_per_million_output", "price_per_million_image", "price_per_million_video")
+        base = {k: v for k, v in flash.items() if k not in ("name", "description", "release_date", "version", "alias", "current_version") + priced}
         ready = extra["decisionnode-flash@acme/triage:1"]
         self.assertEqual({k: ready[k] for k in base}, base)
+        self.assertNotIn("batch_price_factor", ready)
+        self.assertEqual((ready["price_per_million_input"], ready["price_per_million_output"]), (0.041, 0))
 
     def test_boosters_scenario_settings(self):
         scenario = {"name": "t-boosters-off", "boosters": {"disabled": ["ai_generated"]}}

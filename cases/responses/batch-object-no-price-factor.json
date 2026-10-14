@@ -1,0 +1,47 @@
+{
+  "id": "batch-object-no-price-factor",
+  "description": "The batch object states no price: the API sends no price_factor (each model's batch_price_factor in GET /v1/models is the batch price, and each line's charge is in its usage). The SDK's Batch carries every field as sent and has no price_factor of its own, not even an empty one.",
+  "call": {
+    "method": "batches.get",
+    "args": {
+      "batch_id": "batch_01J9ZB8Q3T"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"id\": \"batch_01J9ZB8Q3T\", \"state\": \"completed\", \"counters\": {\"requests\": 3, \"queued\": 0, \"in_progress\": 0, \"completed\": 3, \"failed\": 0, \"expired\": 0, \"cancelled\": 0}, \"created_at\": \"2026-10-06T09:12:04Z\", \"finalized_at\": \"2026-10-06T09:12:31Z\", \"expires_at\": \"2026-10-07T09:12:31Z\", \"ended_at\": \"2026-10-06T17:03:46Z\", \"results_url\": \"https://api.decisionnode.com/v1/batches/batch_01J9ZB8Q3T/results\", \"results_expire_at\": \"2026-10-13T17:03:46Z\", \"usage\": {\"input_tokens\": 138, \"output_tokens\": 0}, \"error\": null}"
+  },
+  "expect": {
+    "batch": {
+      "id": "batch_01J9ZB8Q3T",
+      "state": "completed",
+      "counters": {
+        "requests": 3,
+        "queued": 0,
+        "in_progress": 0,
+        "completed": 3,
+        "failed": 0,
+        "expired": 0,
+        "cancelled": 0
+      },
+      "created_at": "2026-10-06T09:12:04Z",
+      "finalized_at": "2026-10-06T09:12:31Z",
+      "expires_at": "2026-10-07T09:12:31Z",
+      "ended_at": "2026-10-06T17:03:46Z",
+      "results_url": "https://api.decisionnode.com/v1/batches/batch_01J9ZB8Q3T/results",
+      "results_expire_at": "2026-10-13T17:03:46Z",
+      "usage": {
+        "input_tokens": 138,
+        "output_tokens": 0
+      },
+      "error": null,
+      "price_factor": {
+        "$absent": true
+      }
+    }
+  }
+}
