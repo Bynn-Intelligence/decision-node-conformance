@@ -1,0 +1,83 @@
+{
+  "id": "400-booster-segment-prompt-required",
+  "description": "Segment Vision needs prompt: named bare, or with options but no prompt, it is refused. The SDK checks nothing about a booster's options locally: it sends them and raises the API's 400 api_usage_error \"Invalid request.\", a BadRequestError whose reason (x-decisionnode-error) names the entry and the option.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/drone/gate-3.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "gate_ahead": {
+          "$truth": {
+            "instructions": "Is the drone lined up with the gate's opening?"
+          }
+        }
+      },
+      "boosters": [
+        "age",
+        "bynn_segment"
+      ]
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "boosters[1]: \"options\": 'prompt' is required"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Invalid request.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "",
+      "images": [
+        {
+          "id": "gate",
+          "url": "https://files.example.com/drone/gate-3.jpg"
+        }
+      ],
+      "questions": {
+        "gate_ahead": {
+          "type": "truth",
+          "instructions": "Is the drone lined up with the gate's opening?"
+        }
+      },
+      "boosters": [
+        "age",
+        "bynn_segment"
+      ]
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Invalid request.",
+        "reason": "boosters[1]: \"options\": 'prompt' is required",
+        "boosters": {},
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}

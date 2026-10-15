@@ -162,8 +162,10 @@ def norm_answer(a) -> dict:
 def norm_reading(r) -> dict:
     if isinstance(r, dn.UnknownReading):
         return {"kind": "unknown", "raw": r.raw}
-    if isinstance(r, (dn.AgeReading, dn.AiGeneratedReading, dn.OcrReading)):
+    if isinstance(r, (dn.AgeReading, dn.AiGeneratedReading, dn.OcrReading, dn.DepthReading)):
         return dict({"kind": r.kind}, **{name: getattr(r, name) for name in r.FIELDS})
+    if isinstance(r, dn.SegmentReading):
+        return dict({"kind": r.kind}, **{name: getattr(r, name) for name in r.FIELDS}, instances=[norm_instance(i) for i in r.instances])
     if isinstance(r, dn.FaceDetectionReading):
         return {"kind": r.kind, "image": r.image, "faces": r.faces, "detections": [{"box": norm_box(d.box), "confidence": d.confidence} for d in r.detections]}
     if isinstance(r, dn.FaceRecognitionReading):
@@ -175,7 +177,24 @@ def norm_reading(r) -> dict:
             "matches": [{"box": norm_box(m.box), "score": m.score, "collection": m.collection, "reference": m.reference, "name": m.name, "label": m.label,
                          "collection_name": m.collection_name, "metadata": m.metadata} for m in r.matches],
         }
-    raise Fail("reading of class %s is none of AgeReading, AiGeneratedReading, FaceDetectionReading, FaceRecognitionReading, OcrReading, UnknownReading" % type(r).__name__)
+    raise Fail("reading of class %s is none of AgeReading, AiGeneratedReading, DepthReading, FaceDetectionReading, FaceRecognitionReading, OcrReading, SegmentReading, UnknownReading" % type(r).__name__)
+
+
+def norm_instance(i) -> dict:
+    """A Segment Vision match as the cases write it: the wire's fields and shapes, an
+    empty opening, depth or size_m (and the size's opening) as null."""
+    o, d, s = i.opening, i.depth, i.size_m
+    return {
+        "label": i.label,
+        "score": i.score,
+        "box": i.box,
+        "polygon": i.polygon,
+        "area": i.area,
+        "centroid": i.centroid,
+        "opening": None if o is None else {"polygon": o.polygon, "centroid": o.centroid, "width": o.width, "height": o.height, "offset": o.offset, "area": o.area},
+        "depth": None if d is None else {"median": d.median, "opening_median": d.opening_median, "opening_rim_median": d.opening_rim_median},
+        "size_m": None if s is None else {"width": s.width, "height": s.height, "opening": s.opening},
+    }
 
 
 def norm_box(b) -> dict:

@@ -215,12 +215,33 @@ def resolve_model(name: str, workspace: str):
 
 # boosters (suite 1.11): specialist models that read a request's images before the decision
 BOOSTERS = {
-    "age": {"version": "age-v1", "latency_ms": 212},
-    "ai_generated": {"version": "ai_generated-v1", "latency_ms": 340},
+    "age": {"version": "age-v1", "latency_ms": 212, "usd": BOOSTER_CALL_USD},
+    "ai_generated": {"version": "ai_generated-v1", "latency_ms": 340, "usd": BOOSTER_CALL_USD},
+    # Suite 1.21: Depth Vision, distances in meters; Segment Vision, what the prompt names
+    # found in a picture (free, its depth in the same call).
+    "bynn_depth": {"version": "bynn_depth-v1", "latency_ms": 24, "usd": 0.001},
+    "bynn_segment": {"version": "bynn_segment-v1", "latency_ms": 75, "usd": 0.0},
     # Faces matched against one collection.
-    "face_recognition": {"version": "face_recognition-v1", "latency_ms": 230},
+    "face_recognition": {"version": "face_recognition-v1", "latency_ms": 230, "usd": BOOSTER_CALL_USD},
 }
-BOOSTER_OPTIONS = {"face_recognition": ("collection", "threshold")}  # every other booster takes none
+# A booster's options as the API judges them (suite 1.21, in its words): each key in the
+# order sent, the first problem the reason, then what the named booster takes or needs.
+BAD_COLLECTION = "\"options\": 'collection' must be a string"
+BAD_THRESHOLD = "\"options\": 'threshold' must be a number from 0 to 1"
+BAD_GRID_SIZE = "\"options\": 'grid_size' must be an integer from 2 to 16"
+BAD_MAX_INSTANCES = "\"options\": 'max_instances' must be an integer from 1 to 16"
+BAD_MIN_SCORE = "\"options\": 'min_score' must be a number from 0 to 1"
+BAD_POLYGON_POINTS = "\"options\": 'polygon_points' must be an integer from 3 to 64"
+BAD_DEPTH = "\"options\": 'depth' must be true or false"
+BAD_PHRASES = "\"options\": 'prompt' must be a string, or an array of 1 to 4 strings, each of at most 120 characters"
+NO_PHRASE = "\"options\": 'prompt' must name something to find"
+MAX_PROMPT_CHARS = 2000
+MAX_PHRASES = 4
+MAX_PHRASE_CHARS = 120
+MAX_BOOSTER_NAME_BYTES = 64  # a name or an option key quoted in a reason is cut to this
+DEPTH_GRID = 8
+SEGMENT_DEFAULTS = {"max_instances": 8, "min_score": 0.25, "polygon_points": 24, "depth": True}
+SEGMENT_HFOV_DEG = 65.0
 FACE_THRESHOLD = 0.5
 CELEBRITIES = (("celeb-00412", "A Public Figure"), ("celeb-00977", "Another Public Figure"))
 MAX_BOOSTERS = 4
@@ -766,7 +787,7 @@ def validate_rest(deferred, plan, state, questions, grids, images, videos, resol
 
     image_list = validate_images(images or [], resolver)
     video_list = validate_videos(videos or [], [i["id"] for i in image_list])
-    evidence, calls, booster_tokens = run_boosters(plan, image_list)
+    evidence, calls, booster_tokens, booster_usd = run_boosters(plan, image_list)
 
     # normalise questions
     norm = {}
@@ -796,7 +817,7 @@ def validate_rest(deferred, plan, state, questions, grids, images, videos, resol
         "tokens": tokens,
     }
     if plan:
-        out.update(evidence=evidence, booster_calls=calls, booster_tokens=booster_tokens, booster_header=booster_header(plan))
+        out.update(evidence=evidence, booster_calls=calls, booster_tokens=booster_tokens, booster_usd=booster_usd, booster_header=booster_header(plan))
     return out
 
 
@@ -1579,13 +1600,14 @@ def usd(amount: float) -> float:
     return round(amount, 9)
 
 
-def cost_of(model: str, tokens: int, booster_calls: int = 0, price_factor: float = 1.0) -> dict:
-    """usage.cost: usd is model_usd plus boosters_usd, each at most 9 decimals."""
+def cost_of(model: str, tokens: int, booster_usd: float = 0.0, price_factor: float = 1.0) -> dict:
+    """usage.cost: usd is model_usd plus boosters_usd, each at most 9 decimals; the
+    boosters at each one's price per picture read (run_boosters)."""
     base = model.split("@", 1)[0]
     family = FAMILY_OF.get(base) or FINE_TUNED_BASES.get(base) or base
     per_million = PRICE_PER_MILLION.get(family, 0.0) + (FINE_TUNED_PREMIUM_PER_MILLION if "@" in model else 0.0)
     model_usd = usd(tokens * per_million / 1e6 * price_factor)
-    boosters_usd = usd(booster_calls * BOOSTER_CALL_USD)
+    boosters_usd = usd(booster_usd)
     return {"usd": usd(model_usd + boosters_usd), "model_usd": model_usd, "boosters_usd": boosters_usd, "free_tier": False}
 
 
@@ -1643,7 +1665,7 @@ def decide(req: dict, legacy_noul: bool = False, price_factor: float = 1.0) -> t
         # Only a request with videos carries these (and warnings, which this mock sends only from a scenario).
         body["usage"]["video_frames"] = sum(v["frames_read"] for v in req["videos"])
         body["usage"]["video_seconds"] = sum(v["seconds"] for v in req["videos"])
-    body["usage"]["cost"] = cost_of(req["model"], req["tokens"], req.get("booster_calls") or 0, price_factor)
+    body["usage"]["cost"] = cost_of(req["model"], req["tokens"], req.get("booster_usd") or 0.0, price_factor)
     request_seed = hashlib.sha256((base + compact(req["questions"])).encode("utf-8")).hexdigest()
     return body, request_seed
 
@@ -1683,14 +1705,14 @@ def check_boosters(raw, image_ids: list, conf: dict, collections=None) -> list:
             if require is not None and not isinstance(require, bool):
                 raise boosters_malformed("boosters[%d].require must be true or false" % i)
             if options is not None and not isinstance(options, dict):
-                raise boosters_malformed("boosters[%d].options must be an object" % i)
-            allowed = BOOSTER_OPTIONS.get(item["name"], ())
-            for key in options or {}:
-                if key not in allowed:
-                    raise boosters_malformed("'%s' is not a setting of the booster '%s'" % (key, item["name"]))
+                raise usage_error("Invalid request.", "boosters[%d]: \"options\" must be an object" % i)
             b = {"booster": item["name"], "images": images, "require": bool(require), "options": dict(options or {}), "index": i}
         else:
             raise boosters_malformed("boosters[%d] is neither a booster name nor an object with name" % i)
+        # A bare name is judged with no options: face_recognition and bynn_segment need one.
+        problem = options_problem(b)
+        if problem is not None:
+            raise usage_error("Invalid request.", "boosters[%d]: %s" % (i, problem))
         if b["booster"] in seen:
             raise boosters_malformed("'%s' is named twice" % b["booster"])
         seen.add(b["booster"])
@@ -1713,20 +1735,130 @@ def check_boosters(raw, image_ids: list, conf: dict, collections=None) -> list:
 
 
 def check_face_recognition(b: dict, collections) -> None:
-    """face_recognition's options, refused before any model runs: collection required (a
-    public collection's name or the id of one of the workspace's own), threshold a number
-    from 0 to 1. The collection is resolved here, so an unknown one is its 404."""
-    options = b["options"]
-    collection = options.get("collection")
-    if not isinstance(collection, str) or not collection:
-        raise boosters_malformed("boosters[%d]: face_recognition needs the option collection, a collection's id or name" % b["index"])
-    threshold = options.get("threshold", FACE_THRESHOLD)
-    if isinstance(threshold, bool) or not isinstance(threshold, (int, float)) or not 0 <= threshold <= 1:
-        raise boosters_malformed("boosters[%d]: face_recognition's threshold must be a number from 0 to 1" % b["index"])
+    """face_recognition's collection (a public collection's name or the id of one of the
+    workspace's own), resolved before any model runs, so an unknown one is its 404. Its
+    options were judged with the list (options_problem)."""
+    collection = b["options"]["collection"]
     if collections is None:
         raise typed_error(404, "collection_not_found", "Collection not found: %s." % collection)
     b["collection"] = collections(collection)
-    b["threshold"] = threshold
+    b["threshold"] = b["options"].get("threshold", FACE_THRESHOLD)
+
+
+def cut_name(text: str) -> str:
+    """A name or a key as a reason quotes it: its first 64 bytes, on a character boundary."""
+    raw = text.encode("utf-8")
+    if len(raw) <= MAX_BOOSTER_NAME_BYTES:
+        return text
+    return raw[:MAX_BOOSTER_NAME_BYTES].decode("utf-8", "ignore")
+
+
+def whole_in(value, low: int, high: int) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and low <= value <= high
+
+
+def number_in(value, low: float, high: float) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and low <= value <= high
+
+
+def prompt_of(value):
+    """options.prompt as read, judged once the booster is known: a string of at most
+    2,000 characters, an array of at most 4 strings, or None for anything else."""
+    if isinstance(value, str):
+        return value if len(value) <= MAX_PROMPT_CHARS else None
+    if isinstance(value, list) and len(value) <= MAX_PHRASES and all(isinstance(p, str) for p in value):
+        return list(value)
+    return None
+
+
+OPTION_RULES = {
+    "collection": (lambda v: isinstance(v, str), BAD_COLLECTION),
+    "max_instances": (lambda v: whole_in(v, 1, 16), BAD_MAX_INSTANCES),
+    "min_score": (lambda v: number_in(v, 0, 1), BAD_MIN_SCORE),
+    "polygon_points": (lambda v: whole_in(v, 3, 64), BAD_POLYGON_POINTS),
+    "depth": (lambda v: isinstance(v, bool), BAD_DEPTH),
+    "grid_size": (lambda v: whole_in(v, 2, 16), BAD_GRID_SIZE),
+    "threshold": (lambda v: number_in(v, 0, 1), BAD_THRESHOLD),
+}
+
+
+def options_problem(b: dict):
+    """Why a booster's options are refused, as the API words it (its 400 api_usage_error,
+    the reason after "boosters[<i>]: "), else None. First each key in the order sent: a
+    value of the wrong type or out of range, a key no booster takes; then what the named
+    booster takes or needs (a name that is no booster takes any of the known keys: it is
+    booster_unknown later); then Segment Vision's phrases, kept cleaned in b["phrases"]."""
+    options = b["options"]
+    problem = None
+    for key, value in options.items():
+        if key == "prompt":
+            continue  # judged once the booster is known
+        rule = OPTION_RULES.get(key)
+        if rule is None:
+            found = "\"options\": '%s' is not an option" % cut_name(key)
+        else:
+            found = None if rule[0](value) else rule[1]
+        if problem is None:
+            problem = found
+    if problem is not None:
+        return problem
+    name = b["booster"]
+    if name not in BOOSTERS:
+        return None
+
+    def not_an_option(key):
+        return "\"options\": '%s' is not an option" % key
+
+    searches = name == "face_recognition"
+    if searches and "collection" not in options:
+        return "\"options\": 'collection' is required"
+    for key in ("collection", "threshold"):
+        if not searches and key in options:
+            return not_an_option(key)
+    if "prompt" not in options:
+        if name == "bynn_segment":
+            return "\"options\": 'prompt' is required"
+    elif name != "bynn_segment":
+        return not_an_option("prompt")
+    if name != "bynn_depth" and "grid_size" in options:
+        return not_an_option("grid_size")
+    if name != "bynn_segment":
+        for key in ("max_instances", "min_score", "polygon_points", "depth"):
+            if key in options:
+                return not_an_option(key)
+        return None
+    prompt = prompt_of(options["prompt"])
+    if prompt is None:
+        return BAD_PHRASES
+    phrases = segment_phrases([prompt] if isinstance(prompt, str) else prompt)
+    if isinstance(phrases, str):
+        return phrases
+    b["phrases"] = phrases
+    return None
+
+
+def separates(c: str) -> bool:
+    """A character no phrase keeps: a control character, one that reorders text, or the
+    model's separator."""
+    o = ord(c)
+    return unicodedata.category(c) == "Cc" or c == "|" or o in (0x061C, 0x200E, 0x200F) or 0x202A <= o <= 0x202E or 0x2066 <= o <= 0x2069
+
+
+def segment_phrases(raw: list):
+    """Segment Vision's phrases cleaned as the API cleans them, or the reason they are
+    refused: 1 to 4, each at most 120 characters as sent; separators become spaces, white
+    space folds, the ends are trimmed; empty phrases and repeats (by their lower case)
+    drop; none left names nothing."""
+    if not raw or len(raw) > MAX_PHRASES or any(len(p) > MAX_PHRASE_CHARS for p in raw):
+        return BAD_PHRASES
+    kept, seen = [], set()
+    for phrase in raw:
+        cleaned = " ".join("".join(" " if separates(c) else c for c in phrase).split())
+        if not cleaned or cleaned.lower() in seen:
+            continue
+        seen.add(cleaned.lower())
+        kept.append(cleaned)
+    return kept or NO_PHRASE
 
 
 def booster_plan(boosters: list, conf: dict) -> list:
@@ -1789,11 +1921,110 @@ def face_recognition_reading(b: dict, iid: str, stream) -> dict:
     return out
 
 
+def depth_reading(b: dict, iid: str, stream) -> dict:
+    """Depth Vision: a grid_size by grid_size grid of distances in meters, row by row from
+    the top left; each of the seven directions, left to right, the nearest cell of its
+    column (null past 15 m, open space), ahead the nearest of the middle third; the
+    totals over the grid. Two decimals, as the API sends them."""
+    n = b["options"].get("grid_size", DEPTH_GRID)
+    grid = [[round(0.5 + stream.next() * 19.5, 2) for _ in range(n)] for _ in range(n)]
+    cells = sorted(v for row in grid for v in row)
+    half = len(cells) // 2
+    median = cells[half] if len(cells) % 2 else round((cells[half - 1] + cells[half]) / 2, 2)
+
+    def nearest(cols):
+        m = min(grid[r][c] for r in range(n) for c in cols)
+        return m if m <= 15 else None
+
+    directions = [nearest([min(n - 1, int((j + 0.5) * n / 7))]) for j in range(7)]
+    ahead = nearest(range(n // 3, n - n // 3))
+    return {
+        "image": iid,
+        "ahead": ahead,
+        "directions": directions,
+        "ground": stream.next() < 0.7,
+        "grid_rows": n,
+        "grid_cols": n,
+        "grid": grid,
+        "depth_min": cells[0],
+        "depth_max": cells[-1],
+        "depth_median": median,
+        "width": PLACE_WIDTH,
+        "height": PLACE_HEIGHT,
+    }
+
+
+def outline(cx: float, cy: float, rx: float, ry: float, points: int) -> list:
+    """An ellipse's outline as [x, y] fractions, four decimals."""
+    return [[round(cx + rx * math.cos(2 * math.pi * k / points), 4), round(cy + ry * math.sin(2 * math.pi * k / points), 4)] for k in range(points)]
+
+
+def segment_reading(b: dict, iid: str, stream) -> dict:
+    """Segment Vision: 0 to 2 matches of each phrase, each an ellipse inside its box (the
+    outline at polygon_points, coordinates as fractions from the top left), every second
+    one with an opening; at most max_instances, by score, each at min_score or above.
+    With depth on, each match's distances and size in meters (a pinhole at 65 degrees),
+    depth_source bynn_depth; with it off those are null."""
+    options = dict(SEGMENT_DEFAULTS, **{k: v for k, v in b["options"].items() if k in SEGMENT_DEFAULTS})
+    depth = options["depth"]
+    per_meter = 2 * math.tan(math.radians(SEGMENT_HFOV_DEG / 2))
+    instances = []
+    for phrase in b["phrases"]:
+        for k in range(int(stream.next() * 3)):
+            score = round(options["min_score"] + stream.next() * (1 - options["min_score"]), 3)
+            w, h = 0.1 + stream.next() * 0.3, 0.1 + stream.next() * 0.3
+            cx, cy = round(w / 2 + stream.next() * (1 - w), 4), round(h / 2 + stream.next() * (1 - h), 4)
+            inst = {
+                "label": phrase,
+                "score": score,
+                "box": [round(cx - w / 2, 4), round(cy - h / 2, 4), round(cx + w / 2, 4), round(cy + h / 2, 4)],
+                "polygon": outline(cx, cy, w / 2, h / 2, options["polygon_points"]),
+                "area": round(math.pi * w * h / 4, 5),
+                "centroid": [cx, cy],
+                "opening": None,
+                "depth": None,
+                "size_m": None,
+            }
+            hole = k % 2 == 0
+            if hole:
+                inst["opening"] = {
+                    "polygon": outline(cx, cy, w / 4, h / 4, options["polygon_points"]),
+                    "centroid": [cx, cy],
+                    "width": round(w / 2, 4),
+                    "height": round(h / 2, 4),
+                    "offset": [round(cx - 0.5, 4), round(cy - 0.5, 4)],
+                    "area": round(math.pi * w * h / 16, 5),
+                }
+            if depth:
+                meters = round(1 + stream.next() * 19, 2)
+                through = round(meters + 1 + stream.next() * 5, 2)
+                inst["depth"] = {"median": meters, "opening_median": through if hole else None, "opening_rim_median": meters if hole else None}
+                size = {"width": round(meters * per_meter * w, 2), "height": round(meters * per_meter * h * PLACE_HEIGHT / PLACE_WIDTH, 2), "opening": None}
+                if hole:
+                    size["opening"] = {"width": round(size["width"] / 2, 2), "height": round(size["height"] / 2, 2)}
+                inst["size_m"] = size
+            instances.append(inst)
+    instances.sort(key=lambda i: i["score"], reverse=True)
+    return {
+        "image": iid,
+        "width": PLACE_WIDTH,
+        "height": PLACE_HEIGHT,
+        "prompts": b["phrases"],
+        "instances": instances[: options["max_instances"]],
+        "depth_source": "bynn_depth" if depth else None,
+        "assumed_hfov_deg": SEGMENT_HFOV_DEG,
+    }
+
+
 def reading(name: str, iid: str, digest: str, b: dict | None = None) -> dict:
     """A booster's fixed reading of one image, derived from the image's id and bytes."""
     stream = Stream("booster/%s/%s/%s" % (name, iid, digest))
     if name == "face_recognition":
         return face_recognition_reading(b, iid, stream)
+    if name == "bynn_depth":
+        return depth_reading(b, iid, stream)
+    if name == "bynn_segment":
+        return segment_reading(b, iid, stream)
     if name == "age":
         if stream.next() < 0.2:
             return {"image": iid, "faces": 0}
@@ -1817,10 +2048,10 @@ def reading(name: str, iid: str, digest: str, b: dict | None = None) -> dict:
 
 
 def run_boosters(plan: list, images: list) -> tuple:
-    """(evidence, booster calls billed, booster tokens). A required booster that timed
-    out or failed refuses the request with the 529 booster_unavailable."""
+    """(evidence, booster calls billed, booster tokens, what they cost in USD). A required
+    booster that timed out or failed refuses the request with the 529 booster_unavailable."""
     if not plan:
-        return None, 0, 0
+        return None, 0, 0, 0.0
     for p in plan:
         if p["require"] and p["status"] in ("timeout", "error"):
             words = "did not answer in time." if p["status"] == "timeout" else "failed."
@@ -1835,6 +2066,7 @@ def run_boosters(plan: list, images: list) -> tuple:
     evidence = {}
     calls = 0
     tokens = 0
+    spent = 0.0
     for p in plan:
         name = p["booster"]
         read = p["images"] if p["images"] is not None else [i["id"] for i in images]
@@ -1849,11 +2081,12 @@ def run_boosters(plan: list, images: list) -> tuple:
         else:
             results = []
         calls += billed
+        spent += billed * BOOSTERS[name]["usd"]
         # billed_calls: one per image read with status ok; a reading reused from a cache is
         # billed too.
         evidence[name] = {"version": BOOSTERS[name]["version"], "status": p["status"], "latency_ms": p["latency_ms"], "billed_calls": billed, "results": results}
         tokens += BOOSTER_ENTRY_TOKENS + BOOSTER_READING_TOKENS * billed
-    return evidence, calls, tokens
+    return evidence, calls, tokens, spent
 
 
 # --------------------------------------------------------------------------- uploads

@@ -1599,12 +1599,12 @@ class TestSuite111(Spec11):
             (["age", {"name": "age"}], 400, "api_usage_error", "boosters: 'age' is named twice"),
             ([5], 400, "api_usage_error", "boosters: boosters[0] is neither a booster name nor an object with name"),
             ([{"images": ["person"]}], 400, "api_usage_error", "boosters: boosters[0] is neither a booster name nor an object with name"),
-            ([{"name": "age", "options": {"k": 1}}], 400, "api_usage_error", "boosters: 'k' is not a setting of the booster 'age'"),
+            ([{"name": "age", "options": {"k": 1}}], 400, "api_usage_error", "boosters[0]: \"options\": 'k' is not an option"),
             ([{"name": "age", "images": "person"}], 400, "api_usage_error", "boosters: boosters[0].images must be a list of image ids"),
             ([{"name": "age", "require": "yes"}], 400, "api_usage_error", "boosters: boosters[0].require must be true or false"),
             ([{"booster": "age"}], 400, "api_usage_error", "boosters: boosters[0] is neither a booster name nor an object with name"),
             ([{"name": "age", "priority": 1}], 400, "api_usage_error", "boosters: boosters[0]: 'priority' is not a key of a booster object"),
-            (["example_booster"], 400, "booster_unknown", "'example_booster' is not a booster; the boosters are age, ai_generated, face_recognition"),
+            (["example_booster"], 400, "booster_unknown", "'example_booster' is not a booster; the boosters are age, ai_generated, bynn_depth, bynn_segment, face_recognition"),
             ([{"name": "age", "images": ["x9"]}], 400, "booster_input_mismatch", "Booster 'age': 'x9' is not an image of the request."),
         ]:
             st, hd, out = self.boosted(boosters, "t2")
@@ -1722,6 +1722,152 @@ class TestSuite111(Spec11):
         st, _, out = self.call("POST", "/v1/decide", {"images": self.IMAGES, "questions": self.Q, "boosters": ["ai_generated"]}, self.h("t12", "t-boosters-off"))
         self.assertEqual((st, out["detail"]["error_type"]), (403, "booster_not_enabled"))
 
+
+
+class TestSuite121(Spec11):
+    """Suite 1.21: Depth Vision (bynn_depth) and Segment Vision (bynn_segment), their
+    options refused in the API's words and their readings."""
+
+    IMAGES, Q, boosted = TestSuite111.IMAGES, TestSuite111.Q, TestSuite111.boosted
+
+    def refused(self, boosters, session="v1"):
+        st, hd, out = self.boosted(boosters, session)
+        self.assertEqual((st, out["detail"]), (400, {"error_type": "api_usage_error", "message": "Invalid request."}), boosters)
+        self.assertNotIn("x-decisionnode-boosters", hd)
+        return hd["x-decisionnode-error"]
+
+    def test_option_refusals_in_the_apis_words(self):
+        phrases = "\"options\": 'prompt' must be a string, or an array of 1 to 4 strings, each of at most 120 characters"
+        for boosters, reason in [
+            ([{"name": "bynn_depth", "options": {"grid_size": 32}}], "\"options\": 'grid_size' must be an integer from 2 to 16"),
+            ([{"name": "bynn_depth", "options": {"grid_size": 1}}], "\"options\": 'grid_size' must be an integer from 2 to 16"),
+            ([{"name": "bynn_depth", "options": {"grid_size": 8.0}}], "\"options\": 'grid_size' must be an integer from 2 to 16"),
+            ([{"name": "bynn_depth", "options": {"grid_size": True}}], "\"options\": 'grid_size' must be an integer from 2 to 16"),
+            ([{"name": "bynn_depth", "options": {"prompt": "door"}}], "\"options\": 'prompt' is not an option"),
+            ([{"name": "bynn_depth", "options": {"depth": True}}], "\"options\": 'depth' is not an option"),
+            ([{"name": "bynn_depth", "options": {"scale": 2}}], "\"options\": 'scale' is not an option"),
+            (["bynn_segment"], "\"options\": 'prompt' is required"),
+            ([{"name": "bynn_segment"}], "\"options\": 'prompt' is required"),
+            ([{"name": "bynn_segment", "options": {"max_instances": 4}}], "\"options\": 'prompt' is required"),
+            ([{"name": "bynn_segment", "options": {"prompt": " | \t"}}], "\"options\": 'prompt' must name something to find"),
+            ([{"name": "bynn_segment", "options": {"prompt": ["", "|", "\u200e"]}}], "\"options\": 'prompt' must name something to find"),
+            ([{"name": "bynn_segment", "options": {"prompt": []}}], phrases),
+            ([{"name": "bynn_segment", "options": {"prompt": ["a", "b", "c", "d", "e"]}}], phrases),
+            ([{"name": "bynn_segment", "options": {"prompt": "x" * 121}}], phrases),
+            ([{"name": "bynn_segment", "options": {"prompt": "x" * 2001}}], phrases),
+            ([{"name": "bynn_segment", "options": {"prompt": ["gate", 5]}}], phrases),
+            ([{"name": "bynn_segment", "options": {"prompt": 5}}], phrases),
+            ([{"name": "bynn_segment", "options": {"prompt": None}}], phrases),
+            ([{"name": "bynn_segment", "options": {"prompt": "gate", "max_instances": 17}}], "\"options\": 'max_instances' must be an integer from 1 to 16"),
+            ([{"name": "bynn_segment", "options": {"prompt": "gate", "min_score": 1.5}}], "\"options\": 'min_score' must be a number from 0 to 1"),
+            ([{"name": "bynn_segment", "options": {"prompt": "gate", "polygon_points": 2}}], "\"options\": 'polygon_points' must be an integer from 3 to 64"),
+            ([{"name": "bynn_segment", "options": {"prompt": "gate", "depth": "no"}}], "\"options\": 'depth' must be true or false"),
+            ([{"name": "bynn_segment", "options": {"prompt": "gate", "grid_size": 8}}], "\"options\": 'grid_size' is not an option"),
+            ([{"name": "bynn_segment", "options": {"prompt": "gate", "threshold": 0.5}}], "\"options\": 'threshold' is not an option"),
+            # Each key in the order sent, the first problem the reason; a key's own value
+            # before what the booster takes; the phrases last.
+            ([{"name": "bynn_segment", "options": {"min_score": 2, "max_instances": 0, "prompt": ""}}], "\"options\": 'min_score' must be a number from 0 to 1"),
+            ([{"name": "bynn_segment", "options": {"max_instances": 0, "min_score": 2}}], "\"options\": 'max_instances' must be an integer from 1 to 16"),
+            ([{"name": "bynn_segment", "options": {"prompt": "", "grid_size": 8}}], "\"options\": 'grid_size' is not an option"),
+            ([{"name": "bynn_depth", "options": {"prompt": "a", "grid_size": 40}}], "\"options\": 'grid_size' must be an integer from 2 to 16"),
+            ([{"name": "bynn_depth", "options": {"k" * 70: 1}}], "\"options\": '%s' is not an option" % ("k" * 64)),
+            (["face_recognition"], "\"options\": 'collection' is required"),
+            ([{"name": "face_recognition", "options": {"collection": 7}}], "\"options\": 'collection' must be a string"),
+            ([{"name": "face_recognition", "options": {"collection": "celebrities", "threshold": 2}}], "\"options\": 'threshold' must be a number from 0 to 1"),
+            ([{"name": "age", "options": {"collection": "celebrities"}}], "\"options\": 'collection' is not an option"),
+            ([{"name": "ai_generated", "options": {"prompt": "x"}}], "\"options\": 'prompt' is not an option"),
+            ([{"name": "age", "options": "x"}], "\"options\" must be an object"),
+        ]:
+            self.assertEqual(self.refused(boosters), "boosters[0]: " + reason, boosters)
+        # The entry's index, and the entries before it judged first.
+        self.assertEqual(self.refused(["age", {"name": "bynn_depth", "options": {"grid_size": 0}}]), "boosters[1]: \"options\": 'grid_size' must be an integer from 2 to 16")
+        self.assertEqual(self.refused(["bynn_segment", "example_booster"]), "boosters[0]: \"options\": 'prompt' is required")
+        # A name that is no booster takes any known key: it is booster_unknown.
+        st, _, out = self.boosted([{"name": "example_booster", "options": {"prompt": 5, "grid_size": 3}}], "v1")
+        self.assertEqual((st, out["detail"]["error_type"]), (400, "booster_unknown"))
+
+    def test_phrases_cleaned_as_the_api_cleans_them(self):
+        prompt = ["  Gate\u200f  | frame ", "gate frame", "GATE   FRAME", "pad\x07", "x" * 120]
+        st, _, out = self.boosted([{"name": "bynn_segment", "options": {"prompt": prompt[:4]}}], "v2")
+        self.assertEqual(st, 200, out)
+        self.assertEqual(out["evidence"]["bynn_segment"]["results"][0]["prompts"], ["Gate frame", "pad"])
+        st, _, out = self.boosted([{"name": "bynn_segment", "options": {"prompt": prompt[4]}}], "v2")
+        self.assertEqual(out["evidence"]["bynn_segment"]["results"][0]["prompts"], ["x" * 120])
+
+    def test_depth_reading(self):
+        for options, n in ((None, 8), ({"grid_size": 2}, 2), ({"grid_size": 16}, 16)):
+            entry = {"name": "bynn_depth"} if options is None else {"name": "bynn_depth", "options": options}
+            st, hd, out = self.boosted([entry], "v3")
+            self.assertEqual(st, 200, out)
+            self.assertEqual(hd["x-decisionnode-boosters"], "bynn_depth=ok:24")
+            e = out["evidence"]["bynn_depth"]
+            self.assertEqual((e["version"], e["status"], e["billed_calls"]), ("bynn_depth-v1", "ok", 2))
+            for r, iid in zip(e["results"], ("person", "poster")):
+                self.assertEqual(list(r), ["image", "ahead", "directions", "ground", "grid_rows", "grid_cols", "grid", "depth_min", "depth_max", "depth_median", "width", "height"])
+                self.assertEqual((r["image"], r["grid_rows"], r["grid_cols"], r["width"], r["height"]), (iid, n, n, 1920, 1080))
+                self.assertEqual([len(row) for row in r["grid"]], [n] * n)
+                cells = [v for row in r["grid"] for v in row]
+                self.assertEqual((r["depth_min"], r["depth_max"]), (min(cells), max(cells)))
+                self.assertTrue(r["depth_min"] <= r["depth_median"] <= r["depth_max"])
+                self.assertEqual(len(r["directions"]), 7)
+                for d in r["directions"] + [r["ahead"]]:
+                    self.assertTrue(d is None or (isinstance(d, float) and 0 < d <= 15), d)
+                self.assertIsInstance(r["ground"], bool)
+            self.assertEqual(out["usage"]["boosters"], 2)
+            self.assertEqual(out["usage"]["cost"]["boosters_usd"], 0.002)
+        # The same request reads the same.
+        self.assertEqual(self.boosted(["bynn_depth"], "v3")[2]["evidence"], self.boosted(["bynn_depth"], "v3")[2]["evidence"])
+
+    def test_segment_reading(self):
+        keys = ["label", "score", "box", "polygon", "area", "centroid", "opening", "depth", "size_m"]
+        options = {"prompt": ["gate", "landing pad", "person", "door"], "max_instances": 3, "min_score": 0.5, "polygon_points": 6}
+        st, hd, out = self.boosted([{"name": "bynn_segment", "options": options}, "age"], "v4")
+        self.assertEqual(st, 200, out)
+        self.assertEqual(hd["x-decisionnode-boosters"], "bynn_segment=ok:75,age=ok:212")
+        e = out["evidence"]["bynn_segment"]
+        self.assertEqual((e["version"], e["status"], e["billed_calls"]), ("bynn_segment-v1", "ok", 2))
+        found = 0
+        for r in e["results"]:
+            self.assertEqual(list(r), ["image", "width", "height", "prompts", "instances", "depth_source", "assumed_hfov_deg"])
+            self.assertEqual((r["prompts"], r["depth_source"], r["assumed_hfov_deg"]), (options["prompt"], "bynn_depth", 65.0))
+            self.assertLessEqual(len(r["instances"]), 3)
+            scores = [i["score"] for i in r["instances"]]
+            self.assertEqual(scores, sorted(scores, reverse=True))
+            for i in r["instances"]:
+                found += 1
+                self.assertEqual(list(i), keys)
+                self.assertIn(i["label"], options["prompt"])
+                self.assertTrue(0.5 <= i["score"] <= 1)
+                self.assertEqual(len(i["polygon"]), 6)
+                x1, y1, x2, y2 = i["box"]
+                self.assertTrue(0 <= x1 < x2 <= 1 and 0 <= y1 < y2 <= 1, i["box"])
+                self.assertEqual(list(i["depth"]), ["median", "opening_median", "opening_rim_median"])
+                self.assertEqual(list(i["size_m"]), ["width", "height", "opening"])
+                if i["opening"] is None:
+                    self.assertEqual((i["depth"]["opening_median"], i["size_m"]["opening"]), (None, None))
+                else:
+                    self.assertEqual(list(i["opening"]), ["polygon", "centroid", "width", "height", "offset", "area"])
+        self.assertGreater(found, 0)
+        # Free: two pictures read are two calls, at no cost; age's are priced.
+        self.assertEqual(out["usage"]["boosters"], 4)
+        self.assertEqual(out["usage"]["cost"]["boosters_usd"], 0.004)
+        # Depth off: no distances, no sizes, no depth_source; the defaults otherwise.
+        st, _, out = self.boosted([{"name": "bynn_segment", "options": {"prompt": "gate", "depth": False}}], "v4")
+        for r in out["evidence"]["bynn_segment"]["results"]:
+            self.assertIsNone(r["depth_source"])
+            self.assertLessEqual(len(r["instances"]), 8)
+            for i in r["instances"]:
+                self.assertEqual((i["depth"], i["size_m"], len(i["polygon"])), (None, None, 24))
+                self.assertGreaterEqual(i["score"], 0.25)
+        self.assertEqual(out["usage"]["cost"]["boosters_usd"], 0)
+
+    def test_segment_unavailable_when_required(self):
+        self.control("/_mock/boosters", "v5", {"status": {"bynn_segment": "error"}})
+        st, hd, out = self.boosted([{"name": "bynn_segment", "options": {"prompt": "gate"}, "require": True}], "v5")
+        self.assertEqual((st, out["detail"]), (529, {"error_type": "booster_unavailable", "message": "The booster 'bynn_segment' failed."}))
+        self.assertEqual(hd["retry-after"], "1")
+        st, hd, out = self.boosted([{"name": "bynn_segment", "options": {"prompt": "gate"}}], "v5")
+        self.assertEqual((st, out["evidence"]["bynn_segment"]["results"], out["usage"]["boosters"]), (200, [{"image": "person"}, {"image": "poster"}], 0))
 
 
 class TestSeveralPlaces(Spec11):

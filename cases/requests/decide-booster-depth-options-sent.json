@@ -1,0 +1,145 @@
+{
+  "id": "decide-booster-depth-options-sent",
+  "description": "Depth Vision's option grid_size (an integer from 2 to 16, 8 when not given) is sent in the object form as given: {\"name\": \"bynn_depth\", \"options\": {\"grid_size\": 16}}. The SDK checks nothing about it locally; the range is the API's. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "front",
+            "url": "https://files.example.com/robot/front-0412.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "path_clear": {
+          "$truth": {
+            "instructions": "Is the path ahead clear for at least two meters?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "bynn_depth",
+            "options": {
+              "grid_size": 16
+            }
+          }
+        }
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "x-decisionnode-boosters": "bynn_depth=ok:24",
+            "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1"
+          },
+          "body": {
+            "model": "decisionnode-moe-0.9.0-rc1",
+            "answers": {
+              "path_clear": {
+                "type": "truth",
+                "truth": 0.91
+              }
+            },
+            "evidence": {
+              "bynn_depth": {
+                "version": "bynn_depth-v1",
+                "status": "ok",
+                "latency_ms": 24,
+                "billed_calls": 1,
+                "results": [
+                  {
+                    "image": "front",
+                    "ahead": 3.21,
+                    "directions": [
+                      5.12,
+                      4.03,
+                      null,
+                      2.81,
+                      6.02,
+                      7.15,
+                      9.33
+                    ],
+                    "ground": true,
+                    "grid_rows": 2,
+                    "grid_cols": 2,
+                    "grid": [
+                      [
+                        4.51,
+                        6.27
+                      ],
+                      [
+                        2.05,
+                        3.37
+                      ]
+                    ],
+                    "depth_min": 1.01,
+                    "depth_max": 14.98,
+                    "depth_median": 4.37,
+                    "width": 810,
+                    "height": 1080
+                  }
+                ]
+              }
+            },
+            "usage": {
+              "input_tokens": 410,
+              "output_tokens": 0,
+              "booster_tokens": 300,
+              "boosters": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "",
+        "images": [
+          {
+            "id": "front",
+            "url": "https://files.example.com/robot/front-0412.jpg"
+          }
+        ],
+        "questions": {
+          "path_clear": {
+            "type": "truth",
+            "instructions": "Is the path ahead clear for at least two meters?"
+          }
+        },
+        "boosters": [
+          {
+            "name": "bynn_depth",
+            "options": {
+              "grid_size": 16
+            }
+          }
+        ]
+      }
+    }
+  }
+}

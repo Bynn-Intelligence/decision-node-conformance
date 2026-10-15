@@ -1,0 +1,213 @@
+{
+  "id": "decide-booster-segment-options-sent",
+  "description": "Segment Vision's options are sent in the object form as given, in the caller's order: prompt (one phrase as a string, or an array of 1 to 4 phrases of at most 120 characters, required), max_instances, min_score, polygon_points and depth. The SDK checks nothing about them locally and never cleans the phrases; the rules are the API's. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/drone/gate-3.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "gate_ahead": {
+          "$truth": {
+            "instructions": "Is the drone lined up with the gate's opening?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "bynn_segment",
+            "images": [
+              "gate"
+            ],
+            "options": {
+              "prompt": [
+                "purple gate",
+                "landing pad"
+              ],
+              "max_instances": 4,
+              "min_score": 0.3,
+              "polygon_points": 4,
+              "depth": false
+            }
+          }
+        }
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json",
+            "x-decisionnode-boosters": "bynn_segment=ok:31",
+            "x-decisionnode-model": "decisionnode-moe-0.9.0-rc1"
+          },
+          "body": {
+            "model": "decisionnode-moe-0.9.0-rc1",
+            "answers": {
+              "gate_ahead": {
+                "type": "truth",
+                "truth": 0.88
+              }
+            },
+            "evidence": {
+              "bynn_segment": {
+                "version": "bynn_segment-v1",
+                "status": "ok",
+                "latency_ms": 31,
+                "billed_calls": 1,
+                "results": [
+                  {
+                    "image": "gate",
+                    "width": 1280,
+                    "height": 720,
+                    "prompts": [
+                      "purple gate",
+                      "landing pad"
+                    ],
+                    "instances": [
+                      {
+                        "label": "purple gate",
+                        "score": 0.912,
+                        "box": [
+                          0.3125,
+                          0.2214,
+                          0.5781,
+                          0.8125
+                        ],
+                        "polygon": [
+                          [
+                            0.3125,
+                            0.2214
+                          ],
+                          [
+                            0.5781,
+                            0.2214
+                          ],
+                          [
+                            0.5781,
+                            0.8125
+                          ],
+                          [
+                            0.3125,
+                            0.8125
+                          ]
+                        ],
+                        "area": 0.12351,
+                        "centroid": [
+                          0.4453,
+                          0.4719
+                        ],
+                        "opening": {
+                          "polygon": [
+                            [
+                              0.3802,
+                              0.3125
+                            ],
+                            [
+                              0.5104,
+                              0.3125
+                            ],
+                            [
+                              0.5104,
+                              0.4479
+                            ],
+                            [
+                              0.3802,
+                              0.4479
+                            ]
+                          ],
+                          "centroid": [
+                            0.4453,
+                            0.3802
+                          ],
+                          "width": 0.1302,
+                          "height": 0.1354,
+                          "offset": [
+                            -0.0547,
+                            -0.1198
+                          ],
+                          "area": 0.01763
+                        },
+                        "depth": null,
+                        "size_m": null
+                      }
+                    ],
+                    "depth_source": null,
+                    "assumed_hfov_deg": 65.0
+                  }
+                ]
+              }
+            },
+            "usage": {
+              "input_tokens": 380,
+              "output_tokens": 0,
+              "booster_tokens": 120,
+              "boosters": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      },
+      "body": {
+        "model": "decisionnode-moe",
+        "state": "",
+        "images": [
+          {
+            "id": "gate",
+            "url": "https://files.example.com/drone/gate-3.jpg"
+          }
+        ],
+        "questions": {
+          "gate_ahead": {
+            "type": "truth",
+            "instructions": "Is the drone lined up with the gate's opening?"
+          }
+        },
+        "boosters": [
+          {
+            "name": "bynn_segment",
+            "images": [
+              "gate"
+            ],
+            "options": {
+              "prompt": [
+                "purple gate",
+                "landing pad"
+              ],
+              "max_instances": 4,
+              "min_score": 0.3,
+              "polygon_points": 4,
+              "depth": false
+            }
+          }
+        ]
+      }
+    }
+  }
+}

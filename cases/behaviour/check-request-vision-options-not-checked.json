@@ -1,0 +1,60 @@
+{
+  "id": "check-request-vision-options-not-checked",
+  "description": "check_request judges no booster option: a Depth Vision grid_size of 99 and a Segment Vision prompt of five phrases, one over 120 characters, check clean, and nothing is sent. They are the API's to refuse.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/drone/gate-3.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "gate_ahead": {
+          "$truth": {
+            "instructions": "Is the drone lined up with the gate's opening?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "bynn_depth",
+            "options": {
+              "grid_size": 99
+            }
+          }
+        },
+        {
+          "$booster": {
+            "name": "bynn_segment",
+            "options": {
+              "prompt": [
+                "a",
+                "b",
+                "c",
+                "d",
+                "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              ],
+              "max_instances": 0
+            }
+          }
+        }
+      ]
+    },
+    "check": true
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "result": "checked"
+    }
+  }
+}

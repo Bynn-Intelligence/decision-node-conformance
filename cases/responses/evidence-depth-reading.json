@@ -1,0 +1,141 @@
+{
+  "id": "evidence-depth-reading",
+  "description": "A Depth Vision reading is a DepthReading: image, ahead (meters to the nearest obstacle straight ahead, the floor left out), directions (seven, left to right), ground, grid_rows, grid_cols, grid (row by row from the top left), depth_min, depth_max, depth_median, width and height, every number as sent. ahead and a direction are null when nothing was found there (open space or sky), and the reading stays typed. A picture the booster could not decode reads {\"image\", \"readable\": false}: a generic reading, not billed.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "front",
+            "url": "https://files.example.com/robot/front-0412.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "sky",
+            "url": "https://files.example.com/robot/up-0412.jpg"
+          }
+        },
+        {
+          "$image": {
+            "id": "lens",
+            "url": "https://files.example.com/robot/lens-cap.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "path_clear": {
+          "$truth": {
+            "instructions": "Is the path ahead clear for at least two meters?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "bynn_depth",
+            "options": {
+              "grid_size": 2
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "bynn_depth=ok:26"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"path_clear\": {\"type\": \"truth\", \"truth\": 0.87}}, \"evidence\": {\"bynn_depth\": {\"version\": \"bynn_depth-v1\", \"status\": \"ok\", \"latency_ms\": 26, \"billed_calls\": 2, \"results\": [{\"image\": \"front\", \"ahead\": 3.21, \"directions\": [5.12, 4.03, null, 2.81, 6.02, 7.15, 9.33], \"ground\": true, \"grid_rows\": 2, \"grid_cols\": 2, \"grid\": [[4.51, 6.27], [2.05, 3.37]], \"depth_min\": 1.01, \"depth_max\": 14.98, \"depth_median\": 4.37, \"width\": 810, \"height\": 1080}, {\"image\": \"sky\", \"ahead\": null, \"directions\": [null, null, 18.4, null, null, 12.75, null], \"ground\": false, \"grid_rows\": 2, \"grid_cols\": 2, \"grid\": [[40.5, 38.25], [14.6, 12.75]], \"depth_min\": 11.92, \"depth_max\": 41.36, \"depth_median\": 26.43, \"width\": 1280, \"height\": 720}, {\"image\": \"lens\", \"readable\": false}]}}, \"usage\": {\"input_tokens\": 900, \"output_tokens\": 0, \"booster_tokens\": 640, \"boosters\": 2}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "bynn_depth": {
+          "version": "bynn_depth-v1",
+          "status": "ok",
+          "latency_ms": 26,
+          "billed_calls": 2,
+          "results": [
+            {
+              "kind": "bynn_depth",
+              "image": "front",
+              "ahead": 3.21,
+              "directions": [
+                5.12,
+                4.03,
+                null,
+                2.81,
+                6.02,
+                7.15,
+                9.33
+              ],
+              "ground": true,
+              "grid_rows": 2,
+              "grid_cols": 2,
+              "grid": [
+                [
+                  4.51,
+                  6.27
+                ],
+                [
+                  2.05,
+                  3.37
+                ]
+              ],
+              "depth_min": 1.01,
+              "depth_max": 14.98,
+              "depth_median": 4.37,
+              "width": 810,
+              "height": 1080
+            },
+            {
+              "kind": "bynn_depth",
+              "image": "sky",
+              "ahead": null,
+              "directions": [
+                null,
+                null,
+                18.4,
+                null,
+                null,
+                12.75,
+                null
+              ],
+              "ground": false,
+              "grid_rows": 2,
+              "grid_cols": 2,
+              "grid": [
+                [
+                  40.5,
+                  38.25
+                ],
+                [
+                  14.6,
+                  12.75
+                ]
+              ],
+              "depth_min": 11.92,
+              "depth_max": 41.36,
+              "depth_median": 26.43,
+              "width": 1280,
+              "height": 720
+            },
+            {
+              "kind": "unknown",
+              "raw": {
+                "image": "lens",
+                "readable": false
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

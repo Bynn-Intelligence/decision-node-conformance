@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.21 (for SDK specification 1.3)
+
+Depth Vision (`bynn_depth`) and Segment Vision (`bynn_segment`), two boosters listed in production. `SPEC_VERSION` stays `"1.3"`.
+
+- Readings: `DepthReading` (`image`, `ahead`, `directions`, `ground`, `grid_rows`, `grid_cols`, `grid`, `depth_min`, `depth_max`, `depth_median`, `width`, `height`; `ahead` and each of the seven directions empty when nothing was found) and `SegmentReading` (`image`, `width`, `height`, `prompts`, `instances`, `depth_source`, `assumed_hfov_deg`), each instance a `SegmentInstance` (`label`, `score`, `box`, `polygon`, `area`, `centroid`, and `opening`, `depth` and `size_m`, each empty when null or absent). A reading with a field missing or of the wrong shape, one wrong instance included, and a picture the booster could not decode are generic readings. Every number as sent.
+- Requests: each booster's options are sent in the object form as given (`grid_size`; `prompt`, `max_instances`, `min_score`, `polygon_points`, `depth`), never checked or cleaned locally, `check_request` included.
+- Errors: the API's `400` `api_usage_error` "Invalid request." for a bad option, its reason in the API's words (`boosters[<i>]: "options": 'grid_size' must be an integer from 2 to 16`, `'prompt' is required`, `'prompt' must name something to find`, the prompt's shape, `max_instances`, `min_score`, `polygon_points`, `depth`, and `'<key>' is not an option`), each key judged in the order sent, the first problem the reason.
+- Case format: the reading kinds `bynn_depth` and `bynn_segment`.
+- Mock: both boosters served with fixed readings per image (Depth Vision at its `grid_size`; Segment Vision's phrases cleaned as the API cleans them, its matches with outlines, openings and, with depth on, distances and sizes); every booster's options judged as the API judges them, in its words (`age`'s unknown option now reads `boosters[0]: "options": 'k' is not an option`); booster calls priced per booster (Depth Vision 0.001 USD a picture, Segment Vision free); `booster_unknown`'s reason lists the five boosters.
+
+Cases: 855 in all (requests 142, responses 122, errors 141, behaviour 448, constants 2): 15 new (2 requests, 5 responses, 6 errors, 2 behaviour); `400-booster-unknown` and `nesting-128-in-boosters-sent` record the new reasons.
+
 ## 1.20 (for SDK specification 1.3)
 
 A keys key's decide keys, `/v1/keys`. `SPEC_VERSION` stays `"1.3"`.

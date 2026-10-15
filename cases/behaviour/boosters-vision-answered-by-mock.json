@@ -1,0 +1,208 @@
+{
+  "id": "boosters-vision-answered-by-mock",
+  "description": "The mock answers Depth Vision and Segment Vision with fixed readings per image: the decision's evidence holds a DepthReading (a 2 by 2 grid, as asked) and a SegmentReading whose prompts are the phrases as the API cleans them (\"|\" a space, white space folded, the ends trimmed, a repeat in another case dropped), in the request's order. Each picture read is one call, billed once.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/drone/gate-3.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "gate_ahead": {
+          "$truth": {
+            "instructions": "Is the drone lined up with the gate's opening?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "bynn_depth",
+            "options": {
+              "grid_size": 2
+            }
+          }
+        },
+        {
+          "$booster": {
+            "name": "bynn_segment",
+            "options": {
+              "prompt": [
+                "purple gate",
+                " Landing  pad|",
+                "purple GATE"
+              ],
+              "polygon_points": 4,
+              "max_instances": 2
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "decision",
+      "decision": {
+        "model": {
+          "$pattern": "^decisionnode-moe-"
+        },
+        "evidence": {
+          "bynn_depth": {
+            "version": "bynn_depth-v1",
+            "status": "ok",
+            "latency_ms": 24,
+            "billed_calls": 1,
+            "results": [
+              {
+                "kind": "bynn_depth",
+                "image": "gate",
+                "ahead": 8.64,
+                "directions": [
+                  null,
+                  null,
+                  null,
+                  8.64,
+                  8.64,
+                  8.64,
+                  8.64
+                ],
+                "ground": false,
+                "grid_rows": 2,
+                "grid_cols": 2,
+                "grid": [
+                  [
+                    17.27,
+                    18.04
+                  ],
+                  [
+                    15.4,
+                    8.64
+                  ]
+                ],
+                "depth_min": 8.64,
+                "depth_max": 18.04,
+                "depth_median": 16.34,
+                "width": 1920,
+                "height": 1080
+              }
+            ]
+          },
+          "bynn_segment": {
+            "version": "bynn_segment-v1",
+            "status": "ok",
+            "latency_ms": 75,
+            "billed_calls": 1,
+            "results": [
+              {
+                "kind": "bynn_segment",
+                "image": "gate",
+                "width": 1920,
+                "height": 1080,
+                "prompts": [
+                  "purple gate",
+                  "Landing pad"
+                ],
+                "instances": [
+                  {
+                    "label": "purple gate",
+                    "score": 0.278,
+                    "box": [
+                      0.7586,
+                      0.4645,
+                      0.9846,
+                      0.5657
+                    ],
+                    "polygon": [
+                      [
+                        0.9846,
+                        0.5151
+                      ],
+                      [
+                        0.8716,
+                        0.5657
+                      ],
+                      [
+                        0.7586,
+                        0.5151
+                      ],
+                      [
+                        0.8716,
+                        0.4645
+                      ]
+                    ],
+                    "area": 0.01798,
+                    "centroid": [
+                      0.8716,
+                      0.5151
+                    ],
+                    "opening": {
+                      "polygon": [
+                        [
+                          0.9281,
+                          0.5151
+                        ],
+                        [
+                          0.8716,
+                          0.5404
+                        ],
+                        [
+                          0.8151,
+                          0.5151
+                        ],
+                        [
+                          0.8716,
+                          0.4898
+                        ]
+                      ],
+                      "centroid": [
+                        0.8716,
+                        0.5151
+                      ],
+                      "width": 0.113,
+                      "height": 0.0506,
+                      "offset": [
+                        0.3716,
+                        0.0151
+                      ],
+                      "area": 0.00449
+                    },
+                    "depth": {
+                      "median": 5.68,
+                      "opening_median": 10.04,
+                      "opening_rim_median": 5.68
+                    },
+                    "size_m": {
+                      "width": 1.64,
+                      "height": 0.41,
+                      "opening": {
+                        "width": 0.82,
+                        "height": 0.2
+                      }
+                    }
+                  }
+                ],
+                "depth_source": "bynn_depth",
+                "assumed_hfov_deg": 65.0
+              }
+            ]
+          }
+        },
+        "usage": {
+          "booster_tokens": 48,
+          "boosters": 2
+        }
+      }
+    }
+  }
+}

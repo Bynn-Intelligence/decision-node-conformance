@@ -3050,6 +3050,153 @@ class FaceRecognitionReading(Reading):
         self.collection_name = raw.get("collection_name")
 
 
+class DepthReading(Reading):
+    """Depth Vision (bynn_depth, from 1.21): meters to what a picture shows. ahead (the
+    nearest obstacle straight ahead, the floor left out) and each of the seven
+    directions, left to right, are empty when none is found; ground says whether a floor
+    was found and left out; grid is grid_rows by grid_cols, row by row from the top left.
+    Every number as sent. Estimates from one picture, for decisions and planning, never a
+    safety stop."""
+
+    kind = "bynn_depth"
+    FIELDS = ("image", "ahead", "directions", "ground", "grid_rows", "grid_cols", "grid", "depth_min", "depth_max", "depth_median", "width", "height")
+
+
+class SegmentOpening:
+    """The largest hole a match encloses: its outline and centre ([x, y] fractions from
+    the top left), its width and height (fractions of the picture's), its centre's offset
+    from the picture's middle ([dx, dy]) and its share of the picture."""
+
+    def __init__(self, raw: dict):
+        self.polygon, self.centroid, self.width, self.height, self.offset, self.area = (raw[k] for k in ("polygon", "centroid", "width", "height", "offset", "area"))
+
+
+class SegmentDepth:
+    """A match's median distance, the median seen through its opening and that of the
+    opening's rim, in meters, each empty when none was read."""
+
+    def __init__(self, raw: dict):
+        self.median, self.opening_median, self.opening_rim_median = (raw.get(k) for k in ("median", "opening_median", "opening_rim_median"))
+
+
+class SegmentSize:
+    """A match's width and height in meters, and its opening's ({width, height}, empty
+    when it has none)."""
+
+    def __init__(self, raw: dict):
+        self.width, self.height = raw["width"], raw["height"]
+        self.opening = None if raw.get("opening") is None else {"width": raw["opening"]["width"], "height": raw["opening"]["height"]}
+
+
+class SegmentInstance:
+    """One match: the phrase it matched (label), its score, box ([x1, y1, x2, y2]),
+    outline ([x, y] points), area and centroid, as fractions of the picture from the top
+    left; its opening, depth and size_m, each empty when null or absent."""
+
+    def __init__(self, raw: dict):
+        self.label, self.score, self.box, self.polygon, self.area, self.centroid = (raw[k] for k in ("label", "score", "box", "polygon", "area", "centroid"))
+        self.opening = None if raw.get("opening") is None else SegmentOpening(raw["opening"])
+        self.depth = None if raw.get("depth") is None else SegmentDepth(raw["depth"])
+        self.size_m = None if raw.get("size_m") is None else SegmentSize(raw["size_m"])
+
+
+class SegmentReading(Reading):
+    """Segment Vision (bynn_segment, from 1.21): what the prompt names, found in a
+    picture. prompts are the phrases as read; instances the matches, in the order sent
+    (possibly none); depth_source (bynn_depth, empty with depth off) and assumed_hfov_deg
+    are empty when null or absent. Distances and sizes are estimates from one picture,
+    for decisions and planning, never a safety stop."""
+
+    kind = "bynn_segment"
+    FIELDS = ("image", "width", "height", "prompts", "depth_source", "assumed_hfov_deg")
+
+    def __init__(self, raw):
+        super().__init__(raw)
+        self.instances = [SegmentInstance(i) for i in raw["instances"]]
+
+
+def _whole(v) -> bool:
+    return _int(v) and v >= 0
+
+
+def _numbers(v, n: int) -> bool:
+    return isinstance(v, list) and len(v) == n and all(_number(x) for x in v)
+
+
+def _points(v) -> bool:
+    return isinstance(v, list) and all(_numbers(p, 2) for p in v)
+
+
+def _nullable(v, ok) -> bool:
+    return v is None or ok(v)
+
+
+def _depth_ok(raw: dict) -> bool:
+    """Every field but ahead required; directions exactly seven, each a number or null;
+    grid a list of rows of numbers. {"image", "readable": false} is a generic reading."""
+    directions, grid = raw.get("directions"), raw.get("grid")
+    return (
+        isinstance(raw.get("image"), str)
+        and _nullable(raw.get("ahead"), _number)
+        and isinstance(directions, list)
+        and len(directions) == 7
+        and all(_nullable(d, _number) for d in directions)
+        and isinstance(raw.get("ground"), bool)
+        and _whole(raw.get("grid_rows"))
+        and _whole(raw.get("grid_cols"))
+        and isinstance(grid, list)
+        and all(isinstance(row, list) and all(_number(c) for c in row) for row in grid)
+        and all(_number(raw.get(k)) for k in ("depth_min", "depth_max", "depth_median"))
+        and _whole(raw.get("width"))
+        and _whole(raw.get("height"))
+    )
+
+
+def _opening_ok(o) -> bool:
+    return (
+        isinstance(o, dict)
+        and _points(o.get("polygon"))
+        and _numbers(o.get("centroid"), 2)
+        and all(_number(o.get(k)) for k in ("width", "height", "area"))
+        and _numbers(o.get("offset"), 2)
+    )
+
+
+def _extent_ok(e) -> bool:
+    return isinstance(e, dict) and _number(e.get("width")) and _number(e.get("height"))
+
+
+def _instance_ok(i) -> bool:
+    """A match of the wrong shape makes the whole reading generic."""
+    return (
+        isinstance(i, dict)
+        and isinstance(i.get("label"), str)
+        and _number(i.get("score"))
+        and _numbers(i.get("box"), 4)
+        and _points(i.get("polygon"))
+        and _number(i.get("area"))
+        and _numbers(i.get("centroid"), 2)
+        and _nullable(i.get("opening"), _opening_ok)
+        and _nullable(i.get("depth"), lambda d: isinstance(d, dict) and all(_nullable(d.get(k), _number) for k in ("median", "opening_median", "opening_rim_median")))
+        and _nullable(i.get("size_m"), lambda s: _extent_ok(s) and _nullable(s.get("opening"), _extent_ok))
+    )
+
+
+def _segment_ok(raw: dict) -> bool:
+    prompts, instances = raw.get("prompts"), raw.get("instances")
+    return (
+        isinstance(raw.get("image"), str)
+        and _whole(raw.get("width"))
+        and _whole(raw.get("height"))
+        and isinstance(prompts, list)
+        and all(isinstance(p, str) for p in prompts)
+        and isinstance(instances, list)
+        and all(_instance_ok(i) for i in instances)
+        and _nullable(raw.get("depth_source"), lambda v: isinstance(v, str))
+        and _nullable(raw.get("assumed_hfov_deg"), _number)
+    )
+
+
 def _box_ok(box) -> bool:
     return isinstance(box, dict) and all(_number(box.get(k)) for k in ("x1", "y1", "x2", "y2"))
 
@@ -3123,6 +3270,8 @@ def _ai_generated_ok(raw: dict) -> bool:
 READINGS = {
     "age": (AgeReading, _age_ok),
     "ai_generated": (AiGeneratedReading, _ai_generated_ok),
+    "bynn_depth": (DepthReading, _depth_ok),
+    "bynn_segment": (SegmentReading, _segment_ok),
     "face_detection": (FaceDetectionReading, _face_detection_ok),
     "face_recognition": (FaceRecognitionReading, _face_recognition_ok),
     "ocr": (OcrReading, _ocr_ok),

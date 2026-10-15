@@ -1011,7 +1011,7 @@
     },
     "reading": {
       "type": "object",
-      "description": "Suite 1.11: an expected reading, compared whole. kind is the reading class: age (AgeReading: image, faces, age_years, low, high, confidence; the last four null when absent), ai_generated (AiGeneratedReading: image, generated, confidence, method, top_generator, c2pa_signer, c2pa; top_generator null on a photograph and on every c2pa reading, c2pa null when absent) face_detection (FaceDetectionReading: image, faces, detections, each {box: {x1, y1, x2, y2}, confidence}), face_recognition (FaceRecognitionReading: image, faces, matches, each {box, score, collection, reference, name, label}, name and label null when absent, replacing wanted_person), ocr (OcrReading: image, text, truncated, all three always sent) or unknown (a generic reading of a booster the SDK does not know, or of one with a field missing or of the wrong type; raw holds its fields). A field the SDK does not know is ignored: the reading stays typed.",
+      "description": "Suite 1.11: an expected reading, compared whole. kind is the reading class: age (AgeReading: image, faces, age_years, low, high, confidence; the last four null when absent), ai_generated (AiGeneratedReading: image, generated, confidence, method, top_generator, c2pa_signer, c2pa; top_generator null on a photograph and on every c2pa reading, c2pa null when absent) face_detection (FaceDetectionReading: image, faces, detections, each {box: {x1, y1, x2, y2}, confidence}), face_recognition (FaceRecognitionReading: image, faces, matches, each {box, score, collection, reference, name, label}, name and label null when absent, replacing wanted_person), ocr (OcrReading: image, text, truncated, all three always sent), from 1.21 bynn_depth (DepthReading: image, ahead, directions, ground, grid_rows, grid_cols, grid, depth_min, depth_max, depth_median, width, height; ahead and each of the seven directions null when none was found) and bynn_segment (SegmentReading: image, width, height, prompts, instances, depth_source, assumed_hfov_deg, the last two null when absent; each instance a segmentInstance) or unknown (a generic reading of a booster the SDK does not know, or of one with a field missing or of the wrong type; raw holds its fields). A field the SDK does not know is ignored: the reading stays typed.",
       "required": [
         "kind"
       ],
@@ -1020,6 +1020,8 @@
           "enum": [
             "age",
             "ai_generated",
+            "bynn_depth",
+            "bynn_segment",
             "face_detection",
             "face_recognition",
             "ocr",
@@ -1231,8 +1233,295 @@
           ],
           "description": "Suite 1.16: a face_recognition result's own collection display name; null when absent (a public collection, an answer from before these fields)."
         },
+        "ahead": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Suite 1.21: Depth Vision's meters to the nearest obstacle straight ahead, the floor left out; null when none was found."
+        },
+        "directions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "description": "Suite 1.21: Depth Vision's seven directions, left to right, each meters or null."
+        },
+        "ground": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "grid_rows": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "grid_cols": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "grid": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "description": "Suite 1.21: Depth Vision's grid in meters, row by row from the top left."
+        },
+        "depth_min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "depth_max": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "depth_median": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "width": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "height": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "prompts": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "instances": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/segmentInstance"
+          }
+        },
+        "depth_source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "assumed_hfov_deg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "raw": {
           "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "segmentInstance": {
+      "type": "object",
+      "description": "Suite 1.21: one Segment Vision match as a case writes it: the wire's fields, coordinates as fractions from the top left (box [x1, y1, x2, y2], polygon [x, y] points, centroid [x, y]); opening, depth and size_m null when null or absent, and the size's opening too.",
+      "required": [
+        "label",
+        "score",
+        "box",
+        "polygon",
+        "area",
+        "centroid",
+        "opening",
+        "depth",
+        "size_m"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4
+        },
+        "polygon": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2
+          }
+        },
+        "area": {
+          "type": "number"
+        },
+        "centroid": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2
+        },
+        "opening": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "polygon",
+            "centroid",
+            "width",
+            "height",
+            "offset",
+            "area"
+          ],
+          "properties": {
+            "polygon": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2
+              }
+            },
+            "centroid": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "offset": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2
+            },
+            "area": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        "depth": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "median",
+            "opening_median",
+            "opening_rim_median"
+          ],
+          "properties": {
+            "median": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "opening_median": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "opening_rim_median": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "size_m": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "width",
+            "height",
+            "opening"
+          ],
+          "properties": {
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "opening": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "width",
+                    "height"
+                  ],
+                  "properties": {
+                    "width": {
+                      "type": "number"
+                    },
+                    "height": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

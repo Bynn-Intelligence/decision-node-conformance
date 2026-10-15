@@ -1,0 +1,138 @@
+{
+  "id": "evidence-segment-depth-off",
+  "description": "Segment Vision with depth off: depth_source is null, and every instance's depth and size_m are null; the outlines, boxes and openings are read as with depth on. The reading stays typed.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "gate",
+            "url": "https://files.example.com/drone/gate-3.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "gate_ahead": {
+          "$truth": {
+            "instructions": "Is the drone lined up with the gate's opening?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "bynn_segment",
+            "options": {
+              "prompt": "purple gate",
+              "depth": false
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001",
+      "x-decisionnode-boosters": "bynn_segment=ok:28"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"gate_ahead\": {\"type\": \"truth\", \"truth\": 0.79}}, \"evidence\": {\"bynn_segment\": {\"version\": \"bynn_segment-v1\", \"status\": \"ok\", \"latency_ms\": 28, \"billed_calls\": 1, \"results\": [{\"image\": \"gate\", \"width\": 1280, \"height\": 720, \"prompts\": [\"purple gate\"], \"instances\": [{\"label\": \"purple gate\", \"score\": 0.912, \"box\": [0.3125, 0.2214, 0.5781, 0.8125], \"polygon\": [[0.3125, 0.2214], [0.5781, 0.2214], [0.5781, 0.8125], [0.3125, 0.8125]], \"area\": 0.12351, \"centroid\": [0.4453, 0.4719], \"opening\": {\"polygon\": [[0.3802, 0.3125], [0.5104, 0.3125], [0.5104, 0.4479], [0.3802, 0.4479]], \"centroid\": [0.4453, 0.3802], \"width\": 0.1302, \"height\": 0.1354, \"offset\": [-0.0547, -0.1198], \"area\": 0.01763}, \"depth\": null, \"size_m\": null}], \"depth_source\": null, \"assumed_hfov_deg\": 65.0}]}}, \"usage\": {\"input_tokens\": 700, \"output_tokens\": 0, \"booster_tokens\": 260, \"boosters\": 1}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "bynn_segment": {
+          "version": "bynn_segment-v1",
+          "status": "ok",
+          "latency_ms": 28,
+          "billed_calls": 1,
+          "results": [
+            {
+              "kind": "bynn_segment",
+              "image": "gate",
+              "width": 1280,
+              "height": 720,
+              "prompts": [
+                "purple gate"
+              ],
+              "instances": [
+                {
+                  "label": "purple gate",
+                  "score": 0.912,
+                  "box": [
+                    0.3125,
+                    0.2214,
+                    0.5781,
+                    0.8125
+                  ],
+                  "polygon": [
+                    [
+                      0.3125,
+                      0.2214
+                    ],
+                    [
+                      0.5781,
+                      0.2214
+                    ],
+                    [
+                      0.5781,
+                      0.8125
+                    ],
+                    [
+                      0.3125,
+                      0.8125
+                    ]
+                  ],
+                  "area": 0.12351,
+                  "centroid": [
+                    0.4453,
+                    0.4719
+                  ],
+                  "opening": {
+                    "polygon": [
+                      [
+                        0.3802,
+                        0.3125
+                      ],
+                      [
+                        0.5104,
+                        0.3125
+                      ],
+                      [
+                        0.5104,
+                        0.4479
+                      ],
+                      [
+                        0.3802,
+                        0.4479
+                      ]
+                    ],
+                    "centroid": [
+                      0.4453,
+                      0.3802
+                    ],
+                    "width": 0.1302,
+                    "height": 0.1354,
+                    "offset": [
+                      -0.0547,
+                      -0.1198
+                    ],
+                    "area": 0.01763
+                  },
+                  "depth": null,
+                  "size_m": null
+                }
+              ],
+              "depth_source": null,
+              "assumed_hfov_deg": 65.0
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "id": "400-booster-option-not-taken",
+  "description": "An option the named booster does not take (here prompt, which Depth Vision has none of) is refused. The SDK checks nothing about a booster's options locally: it sends them and raises the API's 400 api_usage_error \"Invalid request.\", a BadRequestError whose reason (x-decisionnode-error) names the entry and the option.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": "",
+      "images": [
+        {
+          "$image": {
+            "id": "front",
+            "url": "https://files.example.com/robot/front-0412.jpg"
+          }
+        }
+      ],
+      "questions": {
+        "path_clear": {
+          "$truth": {
+            "instructions": "Is the path ahead clear for at least two meters?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$booster": {
+            "name": "bynn_depth",
+            "options": {
+              "prompt": "door"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001",
+      "x-decisionnode-error": "boosters[0]: \"options\": 'prompt' is not an option"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Invalid request.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": "",
+      "images": [
+        {
+          "id": "front",
+          "url": "https://files.example.com/robot/front-0412.jpg"
+        }
+      ],
+      "questions": {
+        "path_clear": {
+          "type": "truth",
+          "instructions": "Is the path ahead clear for at least two meters?"
+        }
+      },
+      "boosters": [
+        {
+          "name": "bynn_depth",
+          "options": {
+            "prompt": "door"
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "error_type": "api_usage_error",
+        "message": "Invalid request.",
+        "reason": "boosters[0]: \"options\": 'prompt' is not an option",
+        "boosters": {},
+        "request_id": "req_err_0001"
+      }
+    }
+  }
+}
