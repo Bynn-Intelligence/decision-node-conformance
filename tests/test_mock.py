@@ -1847,6 +1847,10 @@ class TestSuite121(Spec11):
                     self.assertEqual((i["depth"]["opening_median"], i["size_m"]["opening"]), (None, None))
                 else:
                     self.assertEqual(list(i["opening"]), ["polygon", "centroid", "width", "height", "offset", "area"])
+                    # The opening's centroid less the centre of the match's box, as the model writes it.
+                    (ox, oy), box = i["opening"]["centroid"], i["box"]
+                    self.assertEqual(i["opening"]["offset"], [round(ox - (box[0] + box[2]) / 2, 4), round(oy - (box[1] + box[3]) / 2, 4)])
+                    self.assertNotEqual(i["opening"]["offset"], [0, 0])
         self.assertGreater(found, 0)
         # Free: two pictures read are two calls, at no cost; age's are priced.
         self.assertEqual(out["usage"]["boosters"], 4)

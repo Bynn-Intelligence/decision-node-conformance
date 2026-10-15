@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.22 (for SDK specification 1.3)
+
+A Segment Vision opening's `offset` corrected. `SPEC_VERSION` stays `"1.3"`; no rule changes.
+
+- An opening's `offset` is its centroid less the centre of the match's `box` (`[dx, dy]`, 4 decimals), as the model writes it, not its distance from the middle of the picture. The mock's readings, the README and the reference client's description say so.
+- Values: the openings in `evidence-segment-reading`, `evidence-segment-depth-off`, `evidence-segment-malformed-is-generic`, `decide-booster-segment-options-sent` and `boosters-vision-answered-by-mock` now carry offsets measured from their boxes (the opening's outline and centroid moved with it). Every SDK keeps an opening's `offset` as sent, so no client changes.
+
+Cases: 855 in all (requests 142, responses 122, errors 141, behaviour 448, constants 2): none new, 5 with new values.
+
 ## 1.21 (for SDK specification 1.3)
 
 Depth Vision (`bynn_depth`) and Segment Vision (`bynn_segment`), two boosters listed in production. `SPEC_VERSION` stays `"1.3"`.

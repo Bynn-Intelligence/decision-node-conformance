@@ -1962,7 +1962,9 @@ def outline(cx: float, cy: float, rx: float, ry: float, points: int) -> list:
 def segment_reading(b: dict, iid: str, stream) -> dict:
     """Segment Vision: 0 to 2 matches of each phrase, each an ellipse inside its box (the
     outline at polygon_points, coordinates as fractions from the top left), every second
-    one with an opening; at most max_instances, by score, each at min_score or above.
+    one with an opening above and right of its middle, whose offset, as the model writes
+    it, is the opening's centroid less the centre of the match's box; at most
+    max_instances, by score, each at min_score or above.
     With depth on, each match's distances and size in meters (a pinhole at 65 degrees),
     depth_source bynn_depth; with it off those are null."""
     options = dict(SEGMENT_DEFAULTS, **{k: v for k, v in b["options"].items() if k in SEGMENT_DEFAULTS})
@@ -1987,12 +1989,14 @@ def segment_reading(b: dict, iid: str, stream) -> dict:
             }
             hole = k % 2 == 0
             if hole:
+                box = inst["box"]
+                ox, oy = round(cx + w / 10, 4), round(cy - h / 8, 4)
                 inst["opening"] = {
-                    "polygon": outline(cx, cy, w / 4, h / 4, options["polygon_points"]),
-                    "centroid": [cx, cy],
+                    "polygon": outline(ox, oy, w / 4, h / 4, options["polygon_points"]),
+                    "centroid": [ox, oy],
                     "width": round(w / 2, 4),
                     "height": round(h / 2, 4),
-                    "offset": [round(cx - 0.5, 4), round(cy - 0.5, 4)],
+                    "offset": [round(ox - (box[0] + box[2]) / 2, 4), round(oy - (box[1] + box[3]) / 2, 4)],
                     "area": round(math.pi * w * h / 16, 5),
                 }
             if depth:

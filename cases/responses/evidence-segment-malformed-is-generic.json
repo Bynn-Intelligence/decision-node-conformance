@@ -48,7 +48,7 @@
       "x-request-id": "req_case_0001",
       "x-decisionnode-boosters": "bynn_segment=ok:74"
     },
-    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"gate_ahead\": {\"type\": \"truth\", \"truth\": 0.5}}, \"evidence\": {\"bynn_segment\": {\"version\": \"bynn_segment-v1\", \"status\": \"ok\", \"latency_ms\": 74, \"billed_calls\": 1, \"results\": [{\"image\": \"gate\", \"width\": 1280, \"height\": 720, \"prompts\": [\"purple gate\", \"landing pad\"], \"instances\": [{\"label\": \"purple gate\", \"score\": 0.912, \"box\": [0.3125, 0.2214, 0.5781], \"polygon\": [[0.3125, 0.2214], [0.5781, 0.2214], [0.5781, 0.8125], [0.3125, 0.8125]], \"area\": 0.12351, \"centroid\": [0.4453, 0.4719], \"opening\": {\"polygon\": [[0.3802, 0.3125], [0.5104, 0.3125], [0.5104, 0.4479], [0.3802, 0.4479]], \"centroid\": [0.4453, 0.3802], \"width\": 0.1302, \"height\": 0.1354, \"offset\": [-0.0547, -0.1198], \"area\": 0.01763}, \"depth\": {\"median\": 4.21, \"opening_median\": 11.34, \"opening_rim_median\": 4.18}, \"size_m\": {\"width\": 1.62, \"height\": 2.13, \"opening\": {\"width\": 1.41, \"height\": 1.38}}}, {\"label\": \"landing pad\", \"score\": 0.374, \"box\": [0.6406, 0.7135, 0.8594, 0.9271], \"polygon\": [[0.75, 0.7135], [0.8594, 0.8203], [0.75, 0.9271], [0.6406, 0.8203]], \"area\": 0.02336, \"centroid\": [0.75, 0.8203], \"opening\": null, \"depth\": {\"median\": 6.85, \"opening_median\": null, \"opening_rim_median\": null}, \"size_m\": {\"width\": 2.94, \"height\": 1.62, \"opening\": null}}], \"depth_source\": \"bynn_depth\", \"assumed_hfov_deg\": 65.0}, {\"image\": \"lens\", \"readable\": false}]}}, \"usage\": {\"input_tokens\": 900, \"output_tokens\": 0, \"booster_tokens\": 400, \"boosters\": 1}}"
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0-rc1\", \"answers\": {\"gate_ahead\": {\"type\": \"truth\", \"truth\": 0.5}}, \"evidence\": {\"bynn_segment\": {\"version\": \"bynn_segment-v1\", \"status\": \"ok\", \"latency_ms\": 74, \"billed_calls\": 1, \"results\": [{\"image\": \"gate\", \"width\": 1280, \"height\": 720, \"prompts\": [\"purple gate\", \"landing pad\"], \"instances\": [{\"label\": \"purple gate\", \"score\": 0.912, \"box\": [0.3125, 0.2214, 0.5781], \"polygon\": [[0.3125, 0.2214], [0.5781, 0.2214], [0.5781, 0.8125], [0.3125, 0.8125]], \"area\": 0.12351, \"centroid\": [0.4453, 0.4719], \"opening\": {\"polygon\": [[0.375, 0.3125], [0.5052, 0.3125], [0.5052, 0.4479], [0.375, 0.4479]], \"centroid\": [0.4401, 0.3802], \"width\": 0.1302, \"height\": 0.1354, \"offset\": [-0.0052, -0.1368], \"area\": 0.01763}, \"depth\": {\"median\": 4.21, \"opening_median\": 11.34, \"opening_rim_median\": 4.18}, \"size_m\": {\"width\": 1.62, \"height\": 2.13, \"opening\": {\"width\": 1.41, \"height\": 1.38}}}, {\"label\": \"landing pad\", \"score\": 0.374, \"box\": [0.6406, 0.7135, 0.8594, 0.9271], \"polygon\": [[0.75, 0.7135], [0.8594, 0.8203], [0.75, 0.9271], [0.6406, 0.8203]], \"area\": 0.02336, \"centroid\": [0.75, 0.8203], \"opening\": null, \"depth\": {\"median\": 6.85, \"opening_median\": null, \"opening_rim_median\": null}, \"size_m\": {\"width\": 2.94, \"height\": 1.62, \"opening\": null}}], \"depth_source\": \"bynn_depth\", \"assumed_hfov_deg\": 65.0}, {\"image\": \"lens\", \"readable\": false}]}}, \"usage\": {\"input_tokens\": 900, \"output_tokens\": 0, \"booster_tokens\": 400, \"boosters\": 1}}"
   },
   "expect": {
     "decision": {
@@ -104,31 +104,31 @@
                     "opening": {
                       "polygon": [
                         [
-                          0.3802,
+                          0.375,
                           0.3125
                         ],
                         [
-                          0.5104,
+                          0.5052,
                           0.3125
                         ],
                         [
-                          0.5104,
+                          0.5052,
                           0.4479
                         ],
                         [
-                          0.3802,
+                          0.375,
                           0.4479
                         ]
                       ],
                       "centroid": [
-                        0.4453,
+                        0.4401,
                         0.3802
                       ],
                       "width": 0.1302,
                       "height": 0.1354,
                       "offset": [
-                        -0.0547,
-                        -0.1198
+                        -0.0052,
+                        -0.1368
                       ],
                       "area": 0.01763
                     },

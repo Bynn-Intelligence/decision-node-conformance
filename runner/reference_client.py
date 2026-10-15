@@ -3064,8 +3064,8 @@ class DepthReading(Reading):
 
 class SegmentOpening:
     """The largest hole a match encloses: its outline and centre ([x, y] fractions from
-    the top left), its width and height (fractions of the picture's), its centre's offset
-    from the picture's middle ([dx, dy]) and its share of the picture."""
+    the top left), its width and height (fractions of the picture's), its offset ([dx,
+    dy], its centroid less the centre of the match's box) and its share of the picture."""
 
     def __init__(self, raw: dict):
         self.polygon, self.centroid, self.width, self.height, self.offset, self.area = (raw[k] for k in ("polygon", "centroid", "width", "height", "offset", "area"))
