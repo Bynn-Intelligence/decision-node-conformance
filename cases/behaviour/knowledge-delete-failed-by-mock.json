@@ -1,0 +1,111 @@
+{
+  "id": "knowledge-delete-failed-by-mock",
+  "description": "Against the mock, with every new version failing: a document added with wait comes back failed, visible with its error; delete_failed deletes it and answers {\"deleted\": 1}; a repeat deletes none, {\"deleted\": 0}; the collection holds no item after.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "knowledge": {
+        "fail": "embedding_rejected"
+      }
+    }
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Failing",
+          "type": "text"
+        }
+      },
+      "outcome": {
+        "result": "collection"
+      }
+    },
+    {
+      "call": {
+        "method": "collections.add_document",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "document": {
+            "$document": {
+              "text": "Reject any claim over 500 SEK without a receipt."
+            }
+          },
+          "title": "Claims policy 2026",
+          "wait": true
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "status": "failed",
+          "error": "embedding_rejected",
+          "serving": "none"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.delete_failed",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "deleted",
+        "deleted": {
+          "deleted": 1
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.delete_failed",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "deleted",
+        "deleted": {
+          "deleted": 0
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.get",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "collection",
+        "collection": {
+          "items": 0
+        }
+      }
+    }
+  ],
+  "expect": {
+    "request_counts": [
+      {
+        "method": "DELETE",
+        "path_pattern": "^/v1/collections/col_[0-9a-f]{32}/items$",
+        "count": 2
+      }
+    ]
+  }
+}

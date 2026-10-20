@@ -1,0 +1,46 @@
+{
+  "id": "knowledge-delete-failed-sent",
+  "description": "collections.delete_failed: DELETE /v1/collections/{id}/items?status=failed, no body and no Idempotency-Key (it is idempotent: a repeat deletes nothing more). (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.delete_failed",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "deleted": 3
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "DELETE",
+      "path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80/items",
+      "query": {
+        "status": "failed"
+      },
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$"
+      },
+      "absent_headers": [
+        "idempotency-key"
+      ]
+    }
+  }
+}

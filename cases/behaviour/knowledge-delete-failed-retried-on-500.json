@@ -1,0 +1,50 @@
+{
+  "id": "knowledge-delete-failed-retried-on-500",
+  "description": "collections.delete_failed is idempotent, so it is retried as any call: a 500, then the answer.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 500,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "detail": {
+              "error_type": "api_error",
+              "message": "Something went wrong on our side."
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "deleted": 2
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "call": {
+    "method": "collections.delete_failed",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "deleted",
+      "deleted": {
+        "deleted": 2
+      }
+    }
+  }
+}

@@ -2325,7 +2325,7 @@ class TestKnowledge(Spec11):
         st, _, out = self.call("POST", items, {"title": "T", "text": "a" * (512 * 1024 + 1)}, self.h("kn2"))
         self.assertEqual((st, out["detail"]["error_type"]), (413, "item_too_large"))
         st, _, out = self.call("POST", items, {"title": "T", "text": "x", "upload_id": "upl_" + "0" * 32}, self.h("kn2"))
-        self.assertEqual((st, out["detail"][0]["loc"]), (422, ["body"]))
+        self.assertEqual((st, out["detail"][0]["loc"]), (422, ["body", "text"]))
         self.call("POST", items, {"title": "T", "text": "x", "reference": "r1"}, self.h("kn2"))
         st, _, out = self.call("POST", items, {"title": "U", "text": "y", "reference": "r1"}, self.h("kn2"))
         self.assertEqual((st, out["detail"]["error_type"], out["detail"]["details"]["item_id"].startswith("itm_")), (409, "reference_taken", True))

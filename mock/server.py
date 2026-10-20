@@ -2292,6 +2292,11 @@ ITEM_OPS = ("eq", "ne", "in", "nin")
 ITEM_ERRORS = ("pinned_budget_exceeded", "chunks_limit_reached", "embedding_rejected", "extraction_failed", "empty_text", "unsupported_type", "too_many_pages", "file_unreadable", "item_too_large", "file_missing")
 
 
+def text_echo(value):
+    """The text an entry echoes: a string cut as every echo, else as echoed."""
+    return value[:ECHO_CHARS] + ("..." if len(value) > ECHO_CHARS else "") if isinstance(value, str) else value
+
+
 def knowledge_type_of_name(filename: str):
     """The knowledge type a file name's extension names, or None."""
     lower = filename.lower()
@@ -3390,7 +3395,7 @@ API_ROUTES = [
     # Collections of faces a request's pictures can be matched against.
     (re.compile(r"^/v1/collections$"), {"POST": "collection_create", "GET": "collection_list"}),
     (re.compile(r"^/v1/collections/([^/]+)$"), {"GET": "collection_get", "DELETE": "collection_delete"}),
-    (re.compile(r"^/v1/collections/([^/]+)/items$"), {"POST": "item_enroll", "GET": "item_list"}),
+    (re.compile(r"^/v1/collections/([^/]+)/items$"), {"POST": "item_enroll", "GET": "item_list", "DELETE": "items_delete_failed"}),
     (re.compile(r"^/v1/collections/([^/]+)/items/([^/]+)$"), {"GET": "item_get", "PUT": "item_put", "PATCH": "item_update", "DELETE": "item_delete"}),
     # Knowledge (suite 1.23): a text item's chunks, and retrieval without a decision.
     (re.compile(r"^/v1/collections/([^/]+)/items/([^/]+)/chunks$"), {"GET": "item_chunks"}),
@@ -3705,8 +3710,9 @@ class Handler(BaseHTTPRequestHandler):
                 if up is None or up["workspace"] != workspace or not use_store:
                     raise upload_fault("upload_not_found", iid, upload_id, "was not found.")
                 if up.get("purpose") == "knowledge":
-                    # Suite 1.23: a document cannot stand for a picture.
-                    raise upload_fault("upload_purpose_mismatch", iid, upload_id, "is a knowledge upload; it cannot be an image.")
+                    # Suite 1.24: a knowledge upload is not found where a picture is named,
+                    # as the API answers it.
+                    raise upload_fault("upload_not_found", iid, upload_id, "was not found.")
                 if up["state"] == "consumed":
                     raise upload_fault("upload_consumed", iid, upload_id, "was deleted after its first decision (zero retention). Upload the image again.")
                 if now >= up["expires_at"]:
@@ -3899,8 +3905,10 @@ class Handler(BaseHTTPRequestHandler):
             except (ValueError, UnicodeDecodeError, RecursionError):
                 raise usage_error("The body must be a JSON object.")
             files = validate_presign(body)
-            if any(f["purpose"] == "knowledge" for f in files) and key_scope(self.key()) != "full":
-                raise typed_error(403, "key_scope_denied", KNOWLEDGE_UPLOAD_DENIED)
+            if any(f["purpose"] == "knowledge" for f in files):
+                if key_scope(self.key()) != "full":
+                    raise typed_error(403, "key_scope_denied", KNOWLEDGE_UPLOAD_DENIED)
+                self.knowledge_gate()
         except Refused as exc:
             self.refuse(rid, exc)
             return
@@ -5170,7 +5178,7 @@ class Handler(BaseHTTPRequestHandler):
                 entries.append(centry("extra_forbidden", ["body", key], "Extra inputs are not permitted", body[key]))
         has_text, has_upload = "text" in body, "upload_id" in body
         if has_text and has_upload:
-            entries.append(centry("value_error", ["body"], "Send text or upload_id, not both", body))
+            entries.append(centry("extra_forbidden", ["body", "text"], "Extra inputs are not permitted", text_echo(body["text"])))
         title = body.get("title")
         if "title" not in body:
             if not has_upload:
@@ -5409,6 +5417,24 @@ class Handler(BaseHTTPRequestHandler):
                     item.update(pending={"text": text, "data": None, "format": fmt, "title": title}, status="queued", reads=0, error=None)
                 status = 202
         self.idem_send(idem, rid, status, self.text_item_object(item))
+
+    def api_items_delete_failed(self, rid, started, body_bytes, query, cid):
+        """Suite 1.24: DELETE /v1/collections/{id}/items?status=failed deletes every item whose
+        newest version failed and that has no ready version, and answers how many; a repeat
+        deletes none. Never gated."""
+        try:
+            status = (query.get("status") or [None])[0]
+            if status != "failed":
+                raise usage_error("Query parameter status must be failed, got %s." % (printable(status, 64) if status is not None else "none"))
+            c = self.text_collection(cid)
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        with self.server.state.lock:
+            gone = [i for i in c["items"].values() if i["status"] == "failed" and not i.get("live")]
+            for i in gone:
+                c["items"].pop(i["id"], None)
+        self.send(200, {"deleted": len(gone)}, {"x-request-id": rid})
 
     def api_item_get(self, rid, started, body_bytes, query, cid, item_id):
         try:

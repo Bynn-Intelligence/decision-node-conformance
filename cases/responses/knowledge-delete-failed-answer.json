@@ -1,0 +1,23 @@
+{
+  "id": "knowledge-delete-failed-answer",
+  "description": "collections.delete_failed's answer: how many failed documents were deleted, {\"deleted\": n}, kept as sent.",
+  "call": {
+    "method": "collections.delete_failed",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"deleted\": 3}"
+  },
+  "expect": {
+    "deleted": {
+      "deleted": 3
+    }
+  }
+}

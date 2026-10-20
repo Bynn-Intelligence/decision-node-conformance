@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.24 (for SDK specification 1.4)
+
+The bulk delete of failed documents. `SPEC_VERSION` stays `"1.4"`.
+
+- Calls: `collections.delete_failed(collection_id)` is `DELETE /v1/collections/{id}/items?status=failed`, no body and no `Idempotency-Key`, and returns the API's `{"deleted": n}` as sent. It is idempotent (a repeat deletes nothing more), so it is retried as any call.
+- `wait_until_ready`'s timeout is a wall-clock deadline from the call (unchanged for every case).
+- A knowledge upload named in an image slot is the API's `400` `upload_not_found`: `400-upload-purpose-mismatch-image-slot` is replaced by `400-knowledge-upload-in-image-slot`.
+- Mock: `DELETE /v1/collections/{id}/items?status=failed` (the items whose newest version failed and that have no ready version), a knowledge upload in an image slot read as not found, `text` beside `upload_id` refused at `["body", "text"]`, a knowledge upload refused while knowledge is off for the workspace; the scenario setting `knowledge` in the case schema.
+
+Cases: 983 in all (requests 168, responses 141, errors 169, behaviour 503, constants 2): 5 new (1 request, 1 response, 1 error, 2 behaviour), 1 removed.
+
 ## 1.23 (for SDK specification 1.4)
 
 Knowledge: a workspace's own documents in collections of type `text`, the passages a decision applies, and search. `SPEC_VERSION` is `"1.4"`.

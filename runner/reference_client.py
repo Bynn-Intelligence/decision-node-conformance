@@ -3716,13 +3716,12 @@ def wait_until_ready(self, collection_id, item_id=None, timeout=READY_TIMEOUT, p
     """Spec 1.4: reads the item until it is ready or failed (and returns it, a failed one
     as a value), or the collection until nothing is queued or processing (and returns
     it). The first read at once, then poll_interval, times 1.5 after each read, up to
-    10 s; past timeout the timeout error."""
+    10 s; past timeout, a wall-clock deadline from the call, the timeout error."""
     if isinstance(poll_interval, bool) or not isinstance(poll_interval, (int, float)) or poll_interval < READY_POLL_MIN:
         raise ValueError("poll_interval must be at least %s s, got %r" % (READY_POLL_MIN, poll_interval))
     if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not timeout > 0:
         raise ValueError("timeout must be a number of seconds above 0, got %r" % (timeout,))
-    started = time.monotonic()
-    waited = 0.0
+    deadline = time.monotonic() + timeout
     interval = float(poll_interval)
     while True:
         if item_id is not None:
@@ -3735,13 +3734,18 @@ def wait_until_ready(self, collection_id, item_id=None, timeout=READY_TIMEOUT, p
             counts = counts if isinstance(counts, dict) else {}
             if not counts.get("queued") and not counts.get("processing"):
                 return got
-        spent = max(time.monotonic() - started, waited)
-        if spent >= timeout:
+        left = deadline - time.monotonic()
+        if left <= 0:
             raise TimeoutError("not ready after %ss" % timeout)
-        wait = min(interval, timeout - spent)
-        self.c._sleep(wait)
-        waited += wait
+        self.c._sleep(min(interval, left))
         interval = min(READY_POLL_MAX, interval * 1.5)
+
+
+def delete_failed(self, collection_id):
+    """Spec 1.4 (suite 1.24): DELETE /v1/collections/{id}/items?status=failed deletes every
+    failed document of a text collection; {"deleted": n}. Idempotent, so retried as any
+    call, with no Idempotency-Key."""
+    return self._call("DELETE", "/v1/collections/%s/items?status=failed" % self._id(collection_id))
 
 
 Collections.create = _create
@@ -3752,6 +3756,7 @@ Collections.get_item = get_item
 Collections.list_chunks = list_chunks
 Collections.search = search
 Collections.wait_until_ready = wait_until_ready
+Collections.delete_failed = delete_failed
 
 
 class KnowledgePassage:
