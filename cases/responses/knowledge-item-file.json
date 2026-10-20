@@ -1,0 +1,55 @@
+{
+  "id": "knowledge-item-file",
+  "description": "A file item: source file, its file (filename, content_type, byte_size, pages, original_held false once its text is extracted) and warnings, kept as sent.",
+  "call": {
+    "method": "collections.get_item",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"id\": \"itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d\", \"reference\": \"policy-2026\", \"label\": null, \"metadata\": {}, \"created_at\": \"2026-10-20T11:00:00Z\", \"title\": \"claims-policy\", \"format\": \"markdown\", \"pinned\": false, \"pin_rank\": 0, \"source\": \"file\", \"file\": {\"filename\": \"claims-policy.pdf\", \"content_type\": \"application/pdf\", \"byte_size\": 1843302, \"pages\": 18, \"original_held\": false}, \"status\": \"ready\", \"stage\": null, \"progress\": null, \"serving\": \"current\", \"error\": null, \"delayed\": false, \"warnings\": [\"possible_instruction\"], \"chunks\": 40, \"tokens\": 7310, \"content_sha256\": \"8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8\", \"version\": 1, \"queued_at\": \"2026-10-20T11:00:01Z\", \"ready_at\": \"2026-10-20T11:00:09Z\"}"
+  },
+  "expect": {
+    "item": {
+      "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+      "reference": "policy-2026",
+      "label": null,
+      "metadata": {},
+      "created_at": "2026-10-20T11:00:00Z",
+      "title": "claims-policy",
+      "format": "markdown",
+      "pinned": false,
+      "pin_rank": 0,
+      "source": "file",
+      "file": {
+        "filename": "claims-policy.pdf",
+        "content_type": "application/pdf",
+        "byte_size": 1843302,
+        "pages": 18,
+        "original_held": false
+      },
+      "status": "ready",
+      "stage": null,
+      "progress": null,
+      "serving": "current",
+      "error": null,
+      "delayed": false,
+      "warnings": [
+        "possible_instruction"
+      ],
+      "chunks": 40,
+      "tokens": 7310,
+      "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+      "version": 1,
+      "queued_at": "2026-10-20T11:00:01Z",
+      "ready_at": "2026-10-20T11:00:09Z"
+    }
+  }
+}

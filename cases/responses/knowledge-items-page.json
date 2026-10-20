@@ -1,0 +1,85 @@
+{
+  "id": "knowledge-items-page",
+  "description": "collections.list_items on a text collection: the items with their text item fields and never their text, the page as sent.",
+  "call": {
+    "method": "collections.list_items",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"items\": [{\"id\": \"itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d\", \"reference\": \"policy-2026\", \"label\": null, \"metadata\": {}, \"created_at\": \"2026-10-20T11:00:00Z\", \"title\": \"Claims policy 2026\", \"format\": \"markdown\", \"pinned\": false, \"pin_rank\": 0, \"source\": \"article\", \"file\": null, \"status\": \"ready\", \"stage\": null, \"progress\": null, \"serving\": \"current\", \"error\": null, \"delayed\": false, \"warnings\": [], \"chunks\": 2, \"tokens\": 18, \"content_sha256\": \"8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8\", \"version\": 1, \"queued_at\": \"2026-10-20T11:00:01Z\", \"ready_at\": \"2026-10-20T11:00:09Z\"}, {\"id\": \"itm_1b2c3d4e5f60718293a4b5c6d7e8f90a\", \"reference\": \"mission-m42\", \"label\": null, \"metadata\": {\"mission\": \"M-42\"}, \"created_at\": \"2026-10-20T11:00:00Z\", \"title\": \"Mission M-42 brief\", \"format\": \"markdown\", \"pinned\": false, \"pin_rank\": 0, \"source\": \"article\", \"file\": null, \"status\": \"queued\", \"stage\": null, \"progress\": null, \"serving\": \"none\", \"error\": null, \"delayed\": false, \"warnings\": [], \"chunks\": 0, \"tokens\": 0, \"content_sha256\": \"8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8\", \"version\": 1, \"queued_at\": \"2026-10-20T11:00:01Z\", \"ready_at\": null}], \"offset\": 0, \"limit\": 20, \"total\": 2, \"total_capped\": false, \"next_offset\": null, \"reference\": null, \"reference_prefix\": null}"
+  },
+  "expect": {
+    "item_page": {
+      "items": [
+        {
+          "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+          "reference": "policy-2026",
+          "label": null,
+          "metadata": {},
+          "created_at": "2026-10-20T11:00:00Z",
+          "title": "Claims policy 2026",
+          "format": "markdown",
+          "pinned": false,
+          "pin_rank": 0,
+          "source": "article",
+          "file": null,
+          "status": "ready",
+          "stage": null,
+          "progress": null,
+          "serving": "current",
+          "error": null,
+          "delayed": false,
+          "warnings": [],
+          "chunks": 2,
+          "tokens": 18,
+          "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+          "version": 1,
+          "queued_at": "2026-10-20T11:00:01Z",
+          "ready_at": "2026-10-20T11:00:09Z"
+        },
+        {
+          "id": "itm_1b2c3d4e5f60718293a4b5c6d7e8f90a",
+          "reference": "mission-m42",
+          "label": null,
+          "metadata": {
+            "mission": "M-42"
+          },
+          "created_at": "2026-10-20T11:00:00Z",
+          "title": "Mission M-42 brief",
+          "format": "markdown",
+          "pinned": false,
+          "pin_rank": 0,
+          "source": "article",
+          "file": null,
+          "status": "queued",
+          "stage": null,
+          "progress": null,
+          "serving": "none",
+          "error": null,
+          "delayed": false,
+          "warnings": [],
+          "chunks": 0,
+          "tokens": 0,
+          "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+          "version": 1,
+          "queued_at": "2026-10-20T11:00:01Z",
+          "ready_at": null
+        }
+      ],
+      "offset": 0,
+      "limit": 20,
+      "total": 2,
+      "total_capped": false,
+      "next_offset": null,
+      "reference": null,
+      "reference_prefix": null
+    }
+  }
+}

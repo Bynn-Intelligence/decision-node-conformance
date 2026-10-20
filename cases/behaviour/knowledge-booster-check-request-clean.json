@@ -1,0 +1,41 @@
+{
+  "id": "knowledge-booster-check-request-clean",
+  "description": "check_request of a decision naming knowledge finds nothing: nothing about boosters is checked locally, and nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "check": true,
+    "args": {
+      "state": {
+        "claim": {
+          "amount": "740.00",
+          "receipt": false
+        },
+        "mission": "M-42"
+      },
+      "questions": {
+        "approve": {
+          "$truth": {
+            "instructions": "Should the claim be approved under our policy?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$knowledge": {
+            "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+            "top_k": 99
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "result": "checked"
+    }
+  }
+}

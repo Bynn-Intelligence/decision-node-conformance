@@ -1,0 +1,50 @@
+{
+  "id": "knowledge-ingestion-delayed-not-retried",
+  "description": "A 529 booster_unavailable with details.reason ingestion_delayed is raised at once, never retried: the wait is an outage of ingestion, so the caller decides.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 529,
+          "headers": {
+            "content-type": "application/json",
+            "retry-after": "60",
+            "retry-after-ms": "60000"
+          },
+          "body": {
+            "detail": {
+              "error_type": "booster_unavailable",
+              "message": "The booster 'knowledge' has no document ready yet: processing is delayed.",
+              "details": {
+                "reason": "ingestion_delayed"
+              }
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "call": {
+    "method": "collections.search",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "query": "receipts over 500 SEK"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "error": "OverloadedError",
+      "fields": {
+        "error_type": "booster_unavailable",
+        "details": {
+          "reason": "ingestion_delayed"
+        }
+      }
+    }
+  }
+}

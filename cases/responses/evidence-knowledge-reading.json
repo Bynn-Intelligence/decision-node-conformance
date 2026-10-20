@@ -1,0 +1,145 @@
+{
+  "id": "evidence-knowledge-reading",
+  "description": "evidence.knowledge with one KnowledgeReading: the pinned passage first (score null), then the retrieved ones with their citations (item, chunk, UTF-8 byte offsets), score, lexical and rendered (false: left out by the worker to fit), the budget, scope, omitted counts, search and truncated, every value as sent.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "claim": {
+          "amount": "740.00",
+          "receipt": false
+        },
+        "mission": "M-42"
+      },
+      "questions": {
+        "approve": {
+          "$truth": {
+            "instructions": "Should the claim be approved under our policy?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$knowledge": {
+            "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+            "scope": "M-42"
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0\", \"answers\": {\"approve\": {\"type\": \"truth\", \"truth\": 0.12}}, \"usage\": {\"input_tokens\": 120, \"output_tokens\": 0, \"booster_tokens\": 96, \"boosters\": 1}, \"evidence\": {\"knowledge\": {\"version\": \"knowledge-v1\", \"status\": \"ok\", \"latency_ms\": 141, \"billed_calls\": 1, \"results\": [{\"collection\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"collection_name\": \"Claims policy\", \"corpus\": {\"version\": 41}, \"query\": {\"source\": \"auto\", \"tokens\": 212}, \"budget\": {\"mode\": \"auto\", \"tokens\": 840, \"entry\": \"short\", \"cause\": null}, \"scope\": {\"key\": \"mission\", \"value\": \"M-42\"}, \"warnings\": [], \"passages\": [{\"n\": 1, \"pinned\": true, \"item\": \"itm_1b2c3d4e5f60718293a4b5c6d7e8f90a\", \"reference\": \"core-rules\", \"title\": \"Core rules\", \"heading\": null, \"chunk\": 0, \"byte_start\": 0, \"byte_end\": 32, \"tokens\": 6, \"score\": null, \"lexical\": false, \"rendered\": true}, {\"n\": 2, \"pinned\": false, \"item\": \"itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d\", \"reference\": \"policy-2026\", \"title\": \"Claims policy 2026\", \"heading\": \"Receipts\", \"chunk\": 0, \"byte_start\": 35, \"byte_end\": 83, \"tokens\": 9, \"score\": 0.8123, \"lexical\": true, \"rendered\": true}, {\"n\": 3, \"pinned\": false, \"item\": \"itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d\", \"reference\": \"policy-2026\", \"title\": \"Claims policy 2026\", \"heading\": \"Photos\", \"chunk\": 1, \"byte_start\": 96, \"byte_end\": 153, \"tokens\": 9, \"score\": 0.4471, \"lexical\": false, \"rendered\": false}], \"omitted\": {\"below_min_score\": 0, \"per_item_cap\": 1, \"over_budget\": 1, \"pinned_filtered\": 0, \"short_entry\": 1, \"context_limit\": 0}, \"pending_items\": 0, \"search\": {\"plan\": \"exact\", \"candidates\": 50, \"fallback\": false}, \"truncated\": false}]}}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "knowledge": {
+          "version": "knowledge-v1",
+          "status": "ok",
+          "latency_ms": 141,
+          "billed_calls": 1,
+          "results": [
+            {
+              "kind": "knowledge",
+              "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+              "collection_name": "Claims policy",
+              "corpus": {
+                "version": 41
+              },
+              "query": {
+                "source": "auto",
+                "tokens": 212
+              },
+              "budget": {
+                "mode": "auto",
+                "tokens": 840,
+                "entry": "short",
+                "cause": null
+              },
+              "scope": {
+                "key": "mission",
+                "value": "M-42"
+              },
+              "warnings": [],
+              "passages": [
+                {
+                  "n": 1,
+                  "pinned": true,
+                  "item": "itm_1b2c3d4e5f60718293a4b5c6d7e8f90a",
+                  "reference": "core-rules",
+                  "title": "Core rules",
+                  "heading": null,
+                  "chunk": 0,
+                  "byte_start": 0,
+                  "byte_end": 32,
+                  "tokens": 6,
+                  "score": null,
+                  "lexical": false,
+                  "rendered": true,
+                  "text": null
+                },
+                {
+                  "n": 2,
+                  "pinned": false,
+                  "item": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+                  "reference": "policy-2026",
+                  "title": "Claims policy 2026",
+                  "heading": "Receipts",
+                  "chunk": 0,
+                  "byte_start": 35,
+                  "byte_end": 83,
+                  "tokens": 9,
+                  "score": 0.8123,
+                  "lexical": true,
+                  "rendered": true,
+                  "text": null
+                },
+                {
+                  "n": 3,
+                  "pinned": false,
+                  "item": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+                  "reference": "policy-2026",
+                  "title": "Claims policy 2026",
+                  "heading": "Photos",
+                  "chunk": 1,
+                  "byte_start": 96,
+                  "byte_end": 153,
+                  "tokens": 9,
+                  "score": 0.4471,
+                  "lexical": false,
+                  "rendered": false,
+                  "text": null
+                }
+              ],
+              "omitted": {
+                "below_min_score": 0,
+                "per_item_cap": 1,
+                "over_budget": 1,
+                "pinned_filtered": 0,
+                "short_entry": 1,
+                "context_limit": 0
+              },
+              "pending_items": 0,
+              "search": {
+                "plan": "exact",
+                "candidates": 50,
+                "fallback": false
+              },
+              "truncated": false
+            }
+          ]
+        }
+      },
+      "usage": {
+        "booster_tokens": 96,
+        "boosters": 1
+      }
+    }
+  }
+}

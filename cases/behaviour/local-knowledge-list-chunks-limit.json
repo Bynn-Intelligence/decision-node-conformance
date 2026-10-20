@@ -1,0 +1,25 @@
+{
+  "id": "local-knowledge-list-chunks-limit",
+  "description": "list_chunks with limit 101: the API's 400 for the query, as list_items'. Checked locally; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.list_chunks",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+      "limit": 101
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "message": "Query parameter limit must be an integer from 1 to 100, got 101."
+      }
+    }
+  }
+}

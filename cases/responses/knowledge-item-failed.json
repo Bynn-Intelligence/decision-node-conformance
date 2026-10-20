@@ -1,0 +1,47 @@
+{
+  "id": "knowledge-item-failed",
+  "description": "A failed new version: status failed with its error code, the previous version still serving; a failed item is a value, never an error.",
+  "call": {
+    "method": "collections.get_item",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"id\": \"itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d\", \"reference\": \"policy-2026\", \"label\": null, \"metadata\": {}, \"created_at\": \"2026-10-20T11:00:00Z\", \"title\": \"Claims policy 2026\", \"format\": \"markdown\", \"pinned\": false, \"pin_rank\": 0, \"source\": \"article\", \"file\": null, \"status\": \"failed\", \"stage\": null, \"progress\": null, \"serving\": \"previous\", \"error\": \"embedding_rejected\", \"delayed\": false, \"warnings\": [], \"chunks\": 2, \"tokens\": 18, \"content_sha256\": \"8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8\", \"version\": 2, \"queued_at\": \"2026-10-20T11:00:01Z\", \"ready_at\": \"2026-10-19T09:00:00Z\"}"
+  },
+  "expect": {
+    "item": {
+      "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+      "reference": "policy-2026",
+      "label": null,
+      "metadata": {},
+      "created_at": "2026-10-20T11:00:00Z",
+      "title": "Claims policy 2026",
+      "format": "markdown",
+      "pinned": false,
+      "pin_rank": 0,
+      "source": "article",
+      "file": null,
+      "status": "failed",
+      "stage": null,
+      "progress": null,
+      "serving": "previous",
+      "error": "embedding_rejected",
+      "delayed": false,
+      "warnings": [],
+      "chunks": 2,
+      "tokens": 18,
+      "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+      "version": 2,
+      "queued_at": "2026-10-20T11:00:01Z",
+      "ready_at": "2026-10-19T09:00:00Z"
+    }
+  }
+}

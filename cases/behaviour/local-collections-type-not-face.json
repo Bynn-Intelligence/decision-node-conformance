@@ -1,6 +1,6 @@
 {
   "id": "local-collections-type-not-face",
-  "description": "A collection type other than face, the only type now. Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
+  "description": "A collection type other than face or text (text from 1.23, a knowledge base). Checked locally (a limit a client may hold): ValidationError with the entry the API answers; nothing is sent.",
   "client": {
     "api_key": "dn_test_conformance"
   },
@@ -25,10 +25,10 @@
               "body",
               "type"
             ],
-            "msg": "Input should be 'face'",
+            "msg": "Input should be 'face' or 'text'",
             "input": "plate",
             "ctx": {
-              "expected": "'face'"
+              "expected": "'face' or 'text'"
             }
           }
         ]

@@ -1,0 +1,125 @@
+{
+  "id": "decide-booster-knowledge-every-option-sent",
+  "description": "The knowledge builder with every option: each sent in options as given (match and filter passed through, max_tokens \"auto\" or an integer); nothing about them is checked locally. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "claim": {
+          "amount": "740.00",
+          "receipt": false
+        },
+        "mission": "M-42"
+      },
+      "questions": {
+        "approve": {
+          "$truth": {
+            "instructions": "Should the claim be approved under our policy?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$knowledge": {
+            "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+            "query": "receipts and photos",
+            "scope": "M-42",
+            "match": {
+              "region": "SE"
+            },
+            "filter": {
+              "key": "product",
+              "op": "eq",
+              "value": "car"
+            },
+            "top_k": 6,
+            "max_tokens": 512,
+            "pinned": false,
+            "min_score": 0.35,
+            "include_text": true
+          }
+        }
+      ]
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "model": "decisionnode-moe-0.9.0",
+            "answers": {
+              "approve": {
+                "type": "truth",
+                "truth": 0.12
+              }
+            },
+            "usage": {
+              "input_tokens": 120,
+              "output_tokens": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/decide",
+      "body": {
+        "model": "decisionnode-moe",
+        "state": {
+          "claim": {
+            "amount": "740.00",
+            "receipt": false
+          },
+          "mission": "M-42"
+        },
+        "questions": {
+          "approve": {
+            "type": "truth",
+            "instructions": "Should the claim be approved under our policy?"
+          }
+        },
+        "boosters": [
+          {
+            "name": "knowledge",
+            "options": {
+              "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+              "query": "receipts and photos",
+              "scope": "M-42",
+              "match": {
+                "region": "SE"
+              },
+              "filter": {
+                "key": "product",
+                "op": "eq",
+                "value": "car"
+              },
+              "top_k": 6,
+              "max_tokens": 512,
+              "pinned": false,
+              "min_score": 0.35,
+              "include_text": true
+            }
+          }
+        ]
+      },
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      }
+    }
+  }
+}

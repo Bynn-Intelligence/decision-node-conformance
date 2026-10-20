@@ -34,7 +34,7 @@
     "headers": {
       "content-type": "application/json",
       "x-request-id": "req_err_0001",
-      "x-decisionnode-error": "'example_booster' is not a booster; the boosters are age, ai_generated, bynn_depth, bynn_segment, face_recognition"
+      "x-decisionnode-error": "'example_booster' is not a booster; the boosters are age, ai_generated, bynn_depth, bynn_segment, face_recognition, knowledge"
     },
     "body_text": "{\"detail\": {\"error_type\": \"booster_unknown\", \"message\": \"Unknown booster: example_booster\"}}"
   },
@@ -72,7 +72,7 @@
         "status": 400,
         "error_type": "booster_unknown",
         "message": "Unknown booster: example_booster",
-        "reason": "'example_booster' is not a booster; the boosters are age, ai_generated, bynn_depth, bynn_segment, face_recognition",
+        "reason": "'example_booster' is not a booster; the boosters are age, ai_generated, bynn_depth, bynn_segment, face_recognition, knowledge",
         "boosters": {},
         "request_id": "req_err_0001"
       }

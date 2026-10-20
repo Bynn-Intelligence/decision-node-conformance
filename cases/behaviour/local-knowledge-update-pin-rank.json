@@ -1,0 +1,36 @@
+{
+  "id": "local-knowledge-update-pin-rank",
+  "description": "update_item with pin_rank -1: the int_range entry. Checked locally; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.update_item",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+      "pin_rank": -1
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "int_range",
+            "loc": [
+              "body",
+              "pin_rank"
+            ],
+            "msg": "Input should be an integer from 0 to 1000",
+            "input": -1
+          }
+        ]
+      }
+    }
+  }
+}

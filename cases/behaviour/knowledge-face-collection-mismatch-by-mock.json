@@ -1,0 +1,87 @@
+{
+  "id": "knowledge-face-collection-mismatch-by-mock",
+  "description": "Against the mock: the knowledge booster naming a face collection, and a search of one, are the 400 collection_type_mismatch.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Staff"
+        }
+      },
+      "outcome": {
+        "result": "collection",
+        "collection": {
+          "type": "face"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": {
+            "claim": {
+              "amount": "740.00",
+              "receipt": false
+            },
+            "mission": "M-42"
+          },
+          "questions": {
+            "approve": {
+              "$truth": {
+                "instructions": "Should the claim be approved under our policy?"
+              }
+            }
+          },
+          "boosters": [
+            {
+              "$knowledge": {
+                "collection": {
+                  "$ref": "col.id"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "outcome": {
+        "error": "BadRequestError",
+        "fields": {
+          "error_type": "collection_type_mismatch"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.search",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "query": "receipts"
+        }
+      },
+      "outcome": {
+        "error": "BadRequestError",
+        "fields": {
+          "error_type": "collection_type_mismatch"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "request_counts": [
+      {
+        "method": "POST",
+        "path": "/v1/collections",
+        "count": 1
+      }
+    ]
+  }
+}

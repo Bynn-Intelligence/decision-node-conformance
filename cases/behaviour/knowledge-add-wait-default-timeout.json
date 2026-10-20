@@ -1,0 +1,69 @@
+{
+  "id": "knowledge-add-wait-default-timeout",
+  "description": "A write with wait waits 20 s per attempt by default (the server holds it up to 10 s): an answer after 11 s is read, not timed out.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 201,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+            "reference": "policy-2026",
+            "label": null,
+            "metadata": {},
+            "created_at": "2026-10-20T11:00:00Z",
+            "title": "Claims policy 2026",
+            "format": "markdown",
+            "pinned": false,
+            "pin_rank": 0,
+            "source": "article",
+            "file": null,
+            "status": "ready",
+            "stage": null,
+            "progress": null,
+            "serving": "current",
+            "error": null,
+            "delayed": false,
+            "warnings": [],
+            "chunks": 2,
+            "tokens": 18,
+            "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+            "version": 1,
+            "queued_at": "2026-10-20T11:00:01Z",
+            "ready_at": "2026-10-20T11:00:09Z"
+          },
+          "delay_ms": 11000
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "collections.add_document",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "document": {
+        "$document": {
+          "text": "# Claims policy 2026\n\n## Receipts\n\nReject any claim over 500 SEK without a receipt.\n\n## Photos\n\nPhotos of damage taken after 2026-09-01 count as current.\n"
+        }
+      },
+      "title": "Claims policy 2026",
+      "wait": true
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "item",
+      "item": {
+        "status": "ready"
+      }
+    }
+  }
+}

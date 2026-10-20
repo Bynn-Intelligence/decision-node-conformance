@@ -223,6 +223,8 @@ BOOSTERS = {
     "bynn_segment": {"version": "bynn_segment-v1", "latency_ms": 75, "usd": 0.0},
     # Faces matched against one collection.
     "face_recognition": {"version": "face_recognition-v1", "latency_ms": 230, "usd": BOOSTER_CALL_USD},
+    # Suite 1.23: passages of the workspace's own documents, one reading a request.
+    "knowledge": {"version": "knowledge-v1", "latency_ms": 141, "usd": 0.001},
 }
 # A booster's options as the API judges them (suite 1.21, in its words): each key in the
 # order sent, the first problem the reason, then what the named booster takes or needs.
@@ -787,6 +789,9 @@ def validate_rest(deferred, plan, state, questions, grids, images, videos, resol
 
     image_list = validate_images(images or [], resolver)
     video_list = validate_videos(videos or [], [i["id"] for i in image_list])
+    for p in plan:
+        if p["booster"] == "knowledge":
+            p["auto_query"] = auto_query(questions, state)
     evidence, calls, booster_tokens, booster_usd = run_boosters(plan, image_list)
 
     # normalise questions
@@ -1724,6 +1729,14 @@ def check_boosters(raw, image_ids: list, conf: dict, collections=None) -> list:
             raise typed_error(400, "booster_unknown", "Unknown booster: %s" % name, "'%s' is not a booster; the boosters are %s" % (name, ", ".join(sorted(BOOSTERS))))
         if name in disabled:
             raise typed_error(403, "booster_not_enabled", "The booster '%s' is not enabled for this workspace." % name)
+        if name == "knowledge":
+            # It reads the request's state and questions, never a picture.
+            if b["images"] is not None:
+                raise typed_error(400, "booster_input_mismatch", "The booster 'knowledge' reads no images.")
+            if collections is None:
+                raise typed_error(404, "collection_not_found", "Collection not found: %s." % b["options"]["collection"])
+            b["kb"] = collections(b["options"]["collection"], b)
+            continue
         if not image_ids:
             raise typed_error(400, "booster_input_mismatch", "The booster '%s' needs at least one image." % name)
         for iid in b["images"] or []:
@@ -1789,6 +1802,9 @@ def options_problem(b: dict):
     booster takes or needs (a name that is no booster takes any of the known keys: it is
     booster_unknown later); then Segment Vision's phrases, kept cleaned in b["phrases"]."""
     options = b["options"]
+    if b["booster"] == "knowledge":
+        # Suite 1.23: knowledge's own options, its collection required.
+        return knowledge_ask(options)
     problem = None
     for key, value in options.items():
         if key == "prompt":
@@ -1870,6 +1886,9 @@ def booster_plan(boosters: list, conf: dict) -> list:
         name = b["booster"]
         status = status_of.get(name, "ok")
         if status == "ok" and b["images"] == []:
+            status = "skipped"
+        if status == "ok" and name == "knowledge" and not knowledge_state(b["kb"]["collection"], b["kb"]["conf"])[0]:
+            # Nothing ready to read: not run, unbilled (a required one is refused).
             status = "skipped"
         latency = {"ok": BOOSTERS[name]["latency_ms"], "timeout": BOOSTER_BUDGET_MS, "error": BOOSTER_ERROR_MS}.get(status, 0)
         plan.append(dict(b, status=status, latency_ms=latency))
@@ -2057,6 +2076,8 @@ def run_boosters(plan: list, images: list) -> tuple:
     if not plan:
         return None, 0, 0, 0.0
     for p in plan:
+        if p["require"] and p["booster"] == "knowledge" and p["status"] == "skipped":
+            raise knowledge_refusal(p["kb"]["collection"], p["kb"]["conf"])
         if p["require"] and p["status"] in ("timeout", "error"):
             words = "did not answer in time." if p["status"] == "timeout" else "failed."
             raise typed_error(
@@ -2075,6 +2096,21 @@ def run_boosters(plan: list, images: list) -> tuple:
         name = p["booster"]
         read = p["images"] if p["images"] is not None else [i["id"] for i in images]
         billed = 0
+        if name == "knowledge":
+            results = []
+            if p["status"] == "ok":
+                opts = p["options"]
+                source = "none" if opts.get("top_k") == 0 else ("request" if "query" in opts else "auto")
+                text = "" if source == "none" else opts.get("query", p.get("auto_query", ""))
+                found, used = knowledge_reading(p["kb"]["collection"], opts, text, source, worker=True, include_text=bool(opts.get("include_text")), citations_ids=p["kb"]["citations_ids"])
+                results = [found]
+                billed = 1
+                tokens += used - BOOSTER_ENTRY_TOKENS - BOOSTER_READING_TOKENS
+            calls += billed
+            spent += billed * BOOSTERS[name]["usd"]
+            evidence[name] = {"version": BOOSTERS[name]["version"], "status": p["status"], "latency_ms": p["latency_ms"], "billed_calls": billed, "results": results}
+            tokens += BOOSTER_ENTRY_TOKENS + BOOSTER_READING_TOKENS * billed
+            continue
         if p["status"] == "ok":
             results = [reading(name, iid, digests[iid], p) for iid in read]
             billed = len(results)
@@ -2124,21 +2160,39 @@ def validate_presign(body) -> list:
         where = "files[%d]" % i
         if not isinstance(f, dict):
             raise usage_error("%s: must be an object." % where)
+        purpose = f.get("purpose")
+        if purpose is None:
+            purpose = "image"
+        if purpose not in ("image", "knowledge"):
+            raise usage_error("%s.purpose: must be image or knowledge." % where)
         ctype = f.get("content_type")
-        if ctype not in MEDIA_TYPES:
+        if purpose == "knowledge":
+            # Suite 1.23: a document for a knowledge base, up to 50 MB.
+            if ctype not in KNOWLEDGE_TYPES:
+                raise usage_error("%s.content_type: must be one of %s, got %s." % (where, ", ".join(KNOWLEDGE_TYPES), compact(ctype)))
+        elif ctype not in MEDIA_TYPES:
             raise usage_error("%s.content_type: must be image/jpeg, image/png or image/webp, got %s." % (where, compact(ctype)))
+        most = KNOWLEDGE_MAX_BYTES if purpose == "knowledge" else MAX_IMAGE_BYTES
         size = f.get("byte_size")
         if not is_int(size) or size < 1:
-            raise usage_error("%s.byte_size: must be an integer from 1 to %d." % (where, MAX_IMAGE_BYTES))
-        if size > MAX_IMAGE_BYTES:
-            raise usage_error("%s.byte_size: %d is over the limit of %d bytes." % (where, size, MAX_IMAGE_BYTES))
+            raise usage_error("%s.byte_size: must be an integer from 1 to %d." % (where, most))
+        if size > most:
+            raise usage_error("%s.byte_size: %d is over the limit of %d bytes." % (where, size, most))
+        filename = f.get("filename") if purpose == "knowledge" else None
+        if filename is not None:
+            if isinstance(filename, str):
+                filename = "".join(ch for ch in filename.replace("\\", "/").rsplit("/", 1)[-1] if unicodedata.category(ch) != "Cc")
+            if not isinstance(filename, str) or not 1 <= len(filename) <= FILENAME_MAX:
+                raise usage_error("%s.filename: must be 1 to %d characters." % (where, FILENAME_MAX))
+            if knowledge_type_of_name(filename) != ctype:
+                raise usage_error("%s.filename: its extension is not one of %s's." % (where, ctype))
         checksum = f.get("checksum")
         if not b64_len_ok(checksum, 16, 24):
             raise usage_error("%s.checksum: must be the file's MD5 in base64, 24 characters." % where)
         sha = f.get("sha256")
         if sha is not None and not b64_len_ok(sha, 32, 44):
             raise usage_error("%s.sha256: must be the file's SHA-256 in base64, 44 characters." % where)
-        out.append({"content_type": ctype, "byte_size": size, "checksum": checksum, "sha256": sha})
+        out.append({"content_type": ctype, "byte_size": size, "checksum": checksum, "sha256": sha, "purpose": purpose, "filename": filename})
     return out
 
 
@@ -2176,6 +2230,389 @@ def key_scope(key: str | None) -> str:
 def may_search_collections(key: str | None) -> bool:
     """A full key always may; a decide key only when it holds may-search."""
     return key_scope(key) == "full" or "may-search" in (key or "")
+
+# --------------------------------------------------------------------------- knowledge (suite 1.23)
+
+# A workspace's documents in collections of type text, cut into passages that the
+# knowledge booster and the search route retrieve.
+DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+KNOWLEDGE_TYPES = ("text/plain", "text/markdown", "application/pdf", DOCX, PPTX, XLSX, "text/html", "image/png", "image/jpeg", "image/tiff", "image/webp")
+KNOWLEDGE_EXTENSIONS = {
+    "text/plain": (".txt",),
+    "text/markdown": (".md", ".markdown"),
+    "application/pdf": (".pdf",),
+    DOCX: (".docx",),
+    PPTX: (".pptx",),
+    XLSX: (".xlsx",),
+    "text/html": (".html", ".htm"),
+    "image/png": (".png",),
+    "image/jpeg": (".jpg", ".jpeg"),
+    "image/tiff": (".tif", ".tiff"),
+    "image/webp": (".webp",),
+}
+TEXT_TYPES = ("text/plain", "text/markdown")
+KNOWLEDGE_MAX_BYTES = 52428800  # a knowledge file, 50 MB
+FILENAME_MAX = 200
+TEXT_MAX_BYTES = 512 * 1024  # an item's text once normalised
+TITLE_MAX = 200
+PIN_RANK_MAX = 1000
+SCOPE_KEY_PATTERN = r"^[a-z0-9_]{1,40}$"
+TOP_K_DEFAULT, TOP_K_MAX = 4, 20
+AUTO_CEILING = 1024  # the retrieved passages' tokens under max_tokens "auto"
+LABEL_TOKENS = 24  # a passage's label in the evidence block
+PER_ITEM_CAP = 3
+PINNED_CAP = 512
+KNOWLEDGE_USD = 0.001
+KNOWLEDGE_LATENCY_MS = 141
+KNOWLEDGE_READS_TO_READY = 2  # an item is processing after one read and ready after two
+KNOWLEDGE_SEARCH_MAX_CHARS = 2000
+KNOWLEDGE_SCOPE_MAX_CHARS = 500
+KNOWLEDGE_OPTIONS = ("collection", "query", "scope", "match", "filter", "top_k", "max_tokens", "pinned", "min_score", "include_text")
+NEEDS_COLLECTION = "the booster 'knowledge' needs options.collection"
+BAD_QUERY = "\"options\": 'query' must be a string of 1 to 2,000 characters"
+BAD_SCOPE = "\"options\": 'scope' must be a string of 1 to 500 characters"
+BAD_TOP_K = "\"options\": 'top_k' must be an integer from 0 to 20"
+BAD_MAX_TOKENS = "\"options\": 'max_tokens' must be \"auto\" or an integer from 128 to 8,192"
+BAD_PINNED = "\"options\": 'pinned' must be true or false"
+BAD_INCLUDE_TEXT = "\"options\": 'include_text' must be true or false"
+BAD_MATCH = "\"options\": 'match' must be an object of keys and values"
+BAD_FILTER = "\"options\": 'filter' must be a condition"
+SCOPE_UNSCOPED = "\"options\": 'scope' names no value: this collection has no scope key"
+INCLUDE_TEXT_DENIED = "include_text needs a full-scope key."
+KNOWLEDGE_UPLOAD_DENIED = "Knowledge uploads need a full-scope key."
+KNOWLEDGE_NOT_READY = "The booster 'knowledge' has no document ready yet."
+KNOWLEDGE_DELAYED = "The booster 'knowledge' has no document ready yet: processing is delayed."
+KNOWLEDGE_EMPTY = "The booster 'knowledge' found no document in its collection that is or can become ready."
+TEXT_UNPRICED = "Text ingestion is not available on this deployment yet."
+INGEST_RATE = "This workspace has reached its ingestion rate. Retry later."
+FILTER_OPS = ("eq", "ne", "in", "nin", "gt", "gte", "lt", "lte", "exists")
+ITEM_OPS = ("eq", "ne", "in", "nin")
+ITEM_ERRORS = ("pinned_budget_exceeded", "chunks_limit_reached", "embedding_rejected", "extraction_failed", "empty_text", "unsupported_type", "too_many_pages", "file_unreadable", "item_too_large", "file_missing")
+
+
+def knowledge_type_of_name(filename: str):
+    """The knowledge type a file name's extension names, or None."""
+    lower = filename.lower()
+    for ctype, exts in KNOWLEDGE_EXTENSIONS.items():
+        if any(lower.endswith(e) for e in exts):
+            return ctype
+    return None
+
+
+def normalise_text(raw: str):
+    """(stored text, None) or (None, the fault): a NUL is invalid_text; then NFC, CR LF and
+    lone CR to LF, the C0 and C1 controls but LF and TAB removed, and DEL; empty after that
+    is the 422, over 512 KiB the 413."""
+    if "\x00" in raw:
+        return None, "invalid"
+    text = unicodedata.normalize("NFC", raw).replace("\r\n", "\n").replace("\r", "\n")
+    text = "".join(c for c in text if c in "\n\t" or not (ord(c) < 0x20 or 0x7F <= ord(c) <= 0x9F))
+    if not text.strip():
+        return None, "empty"
+    if len(text.encode("utf-8")) > TEXT_MAX_BYTES:
+        return None, "too_large"
+    return text, None
+
+
+def chunk_text(text: str, file_pages) -> list:
+    """The stored text's chunks: each block between blank lines, a Markdown heading
+    naming the blocks after it rather than being one; offsets in UTF-8 bytes, end
+    exclusive; tokens the block's words."""
+    chunks = []
+    heading = None
+    raw = text.encode("utf-8")
+    pos = 0
+    for block in re.split(r"(\n[ \t]*\n+)", text):
+        size = len(block.encode("utf-8"))
+        start = pos
+        pos += size
+        if not block.strip():
+            continue
+        stripped = block.strip()
+        if stripped.startswith("#") and "\n" not in stripped:
+            heading = stripped.lstrip("#").strip()[:120] or None
+            continue
+        lead = len(block) - len(block.lstrip())
+        start += len(block[:lead].encode("utf-8"))
+        end = start + len(stripped.encode("utf-8"))
+        assert raw[start:end].decode("utf-8") == stripped
+        chunks.append({"chunk": len(chunks), "heading": heading, "byte_start": start, "byte_end": end, "page_start": 1 if file_pages else None, "page_end": 1 if file_pages else None,
+                       "tokens": len(stripped.split()), "text": stripped})
+    return chunks
+
+
+def words_of(text: str) -> list:
+    return [w for w in re.findall(r"[0-9a-zA-ZÀ-￿]+", text.lower()) if len(w) >= 3]
+
+
+def knowledge_ask(options: dict, search: bool = False):
+    """A knowledge entry's options (or a search's body) as the API judges them: the
+    first fault's reason, else None. Each key in the order sent."""
+    for key, value in options.items():
+        if key not in KNOWLEDGE_OPTIONS or (search and key in ("collection", "min_score", "include_text")):
+            if search:
+                return "'%s' is not an option of a search" % cut_name(key)
+            return "\"options\": '%s' is not an option" % cut_name(key)
+        if key == "collection" and not isinstance(value, str):
+            return BAD_COLLECTION
+        if key == "query" and not (isinstance(value, str) and 1 <= len(value) <= KNOWLEDGE_SEARCH_MAX_CHARS):
+            return BAD_QUERY
+        if key == "scope" and not (isinstance(value, str) and 1 <= len(value) <= KNOWLEDGE_SCOPE_MAX_CHARS):
+            return BAD_SCOPE
+        if key == "top_k" and not whole_in(value, 0, TOP_K_MAX):
+            return BAD_TOP_K
+        if key == "max_tokens" and not (value == "auto" or whole_in(value, 128, 8192)):
+            return BAD_MAX_TOKENS
+        if key == "pinned" and not isinstance(value, bool):
+            return BAD_PINNED
+        if key == "include_text" and not isinstance(value, bool):
+            return BAD_INCLUDE_TEXT
+        if key == "min_score" and not number_in(value, 0, 1):
+            return BAD_MIN_SCORE
+        if key == "match" and not (isinstance(value, dict) and all(isinstance(v, (str, int, float, bool, list)) for v in value.values())):
+            return BAD_MATCH
+        if key == "filter" and not filter_ok(value, 0):
+            return BAD_FILTER
+    if search and "query" not in options:
+        return "'query' is required"
+    if not search and "collection" not in options:
+        return NEEDS_COLLECTION
+    return None
+
+
+def filter_ok(node, depth: int) -> bool:
+    if not isinstance(node, dict) or depth > 2:
+        return False
+    if set(node) in ({"and"}, {"or"}):
+        parts = node.get("and", node.get("or"))
+        return isinstance(parts, list) and bool(parts) and all(filter_ok(p, depth + 1) for p in parts)
+    if set(node) == {"key", "op", "value"}:
+        return isinstance(node["key"], str) and node["op"] in FILTER_OPS
+    if set(node) == {"attr", "op", "value"}:
+        return node["attr"] in ("reference", "item") and node["op"] in ITEM_OPS
+    return False
+
+
+def filter_keys(node) -> list:
+    if "and" in node or "or" in node:
+        return [k for p in node.get("and", node.get("or")) for k in filter_keys(p)]
+    return [node["key"]] if "key" in node else []
+
+
+def leaf_ok(op: str, have, value, present: bool) -> bool:
+    if op == "exists":
+        return present == bool(value)
+    if not present:
+        return False
+    if op == "eq":
+        return have == value
+    if op == "ne":
+        return have != value
+    if op in ("in", "nin"):
+        inside = isinstance(value, list) and have in value
+        return inside if op == "in" else not inside
+    if isinstance(have, bool) or not isinstance(have, (int, float)) or isinstance(value, bool) or not isinstance(value, (int, float)):
+        if isinstance(have, str) and isinstance(value, str):
+            return {"gt": have > value, "gte": have >= value, "lt": have < value, "lte": have <= value}[op]
+        return False
+    return {"gt": have > value, "gte": have >= value, "lt": have < value, "lte": have <= value}[op]
+
+
+def cond_ok(node, item: dict) -> bool:
+    if "and" in node:
+        return all(cond_ok(p, item) for p in node["and"])
+    if "or" in node:
+        return any(cond_ok(p, item) for p in node["or"])
+    if "attr" in node:
+        have = item["reference"] if node["attr"] == "reference" else item["id"]
+        return leaf_ok(node["op"], have, node["value"], True)
+    meta = item.get("metadata") or {}
+    return leaf_ok(node["op"], meta.get(node["key"]), node["value"], node["key"] in meta)
+
+
+def match_ok(match: dict, item: dict) -> bool:
+    meta = item.get("metadata") or {}
+    for key, value in match.items():
+        if key not in meta:
+            return False
+        if isinstance(value, list):
+            if meta[key] not in value:
+                return False
+        elif meta[key] != value:
+            return False
+    return True
+
+
+def knowledge_scope_fault(options: dict, scope_key):
+    """scope on an unscoped collection, or the scope key in match or filter: the 400."""
+    if scope_key is None:
+        return SCOPE_UNSCOPED if "scope" in options else None
+    named = list((options.get("match") or {}).keys()) + (filter_keys(options["filter"]) if isinstance(options.get("filter"), dict) else [])
+    if scope_key in named:
+        return "'%s' is this collection's scope key; set it with options.scope" % scope_key
+    return None
+
+
+def knowledge_reading(col: dict, options: dict, query_text: str, query_source: str, worker: bool, include_text: bool, citations_ids: bool) -> tuple:
+    """(the reading, booster tokens): the results[0] object a decision's evidence carries
+    (worker) or the search route answers (with every passage's text)."""
+    scope_key = col.get("scope_key")
+    scope = options.get("scope")
+    top_k = options.get("top_k", TOP_K_DEFAULT)
+    max_tokens = options.get("max_tokens", "auto")
+    ceiling = AUTO_CEILING if max_tokens == "auto" else max_tokens
+    want_pins = options.get("pinned", True)
+    min_score = options.get("min_score")
+    match = options.get("match")
+    filt = options.get("filter")
+    live = sorted((i for i in col["items"].values() if i.get("live")), key=lambda i: i["id"])
+
+    def in_scope(item):
+        if scope_key is None:
+            return True
+        value = (item.get("metadata") or {}).get(scope_key)
+        return value is None or (scope is not None and value == scope)
+
+    def passes(item):
+        return (match is None or match_ok(match, item)) and (filt is None or cond_ok(filt, item))
+
+    seen = [i for i in live if in_scope(i)]
+    pins = sorted((i for i in seen if i["pinned"]), key=lambda i: (i["pin_rank"], i["reference"].encode("utf-8")))
+    pinned_filtered = sum(1 for i in pins if not passes(i)) if want_pins else 0
+    pinned = [(i, c) for i in pins if want_pins and passes(i) for c in i["live"]["chunks"]]
+    qwords = sorted(set(words_of(query_text)))
+    retrieved, below, capped, over = [], 0, 0, 0
+    candidates = 0
+    if top_k > 0:
+        scored = []
+        for i in seen:
+            if i["pinned"] or not passes(i):
+                continue
+            for c in i["live"]["chunks"]:
+                candidates += 1
+                overlap = len(set(qwords) & set(words_of(c["text"])))
+                if overlap:
+                    score = round(0.3 + 0.6 * overlap / max(1, len(qwords)), 4)
+                else:
+                    score = round(0.1 + 0.2 * Stream("knowledge/%s/%d/%s" % (i["id"], c["chunk"], query_text)).next(), 4)
+                scored.append((score, overlap > 0, i, c))
+        scored.sort(key=lambda s: (-s[0], s[2]["id"], s[3]["chunk"]))
+        per_item: dict = {}
+        for score, lexical, i, c in scored:
+            if min_score is not None and not lexical and score < min_score:
+                below += 1
+                continue
+            if per_item.get(i["id"], 0) >= PER_ITEM_CAP:
+                capped += 1
+                continue
+            per_item[i["id"]] = per_item.get(i["id"], 0) + 1
+            retrieved.append((score, lexical, i, c))
+        kept, used = [], 0
+        for r in retrieved[:top_k]:
+            cost = r[3]["tokens"] + LABEL_TOKENS
+            if used + cost <= ceiling:
+                used += cost
+                kept.append(r)
+            else:
+                over += 1
+        retrieved = kept
+
+    def passage(n, item, c, pinned_lane, score, lexical):
+        p = {"n": n, "pinned": pinned_lane, "item": item["id"], "reference": item["reference"], "title": item["live"]["title"], "heading": c["heading"], "chunk": c["chunk"],
+             "byte_start": c["byte_start"], "byte_end": c["byte_end"], "tokens": c["tokens"], "score": score, "lexical": lexical}
+        if citations_ids:
+            p.update(reference=None, title=None, heading=None)
+        if worker:
+            p["rendered"] = True
+        if include_text:
+            p["text"] = c["text"]
+        return p
+
+    passages = [passage(n + 1, i, c, True, None, False) for n, (i, c) in enumerate(pinned)]
+    passages += [passage(len(passages) + n + 1, i, c, False, s, lex) for n, (s, lex, i, c) in enumerate(retrieved)]
+    warnings = []
+    if scope_key is not None and scope is None:
+        warnings.append("scope_not_named")
+    if over:
+        warnings.append("over_budget")
+    if pinned_filtered:
+        warnings.append("pinned_filtered")
+    budget = {"mode": "auto" if max_tokens == "auto" else "fixed", "tokens": ceiling}
+    if worker:
+        budget.update(entry="short", cause=None)
+    query = {"source": query_source, "tokens": len(qwords)}
+    if include_text and query_source != "none":
+        query["text"] = query_text
+    omitted = {"below_min_score": below, "per_item_cap": capped, "over_budget": over, "pinned_filtered": pinned_filtered}
+    if worker:
+        omitted.update(short_entry=0, context_limit=0)
+    reading = {
+        "collection": col["id"],
+        "collection_name": None if citations_ids else col["name"],
+        "corpus": {"version": col["version"]},
+        "query": query,
+        "budget": budget,
+        "scope": None if scope_key is None else {"key": scope_key, "value": scope},
+        "warnings": warnings,
+        "passages": passages,
+        "omitted": omitted,
+        "pending_items": sum(1 for i in col["items"].values() if i["status"] in ("queued", "processing")),
+        "search": {"plan": "exact", "candidates": candidates, "fallback": False},
+    }
+    if worker:
+        reading["truncated"] = False
+    return reading, BOOSTER_ENTRY_TOKENS + sum(p["tokens"] + LABEL_TOKENS for p in passages)
+
+
+def knowledge_state(col: dict, conf: dict) -> tuple:
+    """(ready, pending, delayed, items, failed) of a text collection."""
+    items = list(col["items"].values())
+    ready = any(i.get("live") for i in items)
+    pending = any(i["status"] in ("queued", "processing") for i in items)
+    failed = sum(1 for i in items if i["status"] == "failed")
+    return ready, pending, bool(conf.get("delayed")) and pending, len(items), failed
+
+
+def knowledge_refusal(col: dict, conf: dict):
+    """A required reading (or a search) of a collection with nothing ready: the 529 while
+    documents are processed (Retry-After 5, or 60 and ingestion_delayed), the 409 when
+    none can become ready; None when something is ready."""
+    ready, pending, delayed, items, failed = knowledge_state(col, conf)
+    if ready:
+        return None
+    if pending and delayed:
+        return Refused(529, {"detail": {"error_type": "booster_unavailable", "message": KNOWLEDGE_DELAYED, "details": {"reason": "ingestion_delayed"}}}, KNOWLEDGE_DELAYED,
+                       {"Retry-After": "60", "retry-after-ms": "60000"})
+    if pending:
+        return Refused(529, {"detail": {"error_type": "booster_unavailable", "message": KNOWLEDGE_NOT_READY}}, KNOWLEDGE_NOT_READY, {"Retry-After": "5", "retry-after-ms": "5000"})
+    return Refused(409, {"detail": {"error_type": "knowledge_collection_empty", "message": KNOWLEDGE_EMPTY, "details": {"items": items, "failed": failed}}}, KNOWLEDGE_EMPTY)
+
+
+def auto_query(questions, state) -> str:
+    """The automatic query: every question's instructions, then the state as path: value
+    lines."""
+    lines = []
+    for q in (questions or {}).values():
+        if isinstance(q, dict) and isinstance(q.get("instructions"), str):
+            lines.append(q["instructions"])
+
+    def leaves(value, path):
+        if isinstance(value, dict):
+            for k, v in value.items():
+                leaves(v, "%s.%s" % (path, k) if path else str(k))
+        elif isinstance(value, list):
+            for n, v in enumerate(value):
+                leaves(v, "%s[%d]" % (path, n))
+        elif path:
+            lines.append("%s: %s" % (path, value if isinstance(value, str) else json.dumps(value)))
+        elif value is not None:
+            lines.append(value if isinstance(value, str) else json.dumps(value))
+
+    leaves(state, "")
+    return "\n".join(lines)
+
 
 # --------------------------------------------------------------------------- per-key usage (suite 1.18)
 
@@ -2741,7 +3178,7 @@ class State:
     def flag(self, sid: str) -> dict:
         f = self.flags.get(sid)
         if f is None:
-            f = {"zero_retention": False, "legacy_noul": False, "batch": {}, "session": {}, "boosters": {}, "workers": {}, "places": {}, "collections": {}}
+            f = {"zero_retention": False, "legacy_noul": False, "batch": {}, "session": {}, "boosters": {}, "workers": {}, "places": {}, "collections": {}, "knowledge": {}}
             self.flags[sid] = f
         return f
 
@@ -2775,6 +3212,8 @@ class State:
                 f["places"] = dict(scenario["places"])
             if "collections" in scenario:
                 f["collections"] = dict(scenario["collections"])
+            if "knowledge" in scenario:
+                f["knowledge"] = dict(scenario["knowledge"])
 
     def reset(self, sid: str | None = None) -> None:
         with self.lock:
@@ -2952,7 +3391,10 @@ API_ROUTES = [
     (re.compile(r"^/v1/collections$"), {"POST": "collection_create", "GET": "collection_list"}),
     (re.compile(r"^/v1/collections/([^/]+)$"), {"GET": "collection_get", "DELETE": "collection_delete"}),
     (re.compile(r"^/v1/collections/([^/]+)/items$"), {"POST": "item_enroll", "GET": "item_list"}),
-    (re.compile(r"^/v1/collections/([^/]+)/items/([^/]+)$"), {"PATCH": "item_update", "DELETE": "item_delete"}),
+    (re.compile(r"^/v1/collections/([^/]+)/items/([^/]+)$"), {"GET": "item_get", "PUT": "item_put", "PATCH": "item_update", "DELETE": "item_delete"}),
+    # Knowledge (suite 1.23): a text item's chunks, and retrieval without a decision.
+    (re.compile(r"^/v1/collections/([^/]+)/items/([^/]+)/chunks$"), {"GET": "item_chunks"}),
+    (re.compile(r"^/v1/collections/([^/]+)/search$"), {"POST": "collection_search"}),
     # Per-key usage (suite 1.18).
     (re.compile(r"^/v1/keys/([^/]+)/usage$"), {"GET": "key_usage"}),
     # A keys key's decide keys (suite 1.20).
@@ -3262,6 +3704,9 @@ class Handler(BaseHTTPRequestHandler):
                 up = state.uploads.get(upload_id)
                 if up is None or up["workspace"] != workspace or not use_store:
                     raise upload_fault("upload_not_found", iid, upload_id, "was not found.")
+                if up.get("purpose") == "knowledge":
+                    # Suite 1.23: a document cannot stand for a picture.
+                    raise upload_fault("upload_purpose_mismatch", iid, upload_id, "is a knowledge upload; it cannot be an image.")
                 if up["state"] == "consumed":
                     raise upload_fault("upload_consumed", iid, upload_id, "was deleted after its first decision (zero retention). Upload the image again.")
                 if now >= up["expires_at"]:
@@ -3454,6 +3899,8 @@ class Handler(BaseHTTPRequestHandler):
             except (ValueError, UnicodeDecodeError, RecursionError):
                 raise usage_error("The body must be a JSON object.")
             files = validate_presign(body)
+            if any(f["purpose"] == "knowledge" for f in files) and key_scope(self.key()) != "full":
+                raise typed_error(403, "key_scope_denied", KNOWLEDGE_UPLOAD_DENIED)
         except Refused as exc:
             self.refuse(rid, exc)
             return
@@ -3497,9 +3944,14 @@ class Handler(BaseHTTPRequestHandler):
                     "state": "pending",
                     "puts": 0,
                     "authorization_seen": False,
+                    "purpose": f["purpose"],
+                    "filename": f["filename"],
                 }
                 state.tokens[token] = upload_id
-                out.append({"upload_id": upload_id, "url": url, "method": "PUT", "headers": headers, "expires_at": iso(expires_at)})
+                entry_out = {"upload_id": upload_id, "url": url, "method": "PUT", "headers": headers, "expires_at": iso(expires_at)}
+                if f["purpose"] == "knowledge":
+                    entry_out["purpose"] = "knowledge"
+                out.append(entry_out)
         self.send(201, {"uploads": out, "expires_in": UPLOAD_URL_TTL_S}, {"x-request-id": rid})
 
     def storage(self, method: str, parts, body_bytes: bytes) -> None:
@@ -4231,18 +4683,26 @@ class Handler(BaseHTTPRequestHandler):
                 return None, pub
         raise typed_error(404, "collection_not_found", "Collection not found: %s." % cid)
 
-    def search_collection(self, cid: str) -> dict:
+    def search_collection(self, cid: str, b: dict | None = None) -> dict:
         """booster_collection for this request's key: a decide key without leave to search
         collections is refused once face_recognition's options are checked, before any
-        collection is looked up or any booster runs."""
+        collection is looked up or any booster runs. Knowledge reads any key's own text
+        collection."""
+        if b is not None and b["booster"] == "knowledge":
+            return self.knowledge_collection(cid, b)
         if not may_search_collections(self.key()):
             raise typed_error(403, "key_scope_denied", KEY_SEARCH_DENIED)
         return self.booster_collection(cid)
 
-    def booster_collection(self, cid: str) -> dict:
+    def booster_collection(self, cid: str, b: dict | None = None) -> dict:
         """The collection face_recognition searches: {id, kind, items}; wanted-persons is
-        its 403 collection_not_enabled, any other unknown or foreign id the 404."""
+        its 403 collection_not_enabled, any other unknown or foreign id the 404, a text
+        collection the 400 collection_type_mismatch."""
+        if b is not None and b["booster"] == "knowledge":
+            return self.knowledge_collection(cid, b)
         own, pub = self.find_collection(cid, search=True)
+        if own is not None and own["type"] == "text":
+            raise typed_error(400, "collection_type_mismatch", "%s is not a face collection." % cid)
         if pub:
             return {"id": pub["id"], "kind": "celebrities", "name": None, "items": []}
         items = sorted(own["items"].values(), key=lambda i: i["seq"])
@@ -4318,8 +4778,8 @@ class Handler(BaseHTTPRequestHandler):
             ctype, name = body.get("type"), body.get("name")
             if ctype is None:
                 entries.append(centry("missing", ["body", "type"], "Field required", body))
-            elif ctype != "face":
-                entries.append(centry("literal_error", ["body", "type"], "Input should be 'face'", ctype, {"expected": "'face'"}))
+            elif ctype not in ("face", "text"):
+                entries.append(centry("literal_error", ["body", "type"], "Input should be 'face' or 'text'", ctype, {"expected": "'face' or 'text'"}))
             if name is None:
                 entries.append(centry("missing", ["body", "name"], "Field required", body))
             elif not isinstance(name, str):
@@ -4328,6 +4788,9 @@ class Handler(BaseHTTPRequestHandler):
                 entries.append(string_length(["body", "name"], name, COLLECTION_NAME_MAX))
             elif any(forbidden_char(c) for c in name):
                 entries.append(centry("string_pattern_mismatch", ["body", "name"], "A name holds no control or invisible characters", name))
+            scope_key = body.get("scope_key")
+            if ctype == "text" and scope_key is not None and not (isinstance(scope_key, str) and re.fullmatch(SCOPE_KEY_PATTERN, scope_key)):
+                entries.append(centry("string_pattern_mismatch", ["body", "scope_key"], "String should match pattern '%s'" % SCOPE_KEY_PATTERN, scope_key))
             if entries:
                 raise refuse_422(entries)
         except Refused as exc:
@@ -4337,6 +4800,9 @@ class Handler(BaseHTTPRequestHandler):
         if idem is False:
             return
         try:
+            if ctype == "text":
+                # A knowledge base: only a workspace with knowledge on creates one.
+                self.knowledge_gate()
             if any(c["name"] == name for c in self.own_collections()):
                 raise refuse_422([centry("name_taken", ["body", "name"], "A collection with this name already exists in this workspace", name)])
             conf = self.collection_conf()
@@ -4353,13 +4819,15 @@ class Handler(BaseHTTPRequestHandler):
         # store is per mock session, so sessions never meet.
         ws = workspace_of(self.key())
         cid = "col_" + hashlib.sha256(("%s\n%s" % (ws, name)).encode("utf-8")).hexdigest()[:32]
-        c = {"id": cid, "workspace": ws, "sid": self.sid, "type": "face", "name": name, "created_at": iso(math.floor(self.now())), "seq": next(CREATION_ORDER), "items": {}, "enrolled": 0}
+        c = {"id": cid, "workspace": ws, "sid": self.sid, "type": ctype, "name": name, "created_at": iso(math.floor(self.now())), "seq": next(CREATION_ORDER), "items": {}, "enrolled": 0}
+        if ctype == "text":
+            c.update(scope_key=body.get("scope_key"), version=0)
         with state.lock:
             state.collections[(self.sid, cid)] = c
-        self.idem_send(idem, rid, 201, self.collection_object(c))
+        self.idem_send(idem, rid, 201, self.any_collection_object(c))
 
     def api_collection_list(self, rid, started, body_bytes, query):
-        out = [self.collection_object(c) for c in self.own_collections()] + self.public_collections()
+        out = [self.any_collection_object(c) for c in self.own_collections()] + self.public_collections()
         self.send(200, {"collections": out}, {"x-request-id": rid})
 
     def api_collection_get(self, rid, started, body_bytes, query, cid):
@@ -4368,7 +4836,11 @@ class Handler(BaseHTTPRequestHandler):
         except Refused as exc:
             self.refuse(rid, exc)
             return
-        self.send(200, self.collection_object(own) if own else pub, {"x-request-id": rid})
+        if own and own["type"] == "text":
+            with self.server.state.lock:
+                for item in list(own["items"].values()):
+                    self.advance_item(own, item)
+        self.send(200, self.any_collection_object(own) if own else pub, {"x-request-id": rid})
 
     def api_collection_delete(self, rid, started, body_bytes, query, cid):
         try:
@@ -4380,9 +4852,16 @@ class Handler(BaseHTTPRequestHandler):
             return
         with self.server.state.lock:
             self.server.state.collections.pop((self.sid, own["id"]), None)
+        if own["type"] == "text" and self.knowledge_conf().get("purge_slow"):
+            # A purge that outlasts 10 s finishes in the background.
+            self.send(202, {"id": own["id"], "status": "purging"}, {"x-request-id": rid})
+            return
         self.send(200, {"id": own["id"], "deleted": True}, {"x-request-id": rid})
 
     def api_item_enroll(self, rid, started, body_bytes, query, cid):
+        if any(c["id"] == cid and c["type"] == "text" for c in self.own_collections()):
+            self.text_item_write(rid, body_bytes, query, cid)
+            return
         # The body is checked before its key is taken and before the collection is looked
         # up, as the API does: a 422 is never kept.
         try:
@@ -4478,6 +4957,7 @@ class Handler(BaseHTTPRequestHandler):
         except Refused as exc:
             self.refuse(rid, exc)
             return
+        text = own["type"] == "text"
         if reference is None and prefix is None:
             items = sorted(own["items"].values(), key=lambda i: i["seq"], reverse=True)
         else:
@@ -4487,10 +4967,18 @@ class Handler(BaseHTTPRequestHandler):
         total, capped = min(len(items), ITEMS_COUNTED), len(items) > ITEMS_COUNTED
         page = items[offset : offset + limit]
         nxt = offset + len(page) if offset + len(page) < len(items) else None
-        self.send(200, {"items": [self.item_object(i) for i in page], "offset": offset, "limit": limit, "total": total, "total_capped": capped, "next_offset": nxt,
+        if text:
+            with self.server.state.lock:
+                for i in page:
+                    self.advance_item(own, i)
+        self.send(200, {"items": [self.text_item_object(i) if text else self.item_object(i) for i in page], "offset": offset, "limit": limit, "total": total, "total_capped": capped, "next_offset": nxt,
                         "reference": reference, "reference_prefix": prefix}, {"x-request-id": rid})
 
     def api_item_update(self, rid, started, body_bytes, query, cid, item_id):
+        text = next((c for c in self.own_collections() if c["id"] == cid and c["type"] == "text"), None)
+        if text is not None:
+            self.text_item_patch(rid, body_bytes, text, item_id)
+            return
         # The body is checked before its key is taken, as an enrollment's.
         try:
             body = parse_body(body_bytes)
@@ -4541,6 +5029,465 @@ class Handler(BaseHTTPRequestHandler):
         with self.server.state.lock:
             own["items"].pop(item_id, None)
         self.send(200, {"id": item_id, "deleted": True}, {"x-request-id": rid})
+
+    # ---- knowledge: collections of type text (suite 1.23)
+
+    def knowledge_conf(self) -> dict:
+        """The scenario's knowledge setting: enabled (false: every write's 403
+        booster_not_enabled), reads_to_ready (the reads an item takes to be ready, 2 by
+        default; ?wait makes it ready at once unless slow), slow (?wait answers as the item
+        stands), fail (an error code: every new version fails with it), delayed (a waiting
+        item is delayed), ingest_limit (ingest_queue_full or ingest_tokens_per_hour: every
+        write of new text the 429), credit (free_text_chunks or free_text_tokens: the 402),
+        unpriced (the 529 enrollment_unpriced) and purge_slow (a delete answers 202)."""
+        return self.server.state.flag(self.sid)["knowledge"]
+
+    def text_collection_object(self, c) -> dict:
+        items = list(c["items"].values())
+        counts = {"queued": 0, "processing": 0, "ready": 0, "failed": 0}
+        for i in items:
+            counts[i["status"]] = counts.get(i["status"], 0) + 1
+        live = [i for i in items if i.get("live")]
+        global_pins = sum(ch["tokens"] + LABEL_TOKENS for i in live if i["pinned"] and (c["scope_key"] is None or (i.get("metadata") or {}).get(c["scope_key"]) is None) for ch in i["live"]["chunks"])
+        by_scope: dict = {}
+        if c["scope_key"] is not None:
+            for i in live:
+                value = (i.get("metadata") or {}).get(c["scope_key"])
+                if i["pinned"] and value is not None:
+                    by_scope[value] = by_scope.get(value, 0) + sum(ch["tokens"] + LABEL_TOKENS for ch in i["live"]["chunks"])
+        largest = max(by_scope.items(), key=lambda kv: (kv[1], kv[0])) if by_scope else None
+        return {
+            "id": c["id"], "type": "text", "name": c["name"], "public": False, "items": len(items), "created_at": c["created_at"], "deletion": None,
+            "scope_key": c["scope_key"],
+            "chunks": sum(len(i["live"]["chunks"]) for i in live),
+            "tokens": sum(ch["tokens"] for i in live for ch in i["live"]["chunks"]),
+            "version": c["version"],
+            "status_counts": counts,
+            "pinned": {"tokens": global_pins + (largest[1] if largest else 0), "cap": PINNED_CAP, "largest_scope": {"value": largest[0], "tokens": largest[1]} if largest else None},
+        }
+
+    def any_collection_object(self, c) -> dict:
+        return self.text_collection_object(c) if c["type"] == "text" else self.collection_object(c)
+
+    def knowledge_gate(self) -> None:
+        """A text write's gate: knowledge enabled for the workspace."""
+        if self.knowledge_conf().get("enabled") is False or "knowledge" in (self.booster_conf().get("disabled") or []):
+            raise typed_error(403, "booster_not_enabled", "The booster 'knowledge' is not enabled for this workspace.")
+
+    def text_collection(self, cid):
+        """An own text collection: a face or public one is the 400 collection_type_mismatch,
+        an unknown or foreign id the 404."""
+        own, pub = self.find_collection(cid)
+        if pub or own["type"] != "text":
+            raise typed_error(400, "collection_type_mismatch", "%s is not a text collection." % cid)
+        return own
+
+    def advance_item(self, c, item, read: bool = True, at_once: bool = False) -> None:
+        """An item's ingestion, moved by the reads it has answered (or at once for ?wait):
+        processing after one read, ready (or failed with the setting's fail) after
+        reads_to_ready."""
+        if item["status"] not in ("queued", "processing"):
+            return
+        conf = self.knowledge_conf()
+        if at_once:
+            if conf.get("slow"):
+                return
+            item["reads"] = int(conf.get("reads_to_ready", KNOWLEDGE_READS_TO_READY))
+        elif read:
+            item["reads"] += 1
+        if item["reads"] >= int(conf.get("reads_to_ready", KNOWLEDGE_READS_TO_READY)):
+            self.finish_item(c, item, conf)
+        elif item["reads"] >= 1:
+            item["status"] = "processing"
+
+    def finish_item(self, c, item, conf) -> None:
+        fault = conf.get("fail")
+        pending = item["pending"]
+        if fault:
+            item.update(status="failed", error=fault)
+            return
+        text = pending["text"]
+        fmt = pending["format"]
+        f = item.get("file")
+        if text is None:
+            # A converted file: its text and Markdown read as they are, anything else made
+            # into the mock's Markdown.
+            if f["content_type"] in TEXT_TYPES:
+                text, _ = normalise_text(pending["data"].decode("utf-8", "replace"))
+                fmt = "markdown" if f["content_type"] == "text/markdown" else "text"
+            else:
+                text = "# %s\n\nThe text of %s, page 1.\n\nEvery rule in it applies to the claims it names." % (pending["title"], f["filename"] or f["content_type"])
+                fmt = "markdown"
+                f["pages"] = 1 if f["content_type"] == "application/pdf" else None
+            text = text or "(empty)"
+            f["original_held"] = False
+        pages = f is not None and f["content_type"] == "application/pdf"
+        item["live"] = {"text": text, "format": fmt, "title": pending["title"], "chunks": chunk_text(text, pages), "version": item["version"]}
+        item.update(status="ready", error=None, format=fmt, title=pending["title"], ready_at=iso(math.floor(self.now())))
+        c["version"] += 1
+
+    def text_item_object(self, item, with_text: bool = False) -> dict:
+        live = item.get("live")
+        f = item.get("file")
+        processing = item["status"] == "processing"
+        stage = None
+        if processing:
+            stage = "extracting" if f is not None and f["content_type"] not in TEXT_TYPES else "chunking"
+        if live and live["version"] == item["version"]:
+            serving = "current"
+        elif live:
+            serving = "previous"
+        else:
+            serving = "none"
+        pending = item["status"] in ("queued", "processing")
+        out = {
+            "id": item["id"], "reference": item["reference"], "label": item["label"], "metadata": item.get("metadata") or {}, "created_at": item["created_at"],
+            "title": item["title"], "format": item["format"], "pinned": item["pinned"], "pin_rank": item["pin_rank"], "source": item["source"],
+            "file": dict(f) if f is not None else None,
+            "status": item["status"], "stage": stage,
+            "progress": {"chunks_embedded": 0, "chunks_total": None, "pages": f.get("pages") if f else None} if processing else None,
+            "serving": serving, "error": item["error"], "delayed": bool(self.knowledge_conf().get("delayed")) and pending,
+            "warnings": list(item.get("warnings") or []),
+            "chunks": len(live["chunks"]) if live else 0,
+            "tokens": sum(ch["tokens"] for ch in live["chunks"]) if live else 0,
+            "content_sha256": item["sha"], "version": item["version"], "queued_at": item["queued_at"], "ready_at": item["ready_at"],
+        }
+        if with_text:
+            out["text"] = live["text"] if live else None
+        return out
+
+    def text_item_body(self, body, replace: bool = False):
+        """A POST or PUT body as the API reads it: (fields, the item's text or None, the
+        upload id or None). The 422's entries in the API's order, then the text's own
+        refusals (the 413 item_too_large, the 422 invalid_text)."""
+        if not isinstance(body, dict):
+            raise refuse_422([centry("model_attributes_type", ["body"], "Input should be a valid dictionary or object to extract fields from", body)])
+        entries = []
+        for key in body:
+            if key in ("image", "images"):
+                entries.append(centry("extra_forbidden", ["body", key], "A text item takes its text in the body or a knowledge upload by upload_id", body[key]))
+            elif key not in ("title", "text", "upload_id", "format", "reference", "pinned", "pin_rank", "label", "metadata"):
+                entries.append(centry("extra_forbidden", ["body", key], "Extra inputs are not permitted", body[key]))
+        has_text, has_upload = "text" in body, "upload_id" in body
+        if has_text and has_upload:
+            entries.append(centry("value_error", ["body"], "Send text or upload_id, not both", body))
+        title = body.get("title")
+        if "title" not in body:
+            if not has_upload:
+                entries.append(centry("missing", ["body", "title"], "Field required", body))
+        elif not (isinstance(title, str) and 1 <= len(title.strip()) <= TITLE_MAX):
+            entries.append(centry("string_too_long", ["body", "title"], "A title is 1 to 200 characters", title))
+        text = body.get("text")
+        if not has_text and not has_upload:
+            entries.append(centry("missing", ["body", "text"], "Field required", body))
+        elif has_text and not isinstance(text, str):
+            entries.append(centry("string_type", ["body", "text"], "Input should be a valid string", text))
+        if has_upload and not isinstance(body["upload_id"], str):
+            entries.append(centry("string_type", ["body", "upload_id"], "Input should be a valid string", body["upload_id"]))
+        if "format" in body:
+            if has_upload:
+                entries.append(centry("extra_forbidden", ["body", "format"], "format is not taken with upload_id", body["format"]))
+            elif body["format"] not in ("markdown", "text"):
+                entries.append(centry("literal_error", ["body", "format"], "Input should be 'markdown' or 'text'", body["format"]))
+        entries.extend(self.text_field_entries(body))
+        if entries:
+            raise refuse_422(entries)
+        stored = None
+        if has_text:
+            stored, fault = normalise_text(text)
+            if fault == "invalid":
+                raise typed_error(422, "invalid_text", "The text is not UTF-8 or holds a NUL character.")
+            if fault == "too_large":
+                raise typed_error(413, "item_too_large", "A text can be at most 512 KiB once normalised.")
+            if fault == "empty":
+                raise refuse_422([centry("string_too_short", ["body", "text"], "The text is empty", text)])
+        return stored, body.get("upload_id")
+
+    @staticmethod
+    def text_field_entries(body) -> list:
+        """reference, pinned, pin_rank, label and metadata, as every collection item's."""
+        entries = []
+        if "reference" in body:
+            entries.extend(reference_entries(["body", "reference"], body["reference"]))
+        if "pinned" in body and not isinstance(body["pinned"], bool):
+            entries.append(centry("bool_type", ["body", "pinned"], "Input should be a valid boolean", body["pinned"]))
+        if "pin_rank" in body and not whole_in(body["pin_rank"], 0, PIN_RANK_MAX):
+            entries.append(centry("int_range", ["body", "pin_rank"], "Input should be an integer from 0 to 1000", body["pin_rank"]))
+        entries.extend(label_entries(["body", "label"], body.get("label")))
+        if "metadata" in body:
+            entries.extend(metadata_entries(body["metadata"]))
+        return entries
+
+    def knowledge_write_limits(self, c) -> None:
+        """What every write of new text meets, in the API's order: the ingestion rate, the
+        catalogue's text prices, credit."""
+        conf = self.knowledge_conf()
+        reason = conf.get("ingest_limit")
+        if reason:
+            wait = "60" if reason == "ingest_queue_full" else "1"
+            raise Refused(429, {"detail": {"error_type": "rate_limit_error", "message": INGEST_RATE, "details": {"reason": reason}}}, INGEST_RATE,
+                          {"Retry-After": wait, "retry-after-ms": str(int(wait) * 1000)})
+        if conf.get("unpriced"):
+            raise Refused(529, {"detail": {"error_type": "overloaded_error", "message": TEXT_UNPRICED, "details": {"reason": "enrollment_unpriced"}}}, TEXT_UNPRICED)
+        credit = conf.get("credit")
+        if credit:
+            raise Refused(402, {"detail": {"error_type": "insufficient_credit", "message": "Add credit to store more knowledge.", "details": {"reason": credit, "resets_at": "2026-10-21T00:00:00Z"}}},
+                          "Add credit to store more knowledge.")
+
+    def knowledge_upload(self, upload_id):
+        """A knowledge upload named by an item: (its record, its bytes), with the reference
+        errors as the API answers them."""
+        state: State = self.server.state
+        if not isinstance(upload_id, str) or not re.fullmatch(r"upl_[0-9a-f]{32}", upload_id):
+            raise typed_error(400, "upload_not_found", "Upload %s was not found." % compact(upload_id))
+        with state.lock:
+            up = state.uploads.get(upload_id)
+            if up is None or up["workspace"] != workspace_of(self.key()):
+                raise typed_error(400, "upload_not_found", "Upload %s was not found." % upload_id)
+            if up.get("purpose", "image") != "knowledge":
+                raise typed_error(400, "upload_purpose_mismatch", "Upload %s is an image upload; it cannot be a document." % upload_id)
+            if up["state"] == "consumed":
+                raise typed_error(400, "upload_consumed", "Upload %s was already added as a document. Upload the file again." % upload_id)
+            if self.now() >= up["expires_at"]:
+                raise typed_error(400, "upload_expired", "Upload %s expired at %s. Upload the file again." % (upload_id, iso(up["expires_at"])))
+            data = state.objects.get(up["object_key"])
+            if data is None or len(data) != up["byte_size"]:
+                raise typed_error(400, "upload_incomplete", "Upload %s has no bytes of its declared size yet. PUT the file to its URL first." % upload_id)
+            return up, data
+
+    def new_version(self, c, item, stored, up_data, title, fmt) -> None:
+        """A new version of an item from its text or its upload: queued, the live version
+        serving until it is ready."""
+        if up_data is not None:
+            up, data = up_data
+            item["file"] = {"filename": up.get("filename"), "content_type": up["content_type"], "byte_size": up["byte_size"], "pages": None, "original_held": True}
+            if title is None:
+                title = (up.get("filename") or "").rsplit(".", 1)[0] or None
+            item["source"] = "file"
+            pending = {"text": None, "data": data, "format": None, "title": title}
+            sha = hashlib.sha256(data + b"\n" + (title or "").encode("utf-8")).hexdigest()
+        else:
+            pending = {"text": stored, "data": None, "format": fmt or "markdown", "title": title}
+            sha = hashlib.sha256(("%s\n%s\n%s" % (stored, pending["format"], title)).encode("utf-8")).hexdigest()
+        item.update(pending=pending, sha=sha, status="queued", error=None, reads=0, queued_at=iso(math.floor(self.now())))
+        if item.get("live") is None:
+            item.update(title=title, format=pending["format"])
+        item["warnings"] = ["possible_instruction"] if stored and re.search(r"ignore (all|the) (previous|above) instructions", stored, re.I) else []
+
+    def text_item_write(self, rid, body_bytes, query, cid, item_id=None):
+        """POST (item_id None) or PUT of a text item."""
+        try:
+            wait = (query.get("wait") or ["false"])[0]
+            if wait not in ("true", "false"):
+                raise usage_error("Query parameter wait must be true or false, got %s." % printable(wait, 64))
+            c = self.text_collection(cid)
+            body = parse_body(body_bytes)
+            stored, upload_id = self.text_item_body(body)
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        idem = self.idem_begin(rid, body_bytes)
+        if idem is False:
+            return
+        consumed = None
+        try:
+            self.knowledge_gate()
+            item = None
+            if item_id is not None:
+                item = c["items"].get(item_id)
+                if item is None:
+                    raise typed_error(404, "item_not_found", "Item not found: %s." % item_id)
+                if upload_id is None and item["source"] == "file":
+                    raise typed_error(409, "not_an_article", "This item is a file: replace it with an upload_id.")
+                if upload_id is not None and item["source"] == "article":
+                    raise typed_error(409, "not_a_file", "This item is an article: replace it with text.")
+            else:
+                conf = self.collection_conf()
+                most = int(conf.get("max_items", ITEMS_MAX))
+                if sum(len(x["items"]) for x in self.own_collections()) >= most:
+                    raise typed_error(409, "items_limit_reached", "This workspace has reached its limit of %d items in its collections." % most)
+            reference = body.get("reference")
+            if reference is not None:
+                holder = next((x for x in c["items"].values() if x["reference"] == reference and x is not item), None)
+                if holder is not None:
+                    raise Refused(409, {"detail": {"error_type": "reference_taken", "message": "Another item of this collection has this reference.", "details": {"item_id": holder["id"]}}},
+                                  "Another item of this collection has this reference.")
+            title = body["title"].strip() if isinstance(body.get("title"), str) else None
+            fmt = body.get("format", "markdown") if upload_id is None else None
+            same = item is not None and upload_id is None and item["source"] == "article" and item["sha"] == hashlib.sha256(("%s\n%s\n%s" % (stored, fmt, title)).encode("utf-8")).hexdigest()
+            if not same:
+                self.knowledge_write_limits(c)
+            up_data = self.knowledge_upload(upload_id) if upload_id is not None else None
+            if body.get("pinned") and stored is not None and len(stored.split()) + LABEL_TOKENS > PINNED_CAP:
+                raise typed_error(409, "pinned_budget_exceeded", "The pinned items would be over this collection's pinned cap of %d tokens." % PINNED_CAP)
+        except Refused as exc:
+            self.idem_refuse(idem, rid, exc)
+            return
+        if up_data is not None:
+            with self.server.state.lock:
+                up_data[0]["state"] = "consumed"
+        created = item is None
+        with self.server.state.lock:
+            if created:
+                c["enrolled"] += 1
+                iid = "itm_" + hashlib.sha256(("%s\n%d" % (c["id"], c["enrolled"])).encode("utf-8")).hexdigest()[:32]
+                item = {"id": iid, "reference": iid, "label": None, "metadata": {}, "pinned": False, "pin_rank": 0, "source": "article", "file": None, "live": None, "version": 0,
+                        "created_at": iso(math.floor(self.now())), "ready_at": None, "seq": next(CREATION_ORDER), "title": None, "format": None, "sha": None}
+                c["items"][iid] = item
+            for key in ("reference", "label", "metadata", "pinned", "pin_rank"):
+                if key in body:
+                    item[key] = body[key]
+            if not created:
+                if "reference" not in body:
+                    item["reference"] = item["id"]
+                for key, default in (("label", None), ("metadata", {}), ("pinned", False), ("pin_rank", 0)):
+                    if key not in body:
+                        item[key] = default
+            if same:
+                status = 200
+            else:
+                item["version"] += 1
+                self.new_version(c, item, stored, up_data, title, fmt)
+                if wait == "true":
+                    self.advance_item(c, item, at_once=True)
+                if created:
+                    status = 201 if item["status"] == "ready" else 202
+                else:
+                    status = 200 if item["status"] == "ready" else 202
+        self.idem_send(idem, rid, status, self.text_item_object(item))
+
+    def text_item_patch(self, rid, body_bytes, c, item_id):
+        try:
+            body = parse_body(body_bytes)
+            if not isinstance(body, dict):
+                raise refuse_422([centry("model_attributes_type", ["body"], "Input should be a valid dictionary or object to extract fields from", body)])
+            entries = [centry("extra_forbidden", ["body", k], "Extra inputs are not permitted", body[k]) for k in body if k not in ("reference", "label", "metadata", "pinned", "pin_rank", "title")]
+            entries.extend(self.text_field_entries(body))
+            if "title" in body and not (isinstance(body["title"], str) and 1 <= len(body["title"].strip()) <= TITLE_MAX):
+                entries.append(centry("string_too_long", ["body", "title"], "A title is 1 to 200 characters", body["title"]))
+            if not body:
+                entries.append(centry("missing", ["body"], "Send a field to change", body))
+            if entries:
+                raise refuse_422(entries)
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        idem = self.idem_begin(rid, body_bytes)
+        if idem is False:
+            return
+        try:
+            self.knowledge_gate()
+            item = c["items"].get(item_id)
+            if item is None:
+                raise typed_error(404, "item_not_found", "Item not found: %s." % item_id)
+            reference = body.get("reference")
+            if reference is not None and any(x["reference"] == reference and x is not item for x in c["items"].values()):
+                holder = next(x for x in c["items"].values() if x["reference"] == reference and x is not item)
+                raise Refused(409, {"detail": {"error_type": "reference_taken", "message": "Another item of this collection has this reference.", "details": {"item_id": holder["id"]}}},
+                              "Another item of this collection has this reference.")
+            title = body["title"].strip() if "title" in body else None
+            retitle = title is not None and title != item["title"]
+            if retitle:
+                self.knowledge_write_limits(c)
+        except Refused as exc:
+            self.idem_refuse(idem, rid, exc)
+            return
+        status = 200
+        with self.server.state.lock:
+            for key in ("reference", "label", "metadata", "pinned", "pin_rank"):
+                if key in body:
+                    item[key] = body[key]
+            if retitle:
+                live = item.get("live")
+                item["version"] += 1
+                if item["source"] == "file" and live is None:
+                    pending = dict(item["pending"], title=title)
+                    item.update(pending=pending, status="queued", reads=0, error=None)
+                else:
+                    text = live["text"] if live else item["pending"]["text"]
+                    fmt = live["format"] if live else item["pending"]["format"]
+                    item.update(pending={"text": text, "data": None, "format": fmt, "title": title}, status="queued", reads=0, error=None)
+                status = 202
+        self.idem_send(idem, rid, status, self.text_item_object(item))
+
+    def api_item_get(self, rid, started, body_bytes, query, cid, item_id):
+        try:
+            include = (query.get("include") or [None])[0]
+            if include not in (None, "text"):
+                raise usage_error("Query parameter include must be text, got %s." % printable(include, 64))
+            own, pub = self.find_collection(cid)
+            if pub:
+                raise typed_error(403, "collection_read_only", "%s is a public collection and cannot be changed or listed." % cid)
+            item = own["items"].get(item_id)
+            if item is None:
+                raise typed_error(404, "item_not_found", "Item not found: %s." % item_id)
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        if own["type"] != "text":
+            self.send(200, self.item_object(item), {"x-request-id": rid})
+            return
+        with self.server.state.lock:
+            self.advance_item(own, item)
+        self.send(200, self.text_item_object(item, include == "text"), {"x-request-id": rid})
+
+    def api_item_put(self, rid, started, body_bytes, query, cid, item_id):
+        self.text_item_write(rid, body_bytes, query, cid, item_id)
+
+    def api_item_chunks(self, rid, started, body_bytes, query, cid, item_id):
+        try:
+            offset = self.query_int(query, "offset", 0, 0, None, "an integer of 0 or more")
+            limit = self.query_int(query, "limit", 20, 1, 100, "an integer from 1 to 100")
+            c = self.text_collection(cid)
+            item = c["items"].get(item_id)
+            if item is None:
+                raise typed_error(404, "item_not_found", "Item not found: %s." % item_id)
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        chunks = item["live"]["chunks"] if item.get("live") else []
+        page = chunks[offset : offset + limit]
+        nxt = offset + len(page) if offset + len(page) < len(chunks) else None
+        self.send(200, {"chunks": page, "offset": offset, "limit": limit, "total": len(chunks), "next_offset": nxt}, {"x-request-id": rid})
+
+    def api_collection_search(self, rid, started, body_bytes, query, cid):
+        try:
+            try:
+                body = json.loads(body_bytes.decode("utf-8"))
+            except (ValueError, UnicodeDecodeError, RecursionError):
+                body = None
+            if not isinstance(body, dict):
+                raise usage_error("the body must be a JSON object")
+            fault = knowledge_ask(body, search=True)
+            if fault:
+                raise usage_error(fault)
+            c = self.text_collection(cid)
+            self.knowledge_gate()
+            fault = knowledge_scope_fault(body, c["scope_key"])
+            if fault:
+                raise usage_error(fault)
+            refusal = knowledge_refusal(c, self.knowledge_conf())
+            if refusal is not None:
+                raise refusal
+        except Refused as exc:
+            self.refuse(rid, exc)
+            return
+        reading, _ = knowledge_reading(c, body, body["query"], "request", worker=False, include_text=True, citations_ids=False)
+        self.send(200, reading, {"x-request-id": rid, "x-decisionnode-boosters": "knowledge=ok:%d" % KNOWLEDGE_LATENCY_MS})
+
+    def knowledge_collection(self, cid: str, b: dict) -> dict:
+        """The collection a knowledge booster reads, resolved before any booster runs: a
+        face or public one is the 400 collection_type_mismatch, an unknown or foreign id
+        the 404; then the scope rules and include_text's key."""
+        own, pub = self.find_collection(cid)
+        if pub or own["type"] != "text":
+            raise typed_error(400, "collection_type_mismatch", "%s is not a text collection." % cid)
+        fault = knowledge_scope_fault(b["options"], own["scope_key"])
+        if fault:
+            raise usage_error("Invalid request.", "boosters[%d]: %s" % (b["index"], fault))
+        if b["options"].get("include_text") and key_scope(self.key()) != "full":
+            raise typed_error(403, "key_scope_denied", INCLUDE_TEXT_DENIED)
+        return {"collection": own, "conf": dict(self.knowledge_conf()), "citations_ids": key_scope(self.key()) == "publishable"}
 
     # ----------------------------------------------------------------- per-key usage
 

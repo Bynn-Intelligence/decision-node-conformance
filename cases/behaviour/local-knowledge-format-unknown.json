@@ -1,0 +1,41 @@
+{
+  "id": "local-knowledge-format-unknown",
+  "description": "A format other than markdown or text: the 422 literal_error at [\"body\", \"format\"]. Checked locally; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.add_document",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "document": {
+        "$document": {
+          "text": "# Claims policy 2026\n\n## Receipts\n\nReject any claim over 500 SEK without a receipt.\n\n## Photos\n\nPhotos of damage taken after 2026-09-01 count as current.\n",
+          "format": "html"
+        }
+      },
+      "title": "Rules"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "literal_error",
+            "loc": [
+              "body",
+              "format"
+            ],
+            "msg": "Input should be 'markdown' or 'text'",
+            "input": "html"
+          }
+        ]
+      }
+    }
+  }
+}

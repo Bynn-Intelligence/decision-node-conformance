@@ -1,0 +1,116 @@
+{
+  "id": "knowledge-wait-until-ready-collection",
+  "description": "wait_until_ready without an item reads the collection until nothing is queued or processing, and returns it (failed items do not hold it).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+            "type": "text",
+            "name": "Claims policy",
+            "public": false,
+            "items": 12,
+            "created_at": "2026-10-20T10:00:00Z",
+            "deletion": null,
+            "scope_key": "mission",
+            "chunks": 412,
+            "tokens": 81230,
+            "version": 41,
+            "status_counts": {
+              "queued": 1,
+              "processing": 1,
+              "ready": 9,
+              "failed": 1
+            },
+            "pinned": {
+              "tokens": 230,
+              "cap": 512,
+              "largest_scope": {
+                "value": "M-42",
+                "tokens": 96
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+            "type": "text",
+            "name": "Claims policy",
+            "public": false,
+            "items": 12,
+            "created_at": "2026-10-20T10:00:00Z",
+            "deletion": null,
+            "scope_key": "mission",
+            "chunks": 412,
+            "tokens": 81230,
+            "version": 41,
+            "status_counts": {
+              "queued": 0,
+              "processing": 0,
+              "ready": 11,
+              "failed": 1
+            },
+            "pinned": {
+              "tokens": 230,
+              "cap": 512,
+              "largest_scope": {
+                "value": "M-42",
+                "tokens": 96
+              }
+            }
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "call": {
+    "method": "collections.wait_until_ready",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+    }
+  },
+  "expect": {
+    "attempts": 2,
+    "outcome": {
+      "result": "collection",
+      "collection": {
+        "status_counts": {
+          "queued": 0,
+          "processing": 0,
+          "ready": 11,
+          "failed": 1
+        }
+      }
+    },
+    "request_sequence": [
+      {
+        "method": "GET",
+        "path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+      },
+      {
+        "method": "GET",
+        "path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+      }
+    ],
+    "scheduled_waits_ms": [
+      {
+        "min": 1000,
+        "max": 1000
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "409-knowledge-not-a-file",
+  "description": "replace_document with a knowledge upload on an article: the 409 not_a_file, the base DecisionNodeError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.replace_document",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+      "document": {
+        "$document": {
+          "upload_id": "upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"not_a_file\", \"message\": \"This item is an article: replace it with text.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "request_id": "req_err_0001",
+        "error_type": "not_a_file"
+      }
+    }
+  }
+}

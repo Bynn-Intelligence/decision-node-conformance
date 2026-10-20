@@ -1,0 +1,118 @@
+{
+  "id": "knowledge-text-file-at-threshold-uploaded",
+  "description": "A Markdown file of exactly 524,288 bytes is uploaded with purpose knowledge and type text/markdown, then named by upload_id.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80/items"
+          },
+          "steps": [
+            {
+              "status": 202,
+              "headers": {
+                "content-type": "application/json"
+              },
+              "body": {
+                "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+                "reference": "policy-2026",
+                "label": null,
+                "metadata": {},
+                "created_at": "2026-10-20T11:00:00Z",
+                "title": "Claims policy 2026",
+                "format": null,
+                "pinned": false,
+                "pin_rank": 0,
+                "source": "file",
+                "file": null,
+                "status": "queued",
+                "stage": null,
+                "progress": null,
+                "serving": "none",
+                "error": null,
+                "delayed": false,
+                "warnings": [],
+                "chunks": 0,
+                "tokens": 0,
+                "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+                "version": 1,
+                "queued_at": "2026-10-20T11:00:01Z",
+                "ready_at": null
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "collections.add_document",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "document": {
+        "$document": {
+          "repeat_text": {
+            "repeat": "a",
+            "times": 524288
+          },
+          "filename": "rules.md"
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 3,
+    "outcome": {
+      "result": "item"
+    },
+    "request_sequence": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "status": 201,
+        "body_checks": [
+          {
+            "pointer": "/files/0/purpose",
+            "equals": "knowledge"
+          },
+          {
+            "pointer": "/files/0/content_type",
+            "equals": "text/markdown"
+          },
+          {
+            "pointer": "/files/0/byte_size",
+            "equals": 524288
+          },
+          {
+            "pointer": "/files/0/filename",
+            "equals": "rules.md"
+          }
+        ]
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80/items",
+        "body_checks": [
+          {
+            "pointer": "/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/text",
+            "absent": true
+          }
+        ]
+      }
+    ]
+  }
+}

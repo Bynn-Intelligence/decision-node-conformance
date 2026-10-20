@@ -1,0 +1,36 @@
+{
+  "id": "local-knowledge-scope-key-pattern",
+  "description": "collections.create with a scope_key outside ^[a-z0-9_]{1,40}$: the 422 string_pattern_mismatch at [\"body\", \"scope_key\"]. Checked locally; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.create",
+    "args": {
+      "name": "Claims policy",
+      "type": "text",
+      "scope_key": "Mission"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "string_pattern_mismatch",
+            "loc": [
+              "body",
+              "scope_key"
+            ],
+            "msg": "String should match pattern '^[a-z0-9_]{1,40}$'",
+            "input": "Mission"
+          }
+        ]
+      }
+    }
+  }
+}

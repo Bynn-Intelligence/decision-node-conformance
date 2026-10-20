@@ -1,0 +1,92 @@
+{
+  "id": "knowledge-required-pending-by-mock",
+  "description": "Against the mock: a required knowledge booster while the only document is still queued is the 529 booster_unavailable with Retry-After 5, an OverloadedError (no retries here).",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Pending",
+          "type": "text"
+        }
+      },
+      "outcome": {
+        "result": "collection"
+      }
+    },
+    {
+      "call": {
+        "method": "collections.add_document",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "document": {
+            "$document": {
+              "text": "# Claims policy 2026\n\n## Receipts\n\nReject any claim over 500 SEK without a receipt.\n\n## Photos\n\nPhotos of damage taken after 2026-09-01 count as current.\n"
+            }
+          },
+          "title": "Claims policy 2026"
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "status": "queued"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": {
+            "claim": {
+              "amount": "740.00",
+              "receipt": false
+            },
+            "mission": "M-42"
+          },
+          "questions": {
+            "approve": {
+              "$truth": {
+                "instructions": "Should the claim be approved under our policy?"
+              }
+            }
+          },
+          "boosters": [
+            {
+              "$knowledge": {
+                "collection": {
+                  "$ref": "col.id"
+                },
+                "require": true
+              }
+            }
+          ]
+        }
+      },
+      "outcome": {
+        "error": "OverloadedError",
+        "fields": {
+          "error_type": "booster_unavailable",
+          "retry_after": 5
+        }
+      }
+    }
+  ],
+  "expect": {
+    "request_counts": [
+      {
+        "method": "POST",
+        "path": "/v1/collections",
+        "count": 1
+      }
+    ]
+  }
+}

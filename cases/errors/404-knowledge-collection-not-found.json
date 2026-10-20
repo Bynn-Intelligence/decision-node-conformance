@@ -1,0 +1,33 @@
+{
+  "id": "404-knowledge-collection-not-found",
+  "description": "A search of an unknown or another workspace's collection: the 404 collection_not_found, a NotFoundError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.search",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "query": "receipts"
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"collection_not_found\", \"message\": \"Collection not found: col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "NotFoundError",
+      "fields": {
+        "status": 404,
+        "request_id": "req_err_0001",
+        "error_type": "collection_not_found"
+      }
+    }
+  }
+}

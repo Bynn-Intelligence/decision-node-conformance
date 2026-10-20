@@ -600,6 +600,10 @@ class DecisionNode:
             if resp.status == 529 and _detail_reason(resp) == "enrollment_unpriced":
                 # Suite 1.15: no price for an enrollment, which a retry never cures.
                 retryable = False
+            if resp.status == 529 and _detail_reason(resp) == "ingestion_delayed":
+                # Spec 1.4: no document ready while ingestion is delayed by an outage: a
+                # wait of a minute or more, so the caller decides.
+                retryable = False
             if resp.status == 429 and _error_type(resp) == "key_spend_cap_reached":
                 # Suite 1.20: the key's daily spend cap, reset at 00:00 UTC: a stop, not a wait.
                 retryable = False
@@ -3313,3 +3317,494 @@ class Evidence:
         self.billed_calls = raw.get("billed_calls")
         results = raw.get("results")
         self.results = [parse_reading(booster, r) for r in results] if isinstance(results, list) else []
+
+
+# =========================================================================== spec 1.4
+#
+# Knowledge: collections of type text, their documents (text inline, files by a knowledge
+# upload), waiting for them, search, the knowledge booster and its reading.
+
+SPEC_VERSION = "1.4"  # noqa: F811 - spec 1.4 adds knowledge
+DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+KNOWLEDGE_TYPES = ("text/plain", "text/markdown", "application/pdf", DOCX, PPTX, XLSX, "text/html", "image/png", "image/jpeg", "image/tiff", "image/webp")
+KNOWLEDGE_EXTENSIONS = (
+    (".txt", "text/plain"), (".md", "text/markdown"), (".markdown", "text/markdown"), (".pdf", "application/pdf"),
+    (".docx", DOCX), (".pptx", PPTX), (".xlsx", XLSX), (".html", "text/html"), (".htm", "text/html"),
+    (".png", "image/png"), (".jpg", "image/jpeg"), (".jpeg", "image/jpeg"), (".tif", "image/tiff"), (".tiff", "image/tiff"), (".webp", "image/webp"),
+)
+MAX_KNOWLEDGE_FILE_BYTES = 52428800  # a knowledge file, 50 MB
+KNOWLEDGE_UPLOAD_TIMEOUT = 120.0  # one PUT of a knowledge file, unless upload_timeout is set
+WAIT_TIMEOUT = 20.0  # one attempt of a write with ?wait=true, which the server holds up to 10 s
+TITLE_MAX, PIN_RANK_MAX = 200, 1000
+SCOPE_KEY_PATTERN = r"^[a-z0-9_]{1,40}$"
+READY_POLL_INTERVAL, READY_POLL_MIN, READY_POLL_MAX, READY_TIMEOUT = 1.0, 0.1, 10.0, 300.0
+
+
+class Document:
+    """One text item's content: text (Markdown by default, or plain), a file by path,
+    bytes or a stream, or a knowledge upload made before. A file is read when the call
+    is made; a stream is read to its end once, since the presign needs its size and
+    checksums first."""
+
+    def __init__(self, text=None, format=None, path=None, data=None, stream=None, content_type=None, filename=None, upload_id=None):  # noqa: A002 - the API's field
+        given = [x for x in (text, path, data, stream, upload_id) if x is not None]
+        if len(given) != 1:
+            raise ValueError("a Document is one of text, path, data, stream or upload_id")
+        if text is not None and not isinstance(text, str):
+            raise ValueError("text must be a string")
+        if format is not None and text is None:
+            raise ValueError("format goes with text; a file's format follows its type")
+        self.text, self.format, self.path, self.data, self.stream = text, format, path, data, stream
+        self.content_type, self.upload_id = content_type, upload_id
+        self.filename = filename if filename is not None else (os.path.basename(path) if path is not None else None)
+
+    def read(self):
+        """(bytes, content type or None) of a file document."""
+        if self.path is not None:
+            with open(self.path, "rb") as fh:
+                data = fh.read(MAX_KNOWLEDGE_FILE_BYTES + 1)
+        elif self.stream is not None:
+            data = self.stream.read(MAX_KNOWLEDGE_FILE_BYTES + 1)
+        else:
+            data = self.data
+        if isinstance(data, str):
+            data = data.encode("utf-8")
+        return bytes(data), self.content_type or knowledge_type_of(self.filename, data)
+
+
+def knowledge_type_of(filename, data):
+    """The type a file name's extension names, else the first bytes'; None when neither
+    tells (text and the ZIP containers need content_type or a file name)."""
+    if filename:
+        lower = filename.lower()
+        for ext, ctype in KNOWLEDGE_EXTENSIONS:
+            if lower.endswith(ext):
+                return ctype
+    if data[:5] == b"%PDF-":
+        return "application/pdf"
+    if data[:4] in (b"II*\x00", b"MM\x00*"):
+        return "image/tiff"
+    return sniff_media_type(data)
+
+
+def knowledge(collection, query=None, scope=None, match=None, filter=None, top_k=None, max_tokens=None, pinned=None, min_score=None, include_text=None, require=None) -> dict:  # noqa: A002
+    """The knowledge booster's object: collection required, every other option only when
+    given, require only when true. Never the bare name, which the API refuses."""
+    options = {"collection": collection}
+    for name, value in (("query", query), ("scope", scope), ("match", match), ("filter", filter), ("top_k", top_k), ("max_tokens", max_tokens),
+                        ("pinned", pinned), ("min_score", min_score), ("include_text", include_text)):
+        if value is not None:
+            options[name] = value
+    b = {"name": "knowledge"}
+    if require:
+        b["require"] = True
+    b["options"] = options
+    return b
+
+
+def _title_entries(title) -> list:
+    """A text item's title as the API judges it: 1 to 200 characters once trimmed."""
+    if not isinstance(title, str) or not 1 <= len(title.strip()) <= TITLE_MAX:
+        return [_entry("string_too_long", ["body", "title"], "A title is 1 to 200 characters", _echoed(title))]
+    return []
+
+
+def _item_entries(reference, pinned, pin_rank, label, metadata) -> list:
+    """The fields every text write shares, as every collection item's (suite 1.15), and
+    pin_rank."""
+    entries = []
+    if reference is not None:
+        entries.extend(_string_entries(["body", "reference"], reference, ITEM_REFERENCE_MAX, ITEM_REFERENCE_PATTERN))
+    if pin_rank is not None and (not _is_int(pin_rank) or not 0 <= pin_rank <= PIN_RANK_MAX):
+        entries.append(_entry("int_range", ["body", "pin_rank"], "Input should be an integer from 0 to 1000", _echoed(pin_rank)))
+    if label is not None:
+        entries.extend(_string_entries(["body", "label"], label, ITEM_LABEL_MAX))
+    if metadata is not None:
+        entries.extend(_metadata_entries(metadata))
+    return entries
+
+
+def _stem(filename):
+    return filename.rsplit(".", 1)[0] if filename and "." in filename.lstrip(".") else filename
+
+
+def _prepare_document(self, document, title):
+    """What a document sends: ("text", text, format, title) inline, or ("upload", bytes,
+    content type, filename) for a file to upload, or ("upload_id", id), after its local
+    checks."""
+    if not isinstance(document, Document):
+        raise ValueError("document must be a Document")
+    entries = []
+    if document.upload_id is not None:
+        if title is not None:
+            entries.extend(_title_entries(title))
+        if entries:
+            raise local_422(entries)
+        return ("upload_id", document.upload_id)
+    if document.text is not None:
+        if title is None:
+            entries.append(_entry("missing", ["body", "title"], "Field required", None))
+        else:
+            entries.extend(_title_entries(title))
+        if document.text == "":
+            entries.append(_entry("string_too_short", ["body", "text"], "The text is empty", ""))
+        if document.format is not None and document.format not in ("markdown", "text"):
+            entries.append(_entry("literal_error", ["body", "format"], "Input should be 'markdown' or 'text'", _echoed(document.format)))
+        if entries:
+            raise local_422(entries)
+        return ("text", document.text, document.format, title)
+    data, ctype = document.read()
+    if ctype is None:
+        raise ValueError("the document's type cannot be told from its name or its first bytes: give content_type or filename")
+    if ctype not in KNOWLEDGE_TYPES:
+        raise local_error(BadRequestError, "files[0].content_type: must be one of %s, got %s." % (", ".join(KNOWLEDGE_TYPES), ctype))
+    if not data:
+        raise local_error(BadRequestError, "files[0].byte_size: must be an integer from 1 to %d." % MAX_KNOWLEDGE_FILE_BYTES)
+    if len(data) > MAX_KNOWLEDGE_FILE_BYTES:
+        raise local_error(BadRequestError, "files[0].byte_size: %d is over the limit of %d bytes." % (len(data), MAX_KNOWLEDGE_FILE_BYTES))
+    if ctype in ("text/plain", "text/markdown") and len(data) < self.inline_threshold:
+        try:
+            text = data.decode("utf-8")
+        except UnicodeDecodeError:
+            text = None
+        if text is not None and "\x00" not in text:
+            # A small text or Markdown file goes inline: one call instead of three.
+            title = title if title is not None else _stem(document.filename)
+            if title is None:
+                entries.append(_entry("missing", ["body", "title"], "Field required", None))
+            else:
+                entries.extend(_title_entries(title))
+            if entries:
+                raise local_422(entries)
+            return ("text", text, "markdown" if ctype == "text/markdown" else "text", title)
+    if title is not None:
+        entries.extend(_title_entries(title))
+    if entries:
+        raise local_422(entries)
+    return ("upload", data, ctype, document.filename)
+
+
+def _upload_documents(self, files):
+    """One presign of purpose knowledge for the files ((bytes, content type, filename)),
+    one PUT each (120 s unless upload_timeout is set), and their upload ids."""
+
+    def presign(group):
+        wire = []
+        for data, ctype, filename in group:
+            f = {
+                "purpose": "knowledge",
+                "content_type": ctype,
+                "byte_size": len(data),
+                "checksum": base64.b64encode(hashlib.md5(data).digest()).decode("ascii"),
+                "sha256": base64.b64encode(hashlib.sha256(data).digest()).decode("ascii"),
+            }
+            if filename:
+                f["filename"] = filename
+            wire.append(f)
+        body, _, _ = self._exchange("POST", "/v1/uploads", {"files": wire})
+        return body.get("uploads") or [], self._clock() + float(body.get("expires_in") or 300)
+
+    uploads, urls_expire = presign(files)
+    ids = []
+    timeout = self.upload_timeout if self._upload_timeout_given else KNOWLEDGE_UPLOAD_TIMEOUT
+    for f, up in zip(files, uploads):
+        try:
+            self._put(up, f[0], timeout)
+        except DecisionNodeError as exc:
+            if exc.status != 403 or self._clock() < urls_expire:
+                raise
+            (up,), _ = presign([f])
+            self._put(up, f[0], timeout)
+        ids.append(up["upload_id"])
+    return ids
+
+
+def upload_documents(self, documents):
+    """Spec 1.4: uploads 1 to 16 documents whatever their type and size (a text document
+    as text/markdown or text/plain by its format) and returns one upload id each."""
+    documents = list(documents)
+    if not 1 <= len(documents) <= MAX_UPLOAD_FILES:
+        raise local_error(BadRequestError, "files: 1 to %d files, got %d." % (MAX_UPLOAD_FILES, len(documents)))
+    files = []
+    for i, d in enumerate(documents):
+        if not isinstance(d, Document) or d.upload_id is not None:
+            raise ValueError("documents[%d] must be a text or file Document" % i)
+        if d.text is not None:
+            files.append((d.text.encode("utf-8"), "text/plain" if d.format == "text" else "text/markdown", d.filename))
+            continue
+        data, ctype = d.read()
+        if ctype is None:
+            raise ValueError("documents[%d]: its type cannot be told from its name or its first bytes: give content_type or filename" % i)
+        if ctype not in KNOWLEDGE_TYPES:
+            raise local_error(BadRequestError, "files[%d].content_type: must be one of %s, got %s." % (i, ", ".join(KNOWLEDGE_TYPES), ctype))
+        if not data:
+            raise local_error(BadRequestError, "files[%d].byte_size: must be an integer from 1 to %d." % (i, MAX_KNOWLEDGE_FILE_BYTES))
+        if len(data) > MAX_KNOWLEDGE_FILE_BYTES:
+            raise local_error(BadRequestError, "files[%d].byte_size: %d is over the limit of %d bytes." % (i, len(data), MAX_KNOWLEDGE_FILE_BYTES))
+        files.append((data, ctype, d.filename))
+    return _upload_documents(self, files)
+
+
+def _put_with_timeout(self, up, data, timeout=None):
+    """The PUT of an upload, with a knowledge file's own timeout."""
+    if timeout is None:
+        return _put_image(self, up, data)
+    kept = self.upload_timeout
+    self.upload_timeout = timeout
+    try:
+        return _put_image(self, up, data)
+    finally:
+        self.upload_timeout = kept
+
+
+_put_image = _put
+DecisionNode._put = _put_with_timeout
+DecisionNode.upload_documents = upload_documents
+_init_1_3 = DecisionNode.__init__
+
+
+def _init(self, *args, **kwargs):
+    _init_1_3(self, *args, **kwargs)
+    self._upload_timeout_given = kwargs.get("upload_timeout") is not None or len(args) > 8
+
+
+DecisionNode.__init__ = _init
+
+
+def _write_document(self, method, path, document, title, reference, pinned, pin_rank, label, metadata, wait):
+    """POST or PUT of a text item: the local checks, the upload when the document needs
+    one, then the call with its own Idempotency-Key, the same on every attempt. A stale
+    upload this call placed is uploaded again once, the call sent once more with a new
+    key (its body changed)."""
+    c = self.c
+    entries = _item_entries(reference, pinned, pin_rank, label, metadata)
+    if pinned is not None and not isinstance(pinned, bool):
+        entries.append(_entry("bool_type", ["body", "pinned"], "Input should be a valid boolean", _echoed(pinned)))
+    try:
+        what = _prepare_document(c, document, title)
+    except ValidationError as exc:
+        raise local_422(list(exc.entries) + entries)
+    if entries:
+        raise local_422(entries)
+    query = "?wait=true" if wait else ""
+    timeout = None if c._timeout_given or not wait else WAIT_TIMEOUT
+    for attempt in (0, 1):
+        body = {}
+        if what[0] == "text":
+            body["title"] = what[3]
+            body["text"] = what[1]
+            if what[2] is not None:
+                body["format"] = what[2]
+        else:
+            if title is not None:
+                body["title"] = title
+            body["upload_id"] = what[1] if what[0] == "upload_id" else _upload_documents(c, [what[1:]])[0]
+        for name, value in (("reference", reference), ("pinned", pinned), ("pin_rank", pin_rank), ("label", label), ("metadata", metadata)):
+            if value is not None:
+                body[name] = value
+        try:
+            parsed, _, _ = c._exchange(method, path + query, body, policy="idempotent", timeout=timeout, extra_headers={"Idempotency-Key": str(uuid.uuid4())})
+            return parsed
+        except BadRequestError as exc:
+            if attempt == 0 and what[0] == "upload" and exc.error_type in STALE_UPLOAD:
+                continue
+            raise
+
+
+def add_document(self, collection_id, document, title=None, reference=None, pinned=None, pin_rank=None, label=None, metadata=None, wait=False):
+    """Spec 1.4: POST /v1/collections/{id}/items on a text collection."""
+    return _write_document(self, "POST", "/v1/collections/%s/items" % self._id(collection_id), document, title, reference, pinned, pin_rank, label, metadata, wait)
+
+
+def replace_document(self, collection_id, item_id, document, title=None, reference=None, pinned=None, pin_rank=None, label=None, metadata=None, wait=False):
+    """Spec 1.4: PUT /v1/collections/{id}/items/{item_id}, the item replaced whole."""
+    path = "/v1/collections/%s/items/%s" % (self._id(collection_id), self._id(item_id))
+    return _write_document(self, "PUT", path, document, title, reference, pinned, pin_rank, label, metadata, wait)
+
+
+def _create(self, name, type="face", scope_key=None):  # noqa: A002 - the API's field
+    """POST /v1/collections: face (the default) or, from spec 1.4, text with an optional
+    scope_key."""
+    entries = []
+    if type not in ("face", "text"):
+        entries.append(_entry("literal_error", ["body", "type"], "Input should be 'face' or 'text'", _echoed(type), {"expected": "'face' or 'text'"}))
+    entries.extend(_string_entries(["body", "name"], name, COLLECTION_NAME_MAX))
+    if scope_key is not None and not (isinstance(scope_key, str) and re.fullmatch(SCOPE_KEY_PATTERN, scope_key)):
+        entries.append(_entry("string_pattern_mismatch", ["body", "scope_key"], "String should match pattern '%s'" % SCOPE_KEY_PATTERN, _echoed(scope_key)))
+    if entries:
+        raise local_422(entries)
+    body = {"type": type, "name": name}
+    if scope_key is not None:
+        body["scope_key"] = scope_key
+    return self._call("POST", "/v1/collections", body, "idempotent", str(uuid.uuid4()))
+
+
+_update_item_1_3 = Collections.update_item
+
+
+def _update_item(self, collection_id, item_id, reference=_UNSET, label=_UNSET, metadata=_UNSET, pinned=_UNSET, pin_rank=_UNSET, title=_UNSET):
+    """PATCH an item: from spec 1.4 a text item's pinned, pin_rank and title too (a new
+    title is a new version, 202)."""
+    if pinned is _UNSET and pin_rank is _UNSET and title is _UNSET:
+        return _update_item_1_3(self, collection_id, item_id, reference, label, metadata)
+    entries, body = [], {}
+    if reference is not _UNSET:
+        entries.extend(_string_entries(["body", "reference"], reference, ITEM_REFERENCE_MAX, ITEM_REFERENCE_PATTERN))
+        body["reference"] = reference
+    if label is not _UNSET:
+        if label is not None:
+            entries.extend(_string_entries(["body", "label"], label, ITEM_LABEL_MAX))
+        body["label"] = label
+    if metadata is not _UNSET:
+        entries.extend(_metadata_entries(metadata))
+        body["metadata"] = metadata
+    if pinned is not _UNSET:
+        if not isinstance(pinned, bool):
+            entries.append(_entry("bool_type", ["body", "pinned"], "Input should be a valid boolean", _echoed(pinned)))
+        body["pinned"] = pinned
+    if pin_rank is not _UNSET:
+        if not _is_int(pin_rank) or not 0 <= pin_rank <= PIN_RANK_MAX:
+            entries.append(_entry("int_range", ["body", "pin_rank"], "Input should be an integer from 0 to 1000", _echoed(pin_rank)))
+        body["pin_rank"] = pin_rank
+    if title is not _UNSET:
+        entries.extend(_title_entries(title))
+        body["title"] = title
+    if entries:
+        raise local_422(entries)
+    path = "/v1/collections/%s/items/%s" % (self._id(collection_id), self._id(item_id))
+    return self._call("PATCH", path, body, "idempotent", str(uuid.uuid4()))
+
+
+def _paging(offset, limit):
+    if offset is not None and (not _is_int(offset) or offset < 0):
+        raise local_error(BadRequestError, "Query parameter offset must be an integer of 0 or more, got %s." % (offset,))
+    if limit is not None and (not _is_int(limit) or not 1 <= limit <= LIST_LIMIT_MAX):
+        raise local_error(BadRequestError, "Query parameter limit must be an integer from 1 to %d, got %s." % (LIST_LIMIT_MAX, limit))
+    q = []
+    if offset is not None:
+        q.append("offset=%d" % offset)
+    if limit is not None:
+        q.append("limit=%d" % limit)
+    return "?" + "&".join(q) if q else ""
+
+
+def get_item(self, collection_id, item_id, include_text=False):
+    """Spec 1.4: one item; with include_text a text item's stored text."""
+    path = "/v1/collections/%s/items/%s" % (self._id(collection_id), self._id(item_id))
+    return self._call("GET", path + ("?include=text" if include_text else ""))
+
+
+def list_chunks(self, collection_id, item_id, offset=None, limit=None):
+    """Spec 1.4: a text item's live chunks, paged; never vectors."""
+    path = "/v1/collections/%s/items/%s/chunks" % (self._id(collection_id), self._id(item_id))
+    return self._call("GET", path + _paging(offset, limit))
+
+
+def search(self, collection_id, query, scope=None, match=None, filter=None, top_k=None, pinned=None, max_tokens=None):  # noqa: A002
+    """Spec 1.4: POST /v1/collections/{id}/search, each argument sent only when given,
+    as given; nothing checked locally. A KnowledgeReading with every passage's text."""
+    body = {"query": query}
+    for name, value in (("scope", scope), ("match", match), ("filter", filter), ("top_k", top_k), ("pinned", pinned), ("max_tokens", max_tokens)):
+        if value is not None:
+            body[name] = value
+    return parse_reading("knowledge", self._call("POST", "/v1/collections/%s/search" % self._id(collection_id), body))
+
+
+def wait_until_ready(self, collection_id, item_id=None, timeout=READY_TIMEOUT, poll_interval=READY_POLL_INTERVAL):
+    """Spec 1.4: reads the item until it is ready or failed (and returns it, a failed one
+    as a value), or the collection until nothing is queued or processing (and returns
+    it). The first read at once, then poll_interval, times 1.5 after each read, up to
+    10 s; past timeout the timeout error."""
+    if isinstance(poll_interval, bool) or not isinstance(poll_interval, (int, float)) or poll_interval < READY_POLL_MIN:
+        raise ValueError("poll_interval must be at least %s s, got %r" % (READY_POLL_MIN, poll_interval))
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not timeout > 0:
+        raise ValueError("timeout must be a number of seconds above 0, got %r" % (timeout,))
+    started = time.monotonic()
+    waited = 0.0
+    interval = float(poll_interval)
+    while True:
+        if item_id is not None:
+            got = self.get_item(collection_id, item_id)
+            if isinstance(got, dict) and got.get("status") in ("ready", "failed"):
+                return got
+        else:
+            got = self.get(collection_id)
+            counts = got.get("status_counts") if isinstance(got, dict) else None
+            counts = counts if isinstance(counts, dict) else {}
+            if not counts.get("queued") and not counts.get("processing"):
+                return got
+        spent = max(time.monotonic() - started, waited)
+        if spent >= timeout:
+            raise TimeoutError("not ready after %ss" % timeout)
+        wait = min(interval, timeout - spent)
+        self.c._sleep(wait)
+        waited += wait
+        interval = min(READY_POLL_MAX, interval * 1.5)
+
+
+Collections.create = _create
+Collections.update_item = _update_item
+Collections.add_document = add_document
+Collections.replace_document = replace_document
+Collections.get_item = get_item
+Collections.list_chunks = list_chunks
+Collections.search = search
+Collections.wait_until_ready = wait_until_ready
+
+
+class KnowledgePassage:
+    """One passage of a knowledge reading, in the block's order (pinned first): its
+    citation (item, chunk, UTF-8 byte offsets into the item's stored text, end
+    exclusive) and what the reading says of it, as sent."""
+
+    FIELDS = ("n", "pinned", "item", "reference", "title", "heading", "chunk", "byte_start", "byte_end", "tokens", "score", "lexical", "rendered", "text")
+
+    def __init__(self, raw):
+        self.raw = raw
+        for name in self.FIELDS:
+            setattr(self, name, raw.get(name))
+
+
+class KnowledgeReading(Reading):
+    """Spec 1.4: the knowledge booster's one reading, and the search route's answer. A
+    search's answer has no truncated and its passages no rendered: those are empty."""
+
+    kind = "knowledge"
+    FIELDS = ("collection", "collection_name", "corpus", "query", "budget", "scope", "warnings", "passages", "omitted", "pending_items", "search", "truncated")
+
+    def __init__(self, raw):
+        super().__init__(raw)
+        self.warnings = list(raw.get("warnings") or [])
+        self.passages = [KnowledgePassage(p) for p in raw["passages"]]
+
+
+def _opt(raw, key, kinds) -> bool:
+    return raw.get(key) is None or (isinstance(raw[key], kinds) and not (bool not in kinds and isinstance(raw[key], bool)))
+
+
+def _passage_ok(p) -> bool:
+    return (
+        isinstance(p, dict)
+        and _is_int(p.get("n")) and _is_int(p.get("chunk")) and _is_int(p.get("byte_start")) and _is_int(p.get("byte_end"))
+        and isinstance(p.get("item"), str) and isinstance(p.get("pinned"), bool)
+        and all(_opt(p, k, (str,)) for k in ("reference", "title", "heading", "text"))
+        and _opt(p, "score", (int, float)) and _opt(p, "tokens", (int,))
+        and _opt(p, "lexical", (bool,)) and _opt(p, "rendered", (bool,))
+    )
+
+
+def _knowledge_ok(raw) -> bool:
+    return (
+        isinstance(raw.get("collection"), str)
+        and isinstance(raw.get("passages"), list)
+        and all(_passage_ok(p) for p in raw["passages"])
+        and _opt(raw, "collection_name", (str,))
+        and _opt(raw, "truncated", (bool,))
+        and (raw.get("warnings") is None or (isinstance(raw["warnings"], list) and all(isinstance(w, str) for w in raw["warnings"])))
+        and all(_opt(raw, k, (dict,)) for k in ("corpus", "query", "budget", "scope", "omitted", "search"))
+    )
+
+
+READINGS["knowledge"] = (KnowledgeReading, _knowledge_ok)

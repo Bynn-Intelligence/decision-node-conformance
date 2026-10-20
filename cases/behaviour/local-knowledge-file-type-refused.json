@@ -1,0 +1,31 @@
+{
+  "id": "local-knowledge-file-type-refused",
+  "description": "A file whose type is not a knowledge type (image/gif): the presign's 400 listing the types. Checked locally; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.add_document",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "document": {
+        "$document": {
+          "path": "fixtures/images/pixel.gif",
+          "content_type": "image/gif"
+        }
+      },
+      "title": "Animation"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "error_type": "api_usage_error",
+        "message": "files[0].content_type: must be one of text/plain, text/markdown, application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, text/html, image/png, image/jpeg, image/tiff, image/webp, got image/gif."
+      }
+    }
+  }
+}

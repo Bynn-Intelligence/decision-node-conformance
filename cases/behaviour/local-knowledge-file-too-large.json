@@ -1,0 +1,31 @@
+{
+  "id": "local-knowledge-file-too-large",
+  "description": "A file document of 52,428,801 bytes: the presign's 400 api_usage_error in its words, a BadRequestError. Checked locally; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.add_document",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "document": {
+        "$document": {
+          "path": "fixtures/knowledge/claims-policy.pdf",
+          "pad_to": 52428801
+        }
+      }
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "error_type": "api_usage_error",
+        "message": "files[0].byte_size: 52428801 is over the limit of 52428800 bytes."
+      }
+    }
+  }
+}

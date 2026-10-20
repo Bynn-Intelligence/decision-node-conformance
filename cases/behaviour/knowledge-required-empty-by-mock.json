@@ -1,0 +1,118 @@
+{
+  "id": "knowledge-required-empty-by-mock",
+  "description": "Against the mock: a required knowledge booster on a knowledge base with no documents is the 409 knowledge_collection_empty with details; not required, the reading is skipped, unbilled, and the decision answered.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Empty",
+          "type": "text"
+        }
+      },
+      "outcome": {
+        "result": "collection"
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": {
+            "claim": {
+              "amount": "740.00",
+              "receipt": false
+            },
+            "mission": "M-42"
+          },
+          "questions": {
+            "approve": {
+              "$truth": {
+                "instructions": "Should the claim be approved under our policy?"
+              }
+            }
+          },
+          "boosters": [
+            {
+              "$knowledge": {
+                "collection": {
+                  "$ref": "col.id"
+                },
+                "require": true
+              }
+            }
+          ]
+        }
+      },
+      "outcome": {
+        "error": "DecisionNodeError",
+        "fields": {
+          "status": 409,
+          "error_type": "knowledge_collection_empty",
+          "details": {
+            "items": 0,
+            "failed": 0
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": {
+            "claim": {
+              "amount": "740.00",
+              "receipt": false
+            },
+            "mission": "M-42"
+          },
+          "questions": {
+            "approve": {
+              "$truth": {
+                "instructions": "Should the claim be approved under our policy?"
+              }
+            }
+          },
+          "boosters": [
+            {
+              "$knowledge": {
+                "collection": {
+                  "$ref": "col.id"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "outcome": {
+        "result": "decision",
+        "decision": {
+          "evidence": {
+            "knowledge": {
+              "version": "knowledge-v1",
+              "status": "skipped",
+              "latency_ms": 0,
+              "billed_calls": 0,
+              "results": []
+            }
+          }
+        }
+      }
+    }
+  ],
+  "expect": {
+    "request_counts": [
+      {
+        "method": "POST",
+        "path": "/v1/collections",
+        "count": 1
+      }
+    ]
+  }
+}

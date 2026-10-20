@@ -1,0 +1,143 @@
+{
+  "id": "knowledge-search-sent",
+  "description": "collections.search: POST /v1/collections/{id}/search with query and every other argument as given (match and filter passed through, max_tokens an integer or \"auto\"). No Idempotency-Key: a search changes nothing. (The mock answers this case from its scenario.)",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.search",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "query": "receipts over 500 SEK",
+      "scope": "M-42",
+      "match": {
+        "region": "SE"
+      },
+      "filter": {
+        "or": [
+          {
+            "key": "product",
+            "op": "in",
+            "value": [
+              "car",
+              "home"
+            ]
+          },
+          {
+            "key": "product",
+            "op": "exists",
+            "value": false
+          }
+        ]
+      },
+      "top_k": 6,
+      "pinned": false,
+      "max_tokens": 512
+    }
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+            "collection_name": "Claims policy",
+            "corpus": {
+              "version": 41
+            },
+            "query": {
+              "source": "request",
+              "tokens": 5,
+              "text": "receipts over 500 SEK"
+            },
+            "budget": {
+              "mode": "auto",
+              "tokens": 1024
+            },
+            "scope": {
+              "key": "mission",
+              "value": "M-42"
+            },
+            "warnings": [],
+            "passages": [
+              {
+                "n": 1,
+                "pinned": false,
+                "item": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+                "reference": "policy-2026",
+                "title": "Claims policy 2026",
+                "heading": "Receipts",
+                "chunk": 0,
+                "byte_start": 35,
+                "byte_end": 83,
+                "tokens": 9,
+                "score": 0.9,
+                "lexical": true,
+                "text": "Reject any claim over 500 SEK without a receipt."
+              }
+            ],
+            "omitted": {
+              "below_min_score": 0,
+              "per_item_cap": 0,
+              "over_budget": 0,
+              "pinned_filtered": 0
+            },
+            "pending_items": 0,
+            "search": {
+              "plan": "exact",
+              "candidates": 6,
+              "fallback": false
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80/search",
+      "body": {
+        "query": "receipts over 500 SEK",
+        "scope": "M-42",
+        "match": {
+          "region": "SE"
+        },
+        "filter": {
+          "or": [
+            {
+              "key": "product",
+              "op": "in",
+              "value": [
+                "car",
+                "home"
+              ]
+            },
+            {
+              "key": "product",
+              "op": "exists",
+              "value": false
+            }
+          ]
+        },
+        "top_k": 6,
+        "pinned": false,
+        "max_tokens": 512
+      },
+      "absent_headers": [
+        "idempotency-key"
+      ],
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$"
+      }
+    }
+  }
+}

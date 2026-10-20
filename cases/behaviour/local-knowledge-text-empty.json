@@ -1,0 +1,40 @@
+{
+  "id": "local-knowledge-text-empty",
+  "description": "An empty text: the 422 string_too_short at [\"body\", \"text\"], \"The text is empty\". Checked locally; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.add_document",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "document": {
+        "$document": {
+          "text": ""
+        }
+      },
+      "title": "Rules"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "ValidationError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "entries": [
+          {
+            "type": "string_too_short",
+            "loc": [
+              "body",
+              "text"
+            ],
+            "msg": "The text is empty",
+            "input": ""
+          }
+        ]
+      }
+    }
+  }
+}

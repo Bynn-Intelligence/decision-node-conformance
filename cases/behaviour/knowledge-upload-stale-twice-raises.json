@@ -1,0 +1,67 @@
+{
+  "id": "knowledge-upload-stale-twice-raises",
+  "description": "A second stale answer after the one re-upload is raised as a BadRequestError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80/items"
+          },
+          "steps": [
+            {
+              "status": 400,
+              "headers": {
+                "content-type": "application/json"
+              },
+              "body": {
+                "detail": {
+                  "error_type": "upload_expired",
+                  "message": "Upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 expired."
+                }
+              }
+            },
+            {
+              "status": 400,
+              "headers": {
+                "content-type": "application/json"
+              },
+              "body": {
+                "detail": {
+                  "error_type": "upload_expired",
+                  "message": "Upload upl_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80 expired."
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "collections.add_document",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "document": {
+        "$document": {
+          "path": "fixtures/knowledge/claims-policy.pdf"
+        }
+      },
+      "reference": "policy-2026"
+    }
+  },
+  "expect": {
+    "attempts": 6,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "error_type": "upload_expired"
+      }
+    }
+  }
+}

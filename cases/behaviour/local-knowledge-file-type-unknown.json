@@ -1,0 +1,25 @@
+{
+  "id": "local-knowledge-file-type-unknown",
+  "description": "Bytes whose type neither a content_type, a file name nor their first bytes tell: the language's argument error. Checked locally; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.add_document",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "document": {
+        "$document": {
+          "data_text": "Rules without a name."
+        }
+      },
+      "title": "Rules"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "argument_error": true
+    }
+  }
+}

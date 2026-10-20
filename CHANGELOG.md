@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.23 (for SDK specification 1.4)
+
+Knowledge: a workspace's own documents in collections of type `text`, the passages a decision applies, and search. `SPEC_VERSION` is `"1.4"`.
+
+- Calls: `collections.create(name, type, scope_key)` takes `type` `text` and a `scope_key`; `collections.add_document(collection_id, document, title, reference, pinned, pin_rank, label, metadata, wait)` and `collections.replace_document(collection_id, item_id, ...)`, each with its own `Idempotency-Key` and `?wait=true` when asked; `collections.update_item` takes `pinned`, `pin_rank` and `title`; `collections.get_item(collection_id, item_id, include_text)`; `collections.list_chunks(collection_id, item_id, offset, limit)`; `collections.search(collection_id, query, scope, match, filter, top_k, pinned, max_tokens)`; `collections.wait_until_ready(collection_id, item_id, timeout, poll_interval)`; `upload_documents(documents)`. Each returns the API's object as sent; a search returns a `KnowledgeReading`.
+- Documents: `Document(text, format)` inline whatever its size; a text or Markdown file under the inline threshold, in UTF-8, inline too (its title the file name's stem unless given); every other file uploaded with `"purpose": "knowledge"` (its type from `content_type`, the extension or the first bytes; up to 52,428,800 bytes; the PUT 120 s per attempt unless `upload_timeout` is set) and named by `upload_id`. A stale upload the call placed is uploaded again once and the item call sent with a new `Idempotency-Key`.
+- The `knowledge` builder: `{"name": "knowledge", "require"?: true, "options": {"collection", ...}}`, every option sent as given and never checked locally.
+- Readings: `KnowledgeReading` (`collection`, `collection_name`, `corpus`, `query`, `budget`, `scope`, `warnings`, `passages`, `omitted`, `pending_items`, `search`, `truncated`) with `KnowledgePassage`s (`n`, `pinned`, `item`, `reference`, `title`, `heading`, `chunk`, `byte_start`, `byte_end`, `tokens`, `score`, `lexical`, `rendered`, `text`), every value as sent; a reading or a passage of the wrong shape is generic.
+- Local checks: a collection type other than `face` or `text`, a `scope_key`, a title, an empty text, `format`, `pin_rank`, a reference, a label and metadata as before, a file's type and size (the presign's `400` in its words), `list_chunks`' query, `wait_until_ready`'s arguments.
+- Errors and retries: every `409` the base error with `details` (`knowledge_collection_empty`, `reference_taken`, `pinned_budget_exceeded`, `chunks_limit_reached`, `not_an_article`, `not_a_file`); `item_too_large` a `RequestTooLargeError`; `invalid_text` a `ValidationError`; `upload_purpose_mismatch` a `BadRequestError`, never uploaded again; a `529` `booster_unavailable` with `details.reason` `ingestion_delayed` never retried; the ingestion `429` and the other `529`s retried as before; `wait_until_ready` returns a failed item as a value.
+- Changed: `local-collections-type-not-face` expects "Input should be 'face' or 'text'"; `400-booster-unknown` lists `knowledge` among the boosters; `spec-version` is `"1.4"`.
+- Case format: `$knowledge` and `$document`; methods `collections.add_document`, `collections.replace_document`, `collections.get_item`, `collections.list_chunks`, `collections.search`, `collections.wait_until_ready` and `upload_documents`; results `chunk_page` and `knowledge`; the reading kind `knowledge`; `distinct_header` in a behaviour case's expectations.
+- Mock: text collections, their items (text and by knowledge upload), chunks, search and the `knowledge` booster with deterministic readings; knowledge uploads; ingestion moved by reads, so waiting needs no clock; the scenario setting `knowledge`.
+
+Cases: 979 in all (requests 167, responses 140, errors 169, behaviour 501, constants 2): 124 new (25 requests, 18 responses, 28 errors, 53 behaviour), 3 changed.
+
 ## 1.22 (for SDK specification 1.3)
 
 A Segment Vision opening's `offset` corrected. `SPEC_VERSION` stays `"1.3"`; no rule changes.

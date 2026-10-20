@@ -1,0 +1,32 @@
+{
+  "id": "knowledge-collection-create-unscoped-sent",
+  "description": "collections.create with type text and no scope_key: the body has no scope_key key.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.create",
+    "args": {
+      "name": "House rules",
+      "type": "text"
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/collections",
+      "body": {
+        "type": "text",
+        "name": "House rules"
+      },
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$",
+        "idempotency-key": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+      }
+    }
+  }
+}

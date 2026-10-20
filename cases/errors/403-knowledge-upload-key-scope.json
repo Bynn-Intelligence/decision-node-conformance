@@ -1,0 +1,39 @@
+{
+  "id": "403-knowledge-upload-key-scope",
+  "description": "A knowledge upload from a key that is not full-scope: the presign's 403 key_scope_denied, a PermissionDeniedError; nothing is stored.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "upload_documents",
+    "args": {
+      "documents": [
+        {
+          "$document": {
+            "path": "fixtures/knowledge/claims-policy.pdf"
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"key_scope_denied\", \"message\": \"Knowledge uploads need a full-scope key.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "PermissionDeniedError",
+      "fields": {
+        "status": 403,
+        "request_id": "req_err_0001",
+        "error_type": "key_scope_denied",
+        "message": "Knowledge uploads need a full-scope key."
+      }
+    }
+  }
+}

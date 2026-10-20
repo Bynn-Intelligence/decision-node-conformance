@@ -205,6 +205,29 @@
             }
           },
           "additionalProperties": false
+        },
+        "distinct_header": {
+          "type": "object",
+          "description": "Suite 1.23: the logged requests (those whose path ends with path_suffix and whose method is method, when given) carry the header name each with its own value, count of them: a resend whose body changed carries a new Idempotency-Key.",
+          "required": [
+            "name",
+            "count"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "path_suffix": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "count": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

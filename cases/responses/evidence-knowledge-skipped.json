@@ -1,0 +1,52 @@
+{
+  "id": "evidence-knowledge-skipped",
+  "description": "A knowledge entry that did not run (no document ready yet, not required): status skipped, no results, nothing billed.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "claim": {
+          "amount": "740.00",
+          "receipt": false
+        },
+        "mission": "M-42"
+      },
+      "questions": {
+        "approve": {
+          "$truth": {
+            "instructions": "Should the claim be approved under our policy?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$knowledge": {
+            "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+            "scope": "M-42"
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0\", \"answers\": {\"approve\": {\"type\": \"truth\", \"truth\": 0.12}}, \"usage\": {\"input_tokens\": 120, \"output_tokens\": 0, \"booster_tokens\": 96, \"boosters\": 0}, \"evidence\": {\"knowledge\": {\"version\": \"knowledge-v1\", \"status\": \"skipped\", \"latency_ms\": 0, \"billed_calls\": 0, \"results\": []}}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "knowledge": {
+          "version": "knowledge-v1",
+          "status": "skipped",
+          "latency_ms": 0,
+          "billed_calls": 0,
+          "results": []
+        }
+      }
+    }
+  }
+}

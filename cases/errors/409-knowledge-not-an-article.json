@@ -1,0 +1,39 @@
+{
+  "id": "409-knowledge-not-an-article",
+  "description": "replace_document with text on a file item: the 409 not_an_article, the base DecisionNodeError.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.replace_document",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+      "document": {
+        "$document": {
+          "text": "# Claims policy 2026\n\n## Receipts\n\nReject any claim over 500 SEK without a receipt.\n\n## Photos\n\nPhotos of damage taken after 2026-09-01 count as current.\n"
+        }
+      },
+      "title": "Claims policy 2026"
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"not_an_article\", \"message\": \"This item is a file: replace it with an upload_id.\"}}"
+  },
+  "expect": {
+    "error": {
+      "class": "DecisionNodeError",
+      "fields": {
+        "status": 409,
+        "request_id": "req_err_0001",
+        "error_type": "not_an_article"
+      }
+    }
+  }
+}

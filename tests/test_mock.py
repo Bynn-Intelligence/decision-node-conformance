@@ -1604,7 +1604,7 @@ class TestSuite111(Spec11):
             ([{"name": "age", "require": "yes"}], 400, "api_usage_error", "boosters: boosters[0].require must be true or false"),
             ([{"booster": "age"}], 400, "api_usage_error", "boosters: boosters[0] is neither a booster name nor an object with name"),
             ([{"name": "age", "priority": 1}], 400, "api_usage_error", "boosters: boosters[0]: 'priority' is not a key of a booster object"),
-            (["example_booster"], 400, "booster_unknown", "'example_booster' is not a booster; the boosters are age, ai_generated, bynn_depth, bynn_segment, face_recognition"),
+            (["example_booster"], 400, "booster_unknown", "'example_booster' is not a booster; the boosters are age, ai_generated, bynn_depth, bynn_segment, face_recognition, knowledge"),
             ([{"name": "age", "images": ["x9"]}], 400, "booster_input_mismatch", "Booster 'age': 'x9' is not an image of the request."),
         ]:
             st, hd, out = self.boosted(boosters, "t2")
@@ -2279,6 +2279,90 @@ class TestKeys(Spec11):
         for key, msg in (("dn_test_conformance", "Keys are managed with a keys key, made in the console."), ("dn_pub_x", "A publishable key may only make decisions.")):
             st, _, out = self.call("GET", "/v1/keys", None, self.h(key))
             self.assertEqual((st, out["detail"]["message"]), (403, msg))
+
+
+class TestKnowledge(Spec11):
+    """Suite 1.23: collections of type text, knowledge uploads, search and the knowledge
+    booster."""
+
+    def h(self, session, key="dn_test_conformance", **extra):
+        out = {"Authorization": "Bearer " + key, "Content-Type": "application/json", "x-mock-session": session}
+        out.update(extra)
+        return out
+
+    def base(self, session, scope_key=None):
+        body = {"type": "text", "name": "Claims policy"}
+        if scope_key:
+            body["scope_key"] = scope_key
+        st, _, col = self.call("POST", "/v1/collections", body, self.h(session))
+        self.assertEqual((st, col["type"], col["scope_key"], col["version"]), (201, "text", scope_key, 0))
+        return col["id"]
+
+    def test_text_items_ingest_by_reads_and_wait(self):
+        cid = self.base("kn1", "mission")
+        items = "/v1/collections/%s/items" % cid
+        st, _, it = self.call("POST", items + "?wait=true", {"title": "Policy", "text": "# Policy\n\n## Receipts\n\nReject any claim over 500 SEK without a receipt."}, self.h("kn1"))
+        self.assertEqual((st, it["status"], it["serving"], it["chunks"], it["reference"]), (201, "ready", "current", 1, it["id"]))
+        st, _, it = self.call("POST", items, {"title": "Brief", "text": "Drones fly low.", "metadata": {"mission": "M-42"}}, self.h("kn1"))
+        self.assertEqual((st, it["status"]), (202, "queued"))
+        path = items + "/" + it["id"]
+        self.assertEqual(self.call("GET", path, None, self.h("kn1"))[2]["status"], "processing")
+        self.assertEqual(self.call("GET", path, None, self.h("kn1"))[2]["status"], "ready")
+        st, _, got = self.call("GET", path + "?include=text", None, self.h("kn1"))
+        self.assertEqual(got["text"], "Drones fly low.")
+        st, _, ch = self.call("GET", items + "/" + it["id"] + "/chunks", None, self.h("kn1"))
+        self.assertEqual((ch["total"], ch["chunks"][0]["byte_start"], ch["chunks"][0]["byte_end"]), (1, 0, 15))
+        st, _, col = self.call("GET", "/v1/collections/" + cid, None, self.h("kn1"))
+        self.assertEqual((col["items"], col["status_counts"]["ready"], col["chunks"]), (2, 2, 2))
+
+    def test_item_body_refusals(self):
+        cid = self.base("kn2")
+        items = "/v1/collections/%s/items" % cid
+        st, _, out = self.call("POST", items, {"text": "x"}, self.h("kn2"))
+        self.assertEqual((st, out["detail"][0]["loc"]), (422, ["body", "title"]))
+        st, _, out = self.call("POST", items, {"title": "T", "text": "a\u0000b"}, self.h("kn2"))
+        self.assertEqual((st, out["detail"]["error_type"]), (422, "invalid_text"))
+        st, _, out = self.call("POST", items, {"title": "T", "text": "a" * (512 * 1024 + 1)}, self.h("kn2"))
+        self.assertEqual((st, out["detail"]["error_type"]), (413, "item_too_large"))
+        st, _, out = self.call("POST", items, {"title": "T", "text": "x", "upload_id": "upl_" + "0" * 32}, self.h("kn2"))
+        self.assertEqual((st, out["detail"][0]["loc"]), (422, ["body"]))
+        self.call("POST", items, {"title": "T", "text": "x", "reference": "r1"}, self.h("kn2"))
+        st, _, out = self.call("POST", items, {"title": "U", "text": "y", "reference": "r1"}, self.h("kn2"))
+        self.assertEqual((st, out["detail"]["error_type"], out["detail"]["details"]["item_id"].startswith("itm_")), (409, "reference_taken", True))
+
+    def test_knowledge_uploads(self):
+        pdf = b"%PDF-1.4\n" + b"x" * 100
+        f = dict(file_of(pdf, "application/pdf"), purpose="knowledge", filename="policy.pdf")
+        st, _, out = self.call("POST", "/v1/uploads", {"files": [f]}, self.h("kn3"))
+        self.assertEqual((st, out["uploads"][0]["purpose"]), (201, "knowledge"))
+        st, _, out = self.call("POST", "/v1/uploads", {"files": [dict(f, filename="policy.docx")]}, self.h("kn3"))
+        self.assertEqual(st, 400)
+        st, _, out = self.call("POST", "/v1/uploads", {"files": [dict(f, byte_size=52428801)]}, self.h("kn3"))
+        self.assertEqual(out["detail"]["message"], "files[0].byte_size: 52428801 is over the limit of 52428800 bytes.")
+        st, _, out = self.call("POST", "/v1/uploads", {"files": [f]}, self.h("kn3", "dn_test_scope-decide"))
+        self.assertEqual((st, out["detail"]["error_type"]), (403, "key_scope_denied"))
+
+    def test_search_and_booster(self):
+        cid = self.base("kn4", "mission")
+        items = "/v1/collections/%s/items" % cid
+        st, _, out = self.call("POST", "/v1/collections/%s/search" % cid, {"query": "receipts"}, self.h("kn4"))
+        self.assertEqual((st, out["detail"]["error_type"], out["detail"]["details"]), (409, "knowledge_collection_empty", {"items": 0, "failed": 0}))
+        self.call("POST", items, {"title": "Rule", "text": "Always ask for the claim number.", "pinned": True}, self.h("kn4"))
+        st, hd, out = self.call("POST", "/v1/collections/%s/search" % cid, {"query": "receipts"}, self.h("kn4"))
+        self.assertEqual((st, out["detail"]["error_type"], hd.get("retry-after")), (529, "booster_unavailable", "5"))
+        self.call("POST", items + "?wait=true", {"title": "Policy", "text": "Reject any claim over 500 SEK without a receipt."}, self.h("kn4"))
+        st, hd, out = self.call("POST", "/v1/collections/%s/search" % cid, {"query": "claim without receipt", "top_k": 1}, self.h("kn4"))
+        self.assertEqual((st, hd["x-decisionnode-boosters"], [p["pinned"] for p in out["passages"]], out["warnings"]), (200, "knowledge=ok:141", [False], ["scope_not_named"]))
+        body = {"state": {"claim": 1}, "questions": {"q": {"type": "truth", "instructions": "Approve?"}}, "boosters": [{"name": "knowledge", "options": {"collection": cid, "scope": "M-42"}}]}
+        st, _, out = self.call("POST", "/v1/decide", body, self.h("kn4"))
+        reading = out["evidence"]["knowledge"]["results"][0]
+        self.assertEqual((st, reading["truncated"], [p["rendered"] for p in reading["passages"]][:1], out["usage"]["boosters"]), (200, False, [True], 1))
+        body["boosters"] = [{"name": "knowledge", "options": {"collection": cid, "match": {"mission": "M-42"}}}]
+        st, _, out = self.call("POST", "/v1/decide", body, self.h("kn4"))
+        self.assertEqual((st, out["detail"]["error_type"]), (400, "api_usage_error"))
+        body["boosters"] = [{"name": "knowledge", "options": {"collection": cid, "include_text": True}}]
+        st, _, out = self.call("POST", "/v1/decide", body, self.h("kn4", "dn_test_scope-decide"))
+        self.assertEqual((st, out["detail"]["message"]), (403, "include_text needs a full-scope key."))
 
 
 if __name__ == "__main__":

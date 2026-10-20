@@ -1,0 +1,24 @@
+{
+  "id": "knowledge-collection-delete-purging",
+  "description": "Deleting a text collection whose purge outlasts 10 s answers 202 with status purging: a success, returned as sent; the SDK does not poll the purge.",
+  "call": {
+    "method": "collections.delete",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+    }
+  },
+  "response": {
+    "status": 202,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"id\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"status\": \"purging\"}"
+  },
+  "expect": {
+    "deleted": {
+      "id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "status": "purging"
+    }
+  }
+}

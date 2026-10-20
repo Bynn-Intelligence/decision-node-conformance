@@ -1,0 +1,136 @@
+{
+  "id": "knowledge-file-by-mock",
+  "description": "Against the mock: a PDF by path is uploaded with purpose knowledge and named by its upload_id; the item is a file item, ready after reads, its original deleted once its text is extracted (original_held false); the same upload cannot be named twice (upload_consumed, raised for a caller's upload).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Scanned policies",
+          "type": "text"
+        }
+      },
+      "outcome": {
+        "result": "collection",
+        "collection": {
+          "scope_key": null
+        }
+      }
+    },
+    {
+      "save_as": "ids",
+      "call": {
+        "method": "upload_documents",
+        "args": {
+          "documents": [
+            {
+              "$document": {
+                "path": "fixtures/knowledge/claims-policy.pdf"
+              }
+            }
+          ]
+        }
+      },
+      "outcome": {
+        "result": "upload_ids",
+        "count": 1
+      }
+    },
+    {
+      "save_as": "doc",
+      "call": {
+        "method": "collections.add_document",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "document": {
+            "$document": {
+              "upload_id": {
+                "$ref": "ids.0"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "status": "queued",
+          "source": "file",
+          "title": "claims-policy",
+          "file": {
+            "filename": "claims-policy.pdf",
+            "content_type": "application/pdf",
+            "byte_size": 623,
+            "pages": null,
+            "original_held": true
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.wait_until_ready",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "item_id": {
+            "$ref": "doc.id"
+          },
+          "poll_interval": 0.1
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "status": "ready",
+          "file": {
+            "filename": "claims-policy.pdf",
+            "content_type": "application/pdf",
+            "byte_size": 623,
+            "pages": 1,
+            "original_held": false
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.add_document",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "document": {
+            "$document": {
+              "upload_id": {
+                "$ref": "ids.0"
+              }
+            }
+          }
+        }
+      },
+      "outcome": {
+        "error": "BadRequestError",
+        "fields": {
+          "error_type": "upload_consumed"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "request_counts": [
+      {
+        "method": "POST",
+        "path": "/v1/collections",
+        "count": 1
+      }
+    ]
+  }
+}

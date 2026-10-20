@@ -1,0 +1,34 @@
+{
+  "id": "knowledge-collection-create-sent",
+  "description": "collections.create with type text and a scope_key: POST /v1/collections with {\"type\": \"text\", \"name\", \"scope_key\"}, a knowledge base whose items a request can scope by that metadata key. It carries an Idempotency-Key, a new UUID (version 4) per call.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.create",
+    "args": {
+      "name": "Claims policy",
+      "type": "text",
+      "scope_key": "mission"
+    }
+  },
+  "expect": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/collections",
+      "body": {
+        "type": "text",
+        "name": "Claims policy",
+        "scope_key": "mission"
+      },
+      "headers": {
+        "authorization": "Bearer dn_test_conformance"
+      },
+      "header_patterns": {
+        "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+        "content-type": "^application/json(;.*)?$",
+        "idempotency-key": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "id": "400-knowledge-needs-collection",
+  "description": "The knowledge booster named bare (a Booster with no option): the API's 400 api_usage_error \"Invalid request.\", its reason naming the missing collection. Nothing about boosters is checked locally.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "claim": {
+          "amount": "740.00",
+          "receipt": false
+        },
+        "mission": "M-42"
+      },
+      "questions": {
+        "approve": {
+          "$truth": {
+            "instructions": "Should the claim be approved under our policy?"
+          }
+        }
+      },
+      "boosters": [
+        "knowledge"
+      ]
+    }
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-decisionnode-error": "boosters[0]: the booster 'knowledge' needs options.collection",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"api_usage_error\", \"message\": \"Invalid request.\"}}"
+  },
+  "natural_request": {
+    "method": "POST",
+    "path": "/v1/decide",
+    "headers": {
+      "authorization": "Bearer dn_test_conformance",
+      "content-type": "application/json"
+    },
+    "body": {
+      "model": "decisionnode-moe",
+      "state": {
+        "claim": {
+          "amount": "740.00",
+          "receipt": false
+        },
+        "mission": "M-42"
+      },
+      "questions": {
+        "approve": {
+          "type": "truth",
+          "instructions": "Should the claim be approved under our policy?"
+        }
+      },
+      "boosters": [
+        "knowledge"
+      ]
+    }
+  },
+  "expect": {
+    "error": {
+      "class": "BadRequestError",
+      "fields": {
+        "status": 400,
+        "request_id": "req_err_0001",
+        "error_type": "api_usage_error",
+        "message": "Invalid request.",
+        "reason": "boosters[0]: the booster 'knowledge' needs options.collection"
+      }
+    }
+  }
+}

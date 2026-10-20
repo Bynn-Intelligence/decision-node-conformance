@@ -162,6 +162,11 @@ def norm_answer(a) -> dict:
 def norm_reading(r) -> dict:
     if isinstance(r, dn.UnknownReading):
         return {"kind": "unknown", "raw": r.raw}
+    if isinstance(r, dn.KnowledgeReading):
+        # Spec 1.4: the passages as the wire writes them, an empty field as null.
+        out = dict({"kind": r.kind}, **{name: getattr(r, name) for name in r.FIELDS})
+        out["passages"] = [{name: getattr(p, name) for name in p.FIELDS} for p in r.passages]
+        return out
     if isinstance(r, (dn.AgeReading, dn.AiGeneratedReading, dn.OcrReading, dn.DepthReading)):
         return dict({"kind": r.kind}, **{name: getattr(r, name) for name in r.FIELDS})
     if isinstance(r, dn.SegmentReading):
@@ -309,6 +314,38 @@ def decode(value, ctx=None):
             return dn.point(args.get("instructions"), args.get("image"), args.get("units"), args.get("max"))
         if key == "$box":
             return dn.box(args.get("instructions"), args.get("image"), args.get("units"), args.get("max"))
+        if key == "$knowledge":
+            # Spec 1.4: the knowledge booster's builder.
+            args = {k: decode(v, ctx) for k, v in args.items()}
+            return dn.knowledge(**args)
+        if key == "$document":
+            # Spec 1.4: text, a file by path, bytes (data_base64, or data_text as UTF-8)
+            # or a stream (stream_base64), or an upload_id; pad_to as for an image.
+            args = {k: decode(v, ctx) for k, v in args.items()}
+            extra = {k: args[k] for k in ("format", "content_type", "filename") if k in args}
+            if "text" in args:
+                return dn.Document(text=args["text"], **extra)
+            if "upload_id" in args:
+                return dn.Document(upload_id=args["upload_id"])
+            if "path" in args and "pad_to" not in args:
+                return dn.Document(path=os.path.join(ROOT, args["path"]), **extra)
+            if "data_text" in args:
+                data = args["data_text"].encode("utf-8")
+            elif "repeat_text" in args:
+                data = (args["repeat_text"]["repeat"] * args["repeat_text"]["times"]).encode("utf-8")
+            elif "path" in args:
+                with open(os.path.join(ROOT, args["path"]), "rb") as fh:
+                    data = fh.read()
+                extra.setdefault("filename", os.path.basename(args["path"]))
+            else:
+                data = base64.b64decode(args["data_base64"] if "data_base64" in args else args["stream_base64"])
+            if "pad_to" in args:
+                data = data + b"\0" * max(0, args["pad_to"] - len(data))
+            if "stream_base64" in args:
+                import io
+
+                return dn.Document(stream=io.BytesIO(data), **extra)
+            return dn.Document(data=data, **extra)
         if key == "$booster":
             args = {k: decode(v, ctx) for k, v in args.items()}
             return dn.Booster(args["name"], **{k: args[k] for k in ("images", "require", "options") if k in args})
@@ -388,7 +425,9 @@ def invoke(client, call: dict, ctx=None):
         # Suite 1.18: key, list, all.
         return getattr(client.usage, method.split(".", 1)[1])(**a)
     if method.startswith("collections."):
-        # Create, list, get, delete, enroll, list_items, delete_item, from 1.15 update_item.
+        # Create, list, get, delete, enroll, list_items, delete_item, from 1.15 update_item,
+        # from 1.23 add_document, replace_document, get_item, list_chunks, search and
+        # wait_until_ready.
         return getattr(client.collections, method.split(".", 1)[1])(**a)
     if method == "supervise":
         replies = []
@@ -685,6 +724,11 @@ def run_response(case: dict, mock: Mock) -> None:
         match(exp["batch"], result, "batch")
     elif "batch_page" in exp:
         match(exp["batch_page"], result, "batch_page")
+    elif "knowledge" in exp:
+        # Spec 1.4: a search's answer.
+        if not isinstance(result, dn.KnowledgeReading):
+            raise Fail("knowledge: expected a KnowledgeReading, got %s" % type(result).__name__)
+        match(exp["knowledge"], norm_reading(result), "knowledge")
     elif any(k in exp for k in COLLECTION_KINDS):
         kind = next(k for k in COLLECTION_KINDS if k in exp)
         check_collection_result(kind, exp[kind], result, kind)
@@ -699,7 +743,7 @@ def run_response(case: dict, mock: Mock) -> None:
 
 # The collections calls' results, each the API's object as sent (an
 # SDK's typed object is compared by its fields' wire names). collections is the list.
-COLLECTION_KINDS = ("collection", "collections", "item", "item_page", "deleted", "key_usage", "usage_page", "usage_items",
+COLLECTION_KINDS = ("collection", "collections", "item", "item_page", "chunk_page", "deleted", "key_usage", "usage_page", "usage_items",
                     "created_key", "api_key", "key_page", "api_keys", "key_revoked", "keys_revoked")
 # The kinds whose result is a list, compared element by element by the keys given.
 LIST_KINDS = ("collections", "usage_items", "api_keys")
@@ -841,6 +885,11 @@ def check_outcome(spec: dict, result, path: str) -> None:
             match(spec.get("batch", {}), result, path + ".batch")
         elif kind == "batch_page":
             match(spec.get("batch_page", {}), result, path + ".batch_page")
+        elif kind == "knowledge":
+            # Spec 1.4: a search's answer, a KnowledgeReading.
+            if not isinstance(result, dn.KnowledgeReading):
+                raise Fail("%s: expected a KnowledgeReading, got %s" % (path, type(result).__name__))
+            match(spec.get("knowledge", {}), norm_reading(result), path + ".knowledge")
         elif kind in COLLECTION_KINDS:
             check_collection_result(kind, spec.get(kind, {}), result, path + "." + kind)
         elif kind == "batch_results":
@@ -1081,6 +1130,15 @@ def run_behaviour(case: dict, mock: Mock) -> None:
         pattern = exp["same_header"].get("pattern")
         if pattern and not re.search(pattern, values[0]):
             raise Fail("same_header %s: %r does not match %s" % (name, values[0], pattern))
+    if "distinct_header" in exp:
+        # Suite 1.23: each of these requests carries its own value, a resend whose body
+        # changed a new Idempotency-Key.
+        spec = exp["distinct_header"]
+        name = spec["name"].lower()
+        hits = [r for r in log if (spec.get("path_suffix") is None or r["path"].endswith(spec["path_suffix"])) and (spec.get("method") is None or r["method"] == spec["method"])]
+        values = [r["headers"].get(name) for r in hits]
+        if len(hits) != spec["count"] or None in values or len(set(values)) != len(values):
+            raise Fail("distinct_header %s: expected %d distinct values, got %s" % (name, spec["count"], values))
     if "request_sequence" in exp:
         check_sequence(exp["request_sequence"], log)
     if "request_counts" in exp:

@@ -1,0 +1,209 @@
+{
+  "id": "knowledge-wait-until-ready-backoff-capped",
+  "description": "The wait grows by 1.5 from poll_interval up to 10 s.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+            "reference": "policy-2026",
+            "label": null,
+            "metadata": {},
+            "created_at": "2026-10-20T11:00:00Z",
+            "title": "Claims policy 2026",
+            "format": "markdown",
+            "pinned": false,
+            "pin_rank": 0,
+            "source": "article",
+            "file": null,
+            "status": "processing",
+            "stage": null,
+            "progress": null,
+            "serving": "none",
+            "error": null,
+            "delayed": false,
+            "warnings": [],
+            "chunks": 0,
+            "tokens": 0,
+            "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+            "version": 1,
+            "queued_at": "2026-10-20T11:00:01Z",
+            "ready_at": null
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+            "reference": "policy-2026",
+            "label": null,
+            "metadata": {},
+            "created_at": "2026-10-20T11:00:00Z",
+            "title": "Claims policy 2026",
+            "format": "markdown",
+            "pinned": false,
+            "pin_rank": 0,
+            "source": "article",
+            "file": null,
+            "status": "processing",
+            "stage": null,
+            "progress": null,
+            "serving": "none",
+            "error": null,
+            "delayed": false,
+            "warnings": [],
+            "chunks": 0,
+            "tokens": 0,
+            "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+            "version": 1,
+            "queued_at": "2026-10-20T11:00:01Z",
+            "ready_at": null
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+            "reference": "policy-2026",
+            "label": null,
+            "metadata": {},
+            "created_at": "2026-10-20T11:00:00Z",
+            "title": "Claims policy 2026",
+            "format": "markdown",
+            "pinned": false,
+            "pin_rank": 0,
+            "source": "article",
+            "file": null,
+            "status": "processing",
+            "stage": null,
+            "progress": null,
+            "serving": "none",
+            "error": null,
+            "delayed": false,
+            "warnings": [],
+            "chunks": 0,
+            "tokens": 0,
+            "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+            "version": 1,
+            "queued_at": "2026-10-20T11:00:01Z",
+            "ready_at": null
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+            "reference": "policy-2026",
+            "label": null,
+            "metadata": {},
+            "created_at": "2026-10-20T11:00:00Z",
+            "title": "Claims policy 2026",
+            "format": "markdown",
+            "pinned": false,
+            "pin_rank": 0,
+            "source": "article",
+            "file": null,
+            "status": "processing",
+            "stage": null,
+            "progress": null,
+            "serving": "none",
+            "error": null,
+            "delayed": false,
+            "warnings": [],
+            "chunks": 0,
+            "tokens": 0,
+            "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+            "version": 1,
+            "queued_at": "2026-10-20T11:00:01Z",
+            "ready_at": null
+          }
+        },
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+            "reference": "policy-2026",
+            "label": null,
+            "metadata": {},
+            "created_at": "2026-10-20T11:00:00Z",
+            "title": "Claims policy 2026",
+            "format": "markdown",
+            "pinned": false,
+            "pin_rank": 0,
+            "source": "article",
+            "file": null,
+            "status": "ready",
+            "stage": null,
+            "progress": null,
+            "serving": "current",
+            "error": null,
+            "delayed": false,
+            "warnings": [],
+            "chunks": 2,
+            "tokens": 18,
+            "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+            "version": 1,
+            "queued_at": "2026-10-20T11:00:01Z",
+            "ready_at": "2026-10-20T11:00:09Z"
+          }
+        }
+      ],
+      "after": "repeat_last"
+    }
+  },
+  "call": {
+    "method": "collections.wait_until_ready",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+      "poll_interval": 4
+    }
+  },
+  "expect": {
+    "attempts": 5,
+    "outcome": {
+      "result": "item",
+      "item": {
+        "status": "ready"
+      }
+    },
+    "scheduled_waits_ms": [
+      {
+        "min": 4000,
+        "max": 4000
+      },
+      {
+        "min": 6000,
+        "max": 6000
+      },
+      {
+        "min": 9000,
+        "max": 9000
+      },
+      {
+        "min": 10000,
+        "max": 10000
+      }
+    ]
+  }
+}

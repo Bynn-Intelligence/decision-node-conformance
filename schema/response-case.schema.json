@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "response-case.schema.json",
   "title": "Response case",
-  "description": "A recorded response and the values the SDK must parse it to. The mock replays it under the scenario response/<id>. expect holds exactly one of decision (decide), answer (check, classify, score, number), models (models), raw (decide_raw), batch (a Batch: create, add, finalize, get, cancel), batch_page (list), batch_results (results), session (open_session) or upload_ids.",
+  "description": "A recorded response and the values the SDK must parse it to. The mock replays it under the scenario response/<id>. expect holds exactly one of decision (decide), answer (check, classify, score, number), models (models), raw (decide_raw), batch (a Batch: create, add, finalize, get, cancel), batch_page (list), batch_results (results), session (open_session) or upload_ids. Suite 1.23 adds chunk_page (list_chunks) and knowledge (search's KnowledgeReading).",
   "type": "object",
   "required": [
     "id",
@@ -159,6 +159,14 @@
         "keys_revoked": {
           "type": "object",
           "description": "Suite 1.20: keys.revoke_by_labels' object as sent; nested objects compare by the keys given, lists whole."
+        },
+        "chunk_page": {
+          "type": "object",
+          "description": "Suite 1.23: collections.list_chunks's page as sent; nested objects compare by the keys given."
+        },
+        "knowledge": {
+          "$ref": "common.schema.json#/$defs/reading",
+          "description": "Suite 1.23: collections.search's KnowledgeReading."
         }
       },
       "additionalProperties": false

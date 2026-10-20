@@ -1,0 +1,74 @@
+{
+  "id": "knowledge-search-answer",
+  "description": "collections.search's answer: a KnowledgeReading with every passage's text and the query's; a search has no truncated and its passages no rendered, both empty.",
+  "call": {
+    "method": "collections.search",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "query": "receipts over 500 SEK"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"collection\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"collection_name\": \"Claims policy\", \"corpus\": {\"version\": 41}, \"query\": {\"source\": \"request\", \"tokens\": 5, \"text\": \"receipts over 500 SEK\"}, \"budget\": {\"mode\": \"auto\", \"tokens\": 1024}, \"scope\": {\"key\": \"mission\", \"value\": \"M-42\"}, \"warnings\": [], \"passages\": [{\"n\": 1, \"pinned\": false, \"item\": \"itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d\", \"reference\": \"policy-2026\", \"title\": \"Claims policy 2026\", \"heading\": \"Receipts\", \"chunk\": 0, \"byte_start\": 35, \"byte_end\": 83, \"tokens\": 9, \"score\": 0.9, \"lexical\": true, \"text\": \"Reject any claim over 500 SEK without a receipt.\"}], \"omitted\": {\"below_min_score\": 0, \"per_item_cap\": 0, \"over_budget\": 0, \"pinned_filtered\": 0}, \"pending_items\": 0, \"search\": {\"plan\": \"exact\", \"candidates\": 6, \"fallback\": false}}"
+  },
+  "expect": {
+    "knowledge": {
+      "kind": "knowledge",
+      "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "collection_name": "Claims policy",
+      "corpus": {
+        "version": 41
+      },
+      "query": {
+        "source": "request",
+        "tokens": 5,
+        "text": "receipts over 500 SEK"
+      },
+      "budget": {
+        "mode": "auto",
+        "tokens": 1024
+      },
+      "scope": {
+        "key": "mission",
+        "value": "M-42"
+      },
+      "warnings": [],
+      "passages": [
+        {
+          "n": 1,
+          "pinned": false,
+          "item": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+          "reference": "policy-2026",
+          "title": "Claims policy 2026",
+          "heading": "Receipts",
+          "chunk": 0,
+          "byte_start": 35,
+          "byte_end": 83,
+          "tokens": 9,
+          "score": 0.9,
+          "lexical": true,
+          "rendered": null,
+          "text": "Reject any claim over 500 SEK without a receipt."
+        }
+      ],
+      "omitted": {
+        "below_min_score": 0,
+        "per_item_cap": 0,
+        "over_budget": 0,
+        "pinned_filtered": 0
+      },
+      "pending_items": 0,
+      "search": {
+        "plan": "exact",
+        "candidates": 6,
+        "fallback": false
+      },
+      "truncated": null
+    }
+  }
+}

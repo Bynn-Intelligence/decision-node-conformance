@@ -1,0 +1,280 @@
+{
+  "id": "knowledge-lifecycle-by-mock",
+  "description": "Against the mock: create a knowledge base with a scope key, add a pinned rule and a Markdown policy with wait (ready at once), a mission's brief without it, wait for the brief, search it, decide with the knowledge booster, read the chunks, then delete the base. Each step answered as the API does.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Claims policy",
+          "type": "text",
+          "scope_key": "mission"
+        }
+      },
+      "outcome": {
+        "result": "collection",
+        "collection": {
+          "type": "text",
+          "name": "Claims policy",
+          "scope_key": "mission",
+          "items": 0,
+          "chunks": 0,
+          "status_counts": {
+            "queued": 0,
+            "processing": 0,
+            "ready": 0,
+            "failed": 0
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.add_document",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "document": {
+            "$document": {
+              "text": "Always ask for the claim number."
+            }
+          },
+          "title": "Core rules",
+          "reference": "core-rules",
+          "pinned": true,
+          "wait": true
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "status": "ready",
+          "serving": "current",
+          "pinned": true,
+          "reference": "core-rules",
+          "source": "article",
+          "chunks": 1
+        }
+      }
+    },
+    {
+      "save_as": "policy",
+      "call": {
+        "method": "collections.add_document",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "document": {
+            "$document": {
+              "path": "fixtures/knowledge/claims-policy.md"
+            }
+          },
+          "reference": "policy-2026",
+          "wait": true
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "status": "ready",
+          "title": "claims-policy",
+          "format": "markdown",
+          "chunks": 2
+        }
+      }
+    },
+    {
+      "save_as": "brief",
+      "call": {
+        "method": "collections.add_document",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "document": {
+            "$document": {
+              "text": "Drones fly below 50 m on this mission."
+            }
+          },
+          "title": "Mission M-42 brief",
+          "metadata": {
+            "mission": "M-42"
+          }
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "status": "queued",
+          "serving": "none",
+          "metadata": {
+            "mission": "M-42"
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.wait_until_ready",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "item_id": {
+            "$ref": "brief.id"
+          },
+          "poll_interval": 0.1
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "status": "ready",
+          "serving": "current"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.search",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "query": "claim over 500 SEK without a receipt",
+          "scope": "M-42",
+          "top_k": 1
+        }
+      },
+      "outcome": {
+        "result": "knowledge",
+        "knowledge": {
+          "kind": "knowledge",
+          "collection_name": "Claims policy",
+          "scope": {
+            "key": "mission",
+            "value": "M-42"
+          },
+          "truncated": null,
+          "query": {
+            "source": "request",
+            "tokens": 6,
+            "text": "claim over 500 SEK without a receipt"
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "decide",
+        "args": {
+          "state": {
+            "claim": {
+              "amount": "740.00",
+              "receipt": false
+            },
+            "mission": "M-42"
+          },
+          "questions": {
+            "approve": {
+              "$truth": {
+                "instructions": "Should the claim be approved under our policy?"
+              }
+            }
+          },
+          "boosters": [
+            {
+              "$knowledge": {
+                "collection": {
+                  "$ref": "col.id"
+                },
+                "scope": "M-42",
+                "require": true
+              }
+            }
+          ]
+        }
+      },
+      "outcome": {
+        "result": "decision",
+        "decision": {
+          "usage": {
+            "boosters": 1
+          }
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list_chunks",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "item_id": {
+            "$ref": "policy.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "chunk_page",
+        "chunk_page": {
+          "total": 2,
+          "offset": 0,
+          "next_offset": null
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.get_item",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "item_id": {
+            "$ref": "policy.id"
+          },
+          "include_text": true
+        }
+      },
+      "outcome": {
+        "result": "item",
+        "item": {
+          "text": "# Claims policy 2026\n\n## Receipts\n\nReject any claim over 500 SEK without a receipt.\n\n## Photos\n\nPhotos of damage taken after 2026-09-01 count as current.\n"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.delete",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "deleted",
+        "deleted": {
+          "deleted": true
+        }
+      }
+    }
+  ],
+  "expect": {
+    "request_counts": [
+      {
+        "method": "POST",
+        "path": "/v1/collections",
+        "count": 1
+      }
+    ]
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "id": "upload-documents-sent",
+  "description": "upload_documents uploads whatever it is given, a text document included (as text/markdown by its format, with no file name): one presign of purpose knowledge for all of them, in order, then one PUT each.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "upload_documents",
+    "args": {
+      "documents": [
+        {
+          "$document": {
+            "text": "# Claims policy 2026\n\n## Receipts\n\nReject any claim over 500 SEK without a receipt.\n\n## Photos\n\nPhotos of damage taken after 2026-09-01 count as current.\n"
+          }
+        },
+        {
+          "$document": {
+            "path": "fixtures/knowledge/claims-policy.pdf"
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "body": {
+          "files": [
+            {
+              "purpose": "knowledge",
+              "content_type": "text/markdown",
+              "byte_size": 154,
+              "checksum": "ftxRw7cCya53DSa5/h4fSQ==",
+              "sha256": "TQ7fpRc+/k94Sm5fhqmWloQMG/MQJYeqDZtYSWwyi5I="
+            },
+            {
+              "purpose": "knowledge",
+              "content_type": "application/pdf",
+              "byte_size": 623,
+              "checksum": "svSX2V8kkAp5e9u69/5FKw==",
+              "sha256": "Qj13GLEcAk5nLzYNU+bVQFGUeyScTF/QW0Fq9HvPzec=",
+              "filename": "claims-policy.pdf"
+            }
+          ]
+        },
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        }
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "text/markdown",
+          "content-md5": "ftxRw7cCya53DSa5/h4fSQ==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "TQ7fpRc+/k94Sm5fhqmWloQMG/MQJYeqDZtYSWwyi5I="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "4d0edfa5173efe4f784a6e5f86a99696840c1bf3102587aa0d9b58496c328b92"
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "application/pdf",
+          "content-md5": "svSX2V8kkAp5e9u69/5FKw==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "Qj13GLEcAk5nLzYNU+bVQFGUeyScTF/QW0Fq9HvPzec="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "423d7718b11c024e672f360d53e6d54051947b249c4c5fd05b416af47bcfcde7"
+      }
+    ]
+  }
+}

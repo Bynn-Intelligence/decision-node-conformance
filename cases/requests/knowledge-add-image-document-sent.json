@@ -1,0 +1,130 @@
+{
+  "id": "knowledge-add-image-document-sent",
+  "description": "A picture is a document too (its text is read from it): a PNG by path is uploaded with purpose knowledge, type image/png and its file name.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.add_document",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "document": {
+        "$document": {
+          "path": "fixtures/images/pixel.png"
+        }
+      },
+      "title": "Notice board"
+    }
+  },
+  "mock": {
+    "scenario": {
+      "rules": [
+        {
+          "match": {
+            "$method": "POST",
+            "$path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80/items"
+          },
+          "steps": [
+            {
+              "status": 202,
+              "headers": {
+                "content-type": "application/json"
+              },
+              "body": {
+                "id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+                "reference": "policy-2026",
+                "label": null,
+                "metadata": {},
+                "created_at": "2026-10-20T11:00:00Z",
+                "title": "Notice board",
+                "format": null,
+                "pinned": false,
+                "pin_rank": 0,
+                "source": "file",
+                "file": null,
+                "status": "queued",
+                "stage": null,
+                "progress": null,
+                "serving": "none",
+                "error": null,
+                "delayed": false,
+                "warnings": [],
+                "chunks": 0,
+                "tokens": 0,
+                "content_sha256": "8c1f1e6b2a7d4c3b9e0f5a6d7c8b9a0e1f2d3c4b5a6978e0d1c2b3a4f5e6d7c8",
+                "version": 1,
+                "queued_at": "2026-10-20T11:00:01Z",
+                "ready_at": null
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/v1/uploads",
+        "body": {
+          "files": [
+            {
+              "purpose": "knowledge",
+              "content_type": "image/png",
+              "byte_size": 79,
+              "checksum": "H6b2ahVGZuiwRyn7kTgCZg==",
+              "sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI=",
+              "filename": "pixel.png"
+            }
+          ]
+        },
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$"
+        }
+      },
+      {
+        "method": "PUT",
+        "path_pattern": "^/_mock/s3/uploads/",
+        "headers": {
+          "content-type": "image/png",
+          "content-md5": "H6b2ahVGZuiwRyn7kTgCZg==",
+          "if-none-match": "*",
+          "x-amz-checksum-sha256": "0bb8TdtHdN/5VL5EhHyy/Ep3ZKGQYHRrAL4jm89xzMI="
+        },
+        "absent_headers": [
+          "authorization",
+          "x-mock-session",
+          "x-mock-scenario"
+        ],
+        "body_sha256": "d1b6fc4ddb4774dff954be44847cb2fc4a7764a19060746b00be239bcf71ccc2"
+      },
+      {
+        "method": "POST",
+        "path": "/v1/collections/col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80/items",
+        "body_checks": [
+          {
+            "pointer": "/upload_id",
+            "pattern": "^upl_[0-9a-f]{32}$"
+          },
+          {
+            "pointer": "/title",
+            "equals": "Notice board"
+          }
+        ],
+        "headers": {
+          "authorization": "Bearer dn_test_conformance"
+        },
+        "header_patterns": {
+          "user-agent": "^decisionnode-(python|node|go|java|dotnet|ruby|php|rust)/[0-9A-Za-z.+_-]+$",
+          "content-type": "^application/json(;.*)?$",
+          "idempotency-key": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        }
+      }
+    ]
+  }
+}

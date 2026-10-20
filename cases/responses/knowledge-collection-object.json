@@ -1,0 +1,47 @@
+{
+  "id": "knowledge-collection-object",
+  "description": "A text collection's object: the face collection's fields, then scope_key, chunks and tokens (the live totals), version (the corpus version), status_counts and pinned (the pinned load, its cap and the largest scope value), each kept as sent.",
+  "call": {
+    "method": "collections.get",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"id\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"type\": \"text\", \"name\": \"Claims policy\", \"public\": false, \"items\": 12, \"created_at\": \"2026-10-20T10:00:00Z\", \"deletion\": null, \"scope_key\": \"mission\", \"chunks\": 412, \"tokens\": 81230, \"version\": 41, \"status_counts\": {\"queued\": 1, \"processing\": 1, \"ready\": 9, \"failed\": 1}, \"pinned\": {\"tokens\": 230, \"cap\": 512, \"largest_scope\": {\"value\": \"M-42\", \"tokens\": 96}}}"
+  },
+  "expect": {
+    "collection": {
+      "id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "type": "text",
+      "name": "Claims policy",
+      "public": false,
+      "items": 12,
+      "created_at": "2026-10-20T10:00:00Z",
+      "deletion": null,
+      "scope_key": "mission",
+      "chunks": 412,
+      "tokens": 81230,
+      "version": 41,
+      "status_counts": {
+        "queued": 1,
+        "processing": 1,
+        "ready": 9,
+        "failed": 1
+      },
+      "pinned": {
+        "tokens": 230,
+        "cap": 512,
+        "largest_scope": {
+          "value": "M-42",
+          "tokens": 96
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "id": "evidence-knowledge-include-text",
+  "description": "A reading with include_text: the query's text and each passage's text; here no scope named (scope.value null, the warning scope_not_named) and the require floor taking a long entry (budget_floor), all kept as sent.",
+  "call": {
+    "method": "decide",
+    "args": {
+      "state": {
+        "claim": {
+          "amount": "740.00",
+          "receipt": false
+        },
+        "mission": "M-42"
+      },
+      "questions": {
+        "approve": {
+          "$truth": {
+            "instructions": "Should the claim be approved under our policy?"
+          }
+        }
+      },
+      "boosters": [
+        {
+          "$knowledge": {
+            "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+            "scope": "M-42"
+          }
+        }
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"model\": \"decisionnode-moe-0.9.0\", \"answers\": {\"approve\": {\"type\": \"truth\", \"truth\": 0.12}}, \"usage\": {\"input_tokens\": 120, \"output_tokens\": 0, \"booster_tokens\": 96, \"boosters\": 1}, \"evidence\": {\"knowledge\": {\"version\": \"knowledge-v1\", \"status\": \"ok\", \"latency_ms\": 141, \"billed_calls\": 1, \"results\": [{\"collection\": \"col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80\", \"collection_name\": \"Claims policy\", \"corpus\": {\"version\": 41}, \"query\": {\"source\": \"request\", \"tokens\": 4, \"text\": \"receipts over 500 SEK\"}, \"budget\": {\"mode\": \"auto\", \"tokens\": 120, \"entry\": \"long\", \"cause\": \"require_floor\"}, \"scope\": {\"key\": \"mission\", \"value\": null}, \"warnings\": [\"scope_not_named\", \"budget_floor\"], \"passages\": [{\"n\": 1, \"pinned\": false, \"item\": \"itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d\", \"reference\": \"policy-2026\", \"title\": \"Claims policy 2026\", \"heading\": \"Receipts\", \"chunk\": 0, \"byte_start\": 35, \"byte_end\": 83, \"tokens\": 9, \"score\": 0.8123, \"lexical\": true, \"rendered\": true, \"text\": \"Reject any claim over 500 SEK without a receipt.\"}], \"omitted\": {\"below_min_score\": 0, \"per_item_cap\": 1, \"over_budget\": 1, \"pinned_filtered\": 0, \"short_entry\": 1, \"context_limit\": 0}, \"pending_items\": 0, \"search\": {\"plan\": \"exact\", \"candidates\": 50, \"fallback\": false}, \"truncated\": false}]}}}"
+  },
+  "expect": {
+    "decision": {
+      "evidence": {
+        "knowledge": {
+          "version": "knowledge-v1",
+          "status": "ok",
+          "latency_ms": 141,
+          "billed_calls": 1,
+          "results": [
+            {
+              "kind": "knowledge",
+              "collection": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+              "collection_name": "Claims policy",
+              "corpus": {
+                "version": 41
+              },
+              "query": {
+                "source": "request",
+                "tokens": 4,
+                "text": "receipts over 500 SEK"
+              },
+              "budget": {
+                "mode": "auto",
+                "tokens": 120,
+                "entry": "long",
+                "cause": "require_floor"
+              },
+              "scope": {
+                "key": "mission",
+                "value": null
+              },
+              "warnings": [
+                "scope_not_named",
+                "budget_floor"
+              ],
+              "passages": [
+                {
+                  "n": 1,
+                  "pinned": false,
+                  "item": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d",
+                  "reference": "policy-2026",
+                  "title": "Claims policy 2026",
+                  "heading": "Receipts",
+                  "chunk": 0,
+                  "byte_start": 35,
+                  "byte_end": 83,
+                  "tokens": 9,
+                  "score": 0.8123,
+                  "lexical": true,
+                  "rendered": true,
+                  "text": "Reject any claim over 500 SEK without a receipt."
+                }
+              ],
+              "omitted": {
+                "below_min_score": 0,
+                "per_item_cap": 1,
+                "over_budget": 1,
+                "pinned_filtered": 0,
+                "short_entry": 1,
+                "context_limit": 0
+              },
+              "pending_items": 0,
+              "search": {
+                "plan": "exact",
+                "candidates": 50,
+                "fallback": false
+              },
+              "truncated": false
+            }
+          ]
+        }
+      }
+    }
+  }
+}

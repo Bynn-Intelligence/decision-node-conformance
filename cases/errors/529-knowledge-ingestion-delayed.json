@@ -1,0 +1,39 @@
+{
+  "id": "529-knowledge-ingestion-delayed",
+  "description": "No document ready while ingestion is delayed: the 529 booster_unavailable with details.reason ingestion_delayed and Retry-After 60, an OverloadedError with details.",
+  "client": {
+    "api_key": "dn_test_conformance",
+    "max_retries": 0
+  },
+  "call": {
+    "method": "collections.search",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "query": "receipts"
+    }
+  },
+  "response": {
+    "status": 529,
+    "headers": {
+      "content-type": "application/json",
+      "retry-after": "60",
+      "retry-after-ms": "60000",
+      "x-request-id": "req_err_0001"
+    },
+    "body_text": "{\"detail\": {\"error_type\": \"booster_unavailable\", \"message\": \"The booster 'knowledge' has no document ready yet: processing is delayed.\", \"details\": {\"reason\": \"ingestion_delayed\"}}}"
+  },
+  "expect": {
+    "error": {
+      "class": "OverloadedError",
+      "fields": {
+        "status": 529,
+        "request_id": "req_err_0001",
+        "error_type": "booster_unavailable",
+        "retry_after": 60,
+        "details": {
+          "reason": "ingestion_delayed"
+        }
+      }
+    }
+  }
+}

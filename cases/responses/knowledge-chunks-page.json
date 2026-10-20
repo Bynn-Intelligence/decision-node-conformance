@@ -1,0 +1,49 @@
+{
+  "id": "knowledge-chunks-page",
+  "description": "collections.list_chunks: the live chunks with heading, UTF-8 byte offsets, pages (null for a text), tokens and text; never vectors.",
+  "call": {
+    "method": "collections.list_chunks",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "item_id": "itm_9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "x-request-id": "req_case_0001"
+    },
+    "body_text": "{\"chunks\": [{\"chunk\": 0, \"heading\": \"Receipts\", \"byte_start\": 35, \"byte_end\": 83, \"page_start\": null, \"page_end\": null, \"tokens\": 9, \"text\": \"Reject any claim over 500 SEK without a receipt.\"}, {\"chunk\": 1, \"heading\": \"Photos\", \"byte_start\": 96, \"byte_end\": 153, \"page_start\": null, \"page_end\": null, \"tokens\": 9, \"text\": \"Photos of damage taken after 2026-09-01 count as current.\"}], \"offset\": 0, \"limit\": 20, \"total\": 2, \"next_offset\": null}"
+  },
+  "expect": {
+    "chunk_page": {
+      "chunks": [
+        {
+          "chunk": 0,
+          "heading": "Receipts",
+          "byte_start": 35,
+          "byte_end": 83,
+          "page_start": null,
+          "page_end": null,
+          "tokens": 9,
+          "text": "Reject any claim over 500 SEK without a receipt."
+        },
+        {
+          "chunk": 1,
+          "heading": "Photos",
+          "byte_start": 96,
+          "byte_end": 153,
+          "page_start": null,
+          "page_end": null,
+          "tokens": 9,
+          "text": "Photos of damage taken after 2026-09-01 count as current."
+        }
+      ],
+      "offset": 0,
+      "limit": 20,
+      "total": 2,
+      "next_offset": null
+    }
+  }
+}
