@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.27 (for SDK specification 1.4)
+
+The fixtures keep their bytes on every checkout. `SPEC_VERSION` stays `"1.4"`.
+
+- `.gitattributes` marks `fixtures/**` as binary (`-text`), so a checkout with `core.autocrlf` (Windows) no longer turns the documents' line endings into CRLF, which changed their sizes, checksums and text. No case changes.
+
+Cases: 992 in all, none new or changed.
+
 ## 1.26 (for SDK specification 1.4)
 
 Finding and ordering a knowledge base's documents. `SPEC_VERSION` stays `"1.4"`.
