@@ -1,0 +1,26 @@
+{
+  "id": "local-knowledge-list-items-q-empty",
+  "description": "list_items with an empty q: the API's 400. Checked locally, after offset, limit and the reference; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.list_items",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "q": ""
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "error_type": "api_usage_error",
+        "message": "Query parameter q must be 1 to 200 characters."
+      }
+    }
+  }
+}

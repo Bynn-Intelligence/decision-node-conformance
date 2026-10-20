@@ -1,0 +1,210 @@
+{
+  "id": "knowledge-list-items-q-sort-by-mock",
+  "description": "Against the mock: three articles and a PDF; q matches the title, the reference or the file's name, case-insensitively; total and next_offset are the filtered list's; q and sort are echoed (sort newest when not sent, q null).",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "steps": [
+    {
+      "save_as": "col",
+      "call": {
+        "method": "collections.create",
+        "args": {
+          "name": "Searchable",
+          "type": "text"
+        }
+      },
+      "outcome": {
+        "result": "collection"
+      }
+    },
+    {
+      "call": {
+        "method": "collections.add_document",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "document": {
+            "$document": {
+              "text": "Rules for Claims policy 2026."
+            }
+          },
+          "title": "Claims policy 2026",
+          "reference": "policy-2026"
+        }
+      },
+      "outcome": {
+        "result": "item"
+      }
+    },
+    {
+      "call": {
+        "method": "collections.add_document",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "document": {
+            "$document": {
+              "text": "Rules for Mission brief."
+            }
+          },
+          "title": "Mission brief",
+          "reference": "mission-m42"
+        }
+      },
+      "outcome": {
+        "result": "item"
+      }
+    },
+    {
+      "call": {
+        "method": "collections.add_document",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "document": {
+            "$document": {
+              "text": "Rules for CLAIMS appendix."
+            }
+          },
+          "title": "CLAIMS appendix",
+          "reference": "appendix"
+        }
+      },
+      "outcome": {
+        "result": "item"
+      }
+    },
+    {
+      "call": {
+        "method": "collections.add_document",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "document": {
+            "$document": {
+              "path": "fixtures/knowledge/claims-policy.pdf"
+            }
+          },
+          "title": "Scanned rules",
+          "reference": "scan-1"
+        }
+      },
+      "outcome": {
+        "result": "item"
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list_items",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          }
+        }
+      },
+      "outcome": {
+        "result": "item_page",
+        "item_page": {
+          "total": 4,
+          "q": null,
+          "sort": "newest",
+          "next_offset": null
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list_items",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "q": "claims",
+          "sort": "title",
+          "limit": 1
+        }
+      },
+      "outcome": {
+        "result": "item_page",
+        "item_page": {
+          "total": 3,
+          "q": "claims",
+          "sort": "title",
+          "offset": 0,
+          "limit": 1,
+          "next_offset": 1
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list_items",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "q": "M42"
+        }
+      },
+      "outcome": {
+        "result": "item_page",
+        "item_page": {
+          "total": 1,
+          "q": "M42"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list_items",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "q": "POLICY.PDF",
+          "sort": "oldest"
+        }
+      },
+      "outcome": {
+        "result": "item_page",
+        "item_page": {
+          "total": 1,
+          "sort": "oldest"
+        }
+      }
+    },
+    {
+      "call": {
+        "method": "collections.list_items",
+        "args": {
+          "collection_id": {
+            "$ref": "col.id"
+          },
+          "q": "nothing like this"
+        }
+      },
+      "outcome": {
+        "result": "item_page",
+        "item_page": {
+          "total": 0,
+          "items": [],
+          "next_offset": null
+        }
+      }
+    }
+  ],
+  "expect": {
+    "request_counts": [
+      {
+        "method": "GET",
+        "path_pattern": "^/v1/collections/col_[0-9a-f]{32}/items$",
+        "count": 5
+      }
+    ]
+  }
+}

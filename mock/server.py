@@ -4966,7 +4966,34 @@ class Handler(BaseHTTPRequestHandler):
             self.refuse(rid, exc)
             return
         text = own["type"] == "text"
-        if reference is None and prefix is None:
+        q = (query.get("q") or [None])[0]
+        sort = (query.get("sort") or ["newest"])[0]
+        if text:
+            # Suite 1.26: a text collection's list takes q (1 to 200 characters, a
+            # case-insensitive part of the title, the file's name or the reference) and
+            # sort (newest, oldest, title), checked after the collection is found.
+            try:
+                if q is not None and not 1 <= len(q) <= 200:
+                    raise usage_error("Query parameter q must be 1 to 200 characters.")
+                if sort not in ("newest", "oldest", "title"):
+                    raise usage_error("Query parameter sort must be newest, oldest or title, got %s." % printable(sort, 16))
+            except Refused as exc:
+                self.refuse(rid, exc)
+                return
+        if text:
+            needle = (q or "").lower()
+
+            def hit(i):
+                names = [i.get("title") or "", (i.get("file") or {}).get("filename") or "", i["reference"]]
+                if q is not None and not any(needle in n.lower() for n in names):
+                    return False
+                if reference is not None:
+                    return i["reference"] == reference
+                return prefix is None or i["reference"].startswith(prefix)
+
+            order = {"newest": lambda i: -i["seq"], "oldest": lambda i: i["seq"], "title": lambda i: ((i.get("title") or "").lower(), i["id"])}[sort]
+            items = sorted((i for i in own["items"].values() if hit(i)), key=order)
+        elif reference is None and prefix is None:
             items = sorted(own["items"].values(), key=lambda i: i["seq"], reverse=True)
         else:
             # Found by reference: in reference order (its bytes), then the id.
@@ -4979,8 +5006,11 @@ class Handler(BaseHTTPRequestHandler):
             with self.server.state.lock:
                 for i in page:
                     self.advance_item(own, i)
-        self.send(200, {"items": [self.text_item_object(i) if text else self.item_object(i) for i in page], "offset": offset, "limit": limit, "total": total, "total_capped": capped, "next_offset": nxt,
-                        "reference": reference, "reference_prefix": prefix}, {"x-request-id": rid})
+        out = {"items": [self.text_item_object(i) if text else self.item_object(i) for i in page], "offset": offset, "limit": limit, "total": total, "total_capped": capped, "next_offset": nxt}
+        if text:
+            out.update(q=q, sort=sort)
+        out.update(reference=reference, reference_prefix=prefix)
+        self.send(200, out, {"x-request-id": rid})
 
     def api_item_update(self, rid, started, body_bytes, query, cid, item_id):
         text = next((c for c in self.own_collections() if c["id"] == cid and c["type"] == "text"), None)

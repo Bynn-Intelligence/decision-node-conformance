@@ -2364,6 +2364,22 @@ class TestKnowledge(Spec11):
         st, _, out = self.call("POST", "/v1/decide", body, self.h("kn4", "dn_test_scope-decide"))
         self.assertEqual((st, out["detail"]["message"]), (403, "include_text needs a full-scope key."))
 
+    def test_items_q_and_sort(self):
+        cid = self.base("kn5")
+        items = "/v1/collections/%s/items" % cid
+        for title, ref in (("b rules", "r-1"), ("A claims", "r-2"), ("c claims", "x-claims")):
+            self.call("POST", items, {"title": title, "text": "Text.", "reference": ref}, self.h("kn5"))
+        st, _, page = self.call("GET", items + "?q=CLAIMS&sort=title", None, self.h("kn5"))
+        self.assertEqual((st, [i["title"] for i in page["items"]], page["total"], page["q"], page["sort"]), (200, ["A claims", "c claims"], 2, "CLAIMS", "title"))
+        st, _, page = self.call("GET", items + "?sort=oldest&limit=2", None, self.h("kn5"))
+        self.assertEqual(([i["title"] for i in page["items"]], page["next_offset"], page["q"]), (["b rules", "A claims"], 2, None))
+        st, _, page = self.call("GET", items, None, self.h("kn5"))
+        self.assertEqual(([i["title"] for i in page["items"]], page["sort"]), (["c claims", "A claims", "b rules"], "newest"))
+        st, _, out = self.call("GET", items + "?sort=Title", None, self.h("kn5"))
+        self.assertEqual((st, out["detail"]["message"]), (400, "Query parameter sort must be newest, oldest or title, got Title."))
+        st, _, out = self.call("GET", items + "?q=", None, self.h("kn5"))
+        self.assertEqual((st, out["detail"]["message"]), (400, "Query parameter q must be 1 to 200 characters."))
+
 
 if __name__ == "__main__":
     unittest.main()

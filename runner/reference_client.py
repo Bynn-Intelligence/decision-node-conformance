@@ -3813,3 +3813,39 @@ def _knowledge_ok(raw) -> bool:
 
 
 READINGS["knowledge"] = (KnowledgeReading, _knowledge_ok)
+
+
+# Suite 1.26: a text collection's items list takes q and sort.
+ITEMS_Q_MAX = 200
+ITEMS_SORTS = ("newest", "oldest", "title")
+_list_items_1_3 = Collections.list_items
+
+
+def _list_items(self, collection_id, offset=None, limit=None, reference=None, reference_prefix=None, q=None, sort=None):
+    """list_items; from spec 1.4 q (1 to 200 characters, matched case-insensitively
+    against a text item's title, file name or reference) and sort (newest, oldest,
+    title), each sent only when given and checked after the other query parameters, as
+    the API checks them. The page echoes both on a text collection."""
+    if q is None and sort is None:
+        return _list_items_1_3(self, collection_id, offset, limit, reference, reference_prefix)
+    _paging(offset, limit)
+    if reference is not None and reference_prefix is not None:
+        raise local_error(BadRequestError, "Send query parameter reference or reference_prefix, not both.")
+    for name, value in (("reference", reference), ("reference_prefix", reference_prefix)):
+        if value is not None:
+            _reference_query(name, value)
+    if q is not None and (not isinstance(q, str) or not 1 <= len(q) <= ITEMS_Q_MAX):
+        raise local_error(BadRequestError, "Query parameter q must be 1 to 200 characters.")
+    if sort is not None and sort not in ITEMS_SORTS:
+        raise local_error(BadRequestError, "Query parameter sort must be newest, oldest or title, got %s." % _printable(str(sort), 16))
+    query = []
+    for name, value in (("offset", offset), ("limit", limit)):
+        if value is not None:
+            query.append("%s=%d" % (name, value))
+    for name, value in (("reference", reference), ("reference_prefix", reference_prefix), ("q", q), ("sort", sort)):
+        if value is not None:
+            query.append("%s=%s" % (name, quote(value, safe="")))
+    return self._call("GET", "/v1/collections/%s/items?%s" % (self._id(collection_id), "&".join(query)))
+
+
+Collections.list_items = _list_items

@@ -1,0 +1,48 @@
+{
+  "id": "knowledge-list-items-q-200-sent",
+  "description": "A q of exactly 200 characters (code points, here outside ASCII) is sent; the limit is 200.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "mock": {
+    "scenario": {
+      "steps": [
+        {
+          "status": 200,
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": {
+            "items": [],
+            "offset": 0,
+            "limit": 10,
+            "total": 0,
+            "total_capped": false,
+            "next_offset": null,
+            "q": "åååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååå",
+            "sort": "title",
+            "reference": null,
+            "reference_prefix": null
+          }
+        }
+      ]
+    }
+  },
+  "call": {
+    "method": "collections.list_items",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "q": "åååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååå"
+    }
+  },
+  "expect": {
+    "attempts": 1,
+    "outcome": {
+      "result": "item_page",
+      "item_page": {
+        "q": "åååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååååå",
+        "total": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "local-knowledge-list-items-sort-printable",
+  "description": "A sort value is echoed in the message as the API echoes it: its first 16 characters, any but printable ASCII as \\u{hex}, then \"...\" before the closing full stop. Checked locally, after offset, limit and the reference; nothing is sent.",
+  "client": {
+    "api_key": "dn_test_conformance"
+  },
+  "call": {
+    "method": "collections.list_items",
+    "args": {
+      "collection_id": "col_3f6c1a9e0b2d4c7f8a1e5d9b2c4f6a80",
+      "sort": "größer-als-sechzehn"
+    }
+  },
+  "expect": {
+    "attempts": 0,
+    "outcome": {
+      "error": "BadRequestError",
+      "fields": {
+        "status": null,
+        "request_id": null,
+        "error_type": "api_usage_error",
+        "message": "Query parameter sort must be newest, oldest or title, got gr\\u{f6}\\u{df}er-als-sechz...."
+      }
+    }
+  }
+}

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.26 (for SDK specification 1.4)
+
+Finding and ordering a knowledge base's documents. `SPEC_VERSION` stays `"1.4"`.
+
+- Calls: `collections.list_items` takes `q` (1 to 200 characters, matched case-insensitively against a text item's title, file name or reference) and `sort` (`newest`, the server's default, `oldest`, `title`), each sent only when given. A text collection's page echoes `q` and `sort`; its `total` and `next_offset` are the filtered list's.
+- Local checks, after `offset`, `limit` and the reference, with the API's words: `q` empty or over 200 characters (code points); `sort` other than the three, its value echoed as an API message echoes it (16 characters, any but printable ASCII as `\u{hex}`, then `...`).
+- Mock: the text items list filters by `q` and orders by `sort`, and echoes both.
+
+Cases: 992 in all (requests 169, responses 142, errors 170, behaviour 509, constants 2): 9 new (1 request, 1 response, 1 error, 6 behaviour).
+
 ## 1.25 (for SDK specification 1.4)
 
 A case corrected. `SPEC_VERSION` stays `"1.4"`.
