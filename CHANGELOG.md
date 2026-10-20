@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.25 (for SDK specification 1.4)
+
+A case corrected. `SPEC_VERSION` stays `"1.4"`.
+
+- `requests/upload-documents-sent`: the two storage PUTs of one presign are marked `parallel`, so they may arrive in either order, as for images. No rule changes.
+
+Cases: 983 in all (requests 168, responses 141, errors 169, behaviour 503, constants 2): none new, 1 changed.
+
 ## 1.24 (for SDK specification 1.4)
 
 The bulk delete of failed documents. `SPEC_VERSION` stays `"1.4"`.

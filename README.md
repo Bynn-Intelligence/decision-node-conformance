@@ -4,7 +4,7 @@
 
 Language-neutral test cases and a mock API server. Every DecisionNode SDK runs this suite in CI. An SDK release needs every case to pass.
 
-Suite version: 1.24, for SDK specification version 1.4 (the `SPEC_VERSION` every SDK exports). What changed in each version is in [CHANGELOG.md](CHANGELOG.md). Every change to the suite, a single added or corrected case included, is the next minor version (1.21, 1.22): the suite has no patch versions.
+Suite version: 1.25, for SDK specification version 1.4 (the `SPEC_VERSION` every SDK exports). What changed in each version is in [CHANGELOG.md](CHANGELOG.md). Every change to the suite, a single added or corrected case included, is the next minor version (1.21, 1.22): the suite has no patch versions.
 
 ```
 cases/

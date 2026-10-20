@@ -1,6 +1,6 @@
 {
   "id": "upload-documents-sent",
-  "description": "upload_documents uploads whatever it is given, a text document included (as text/markdown by its format, with no file name): one presign of purpose knowledge for all of them, in order, then one PUT each.",
+  "description": "upload_documents uploads whatever it is given, a text document included (as text/markdown by its format, with no file name): one presign of purpose knowledge for all of them, in order, then one PUT each, in parallel: they may arrive in either order.",
   "client": {
     "api_key": "dn_test_conformance"
   },
@@ -67,7 +67,8 @@
           "x-mock-session",
           "x-mock-scenario"
         ],
-        "body_sha256": "4d0edfa5173efe4f784a6e5f86a99696840c1bf3102587aa0d9b58496c328b92"
+        "body_sha256": "4d0edfa5173efe4f784a6e5f86a99696840c1bf3102587aa0d9b58496c328b92",
+        "parallel": true
       },
       {
         "method": "PUT",
@@ -83,7 +84,8 @@
           "x-mock-session",
           "x-mock-scenario"
         ],
-        "body_sha256": "423d7718b11c024e672f360d53e6d54051947b249c4c5fd05b416af47bcfcde7"
+        "body_sha256": "423d7718b11c024e672f360d53e6d54051947b249c4c5fd05b416af47bcfcde7",
+        "parallel": true
       }
     ]
   }
